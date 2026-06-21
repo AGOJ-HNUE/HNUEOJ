@@ -1,5 +1,5 @@
 const config = require('./config');
-const queue = require('qu');
+const Queue = require('queue');
 const { Server } = require('socket.io');
 const http = require('http');
 const express = require('express');
@@ -26,7 +26,7 @@ const io = new Server(server, {
 // Connection tracking
 let connection_count = 0;
 let message_id = Date.now();
-const messages = new queue();
+const messages = new Queue();
 const max_queue = config.max_queue || 50;
 const max_subscriptions_per_connection = config.max_subscriptions_per_connection || 10;
 const max_connections = config.max_connections || 5000;

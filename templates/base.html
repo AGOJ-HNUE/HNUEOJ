@@ -26,10 +26,10 @@
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
     <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
     <link rel="manifest" href="/manifest.json">
-    <meta name="msapplication-TileColor" content="#FFBB33">
+    <meta name="msapplication-TileColor" content="#0050A0">
     <meta name="msapplication-TileImage" content="/mstile-144x144.png">
   {# Chrome 39 for Android colour #}
-    <meta name="theme-color" content="#FFBB33">
+    <meta name="theme-color" content="#0050A0">
     {% if og_image %}
       <meta property="og:image" content="{{ request.build_absolute_uri(og_image) }}">
     {% endif %}
@@ -106,6 +106,7 @@
     {% else %}
       <script src="{{ static('libs/jquery-3.4.1.min.js') }}"></script>
     {% endif %}
+
   </head>
 
   <body>
@@ -117,11 +118,17 @@
       </defs>
     </svg>
     <nav id="navigation" class="unselectable">
-      <div id="nav-container" style="display: flex">
-        <span id="navicon"><i class="fa fa-bars"></i></span>
+      <div id="nav-container">
         <ul id="nav-list">
           <li class="home-nav-element"><a href="{{ url('home') }}">{% include "site-logo-fragment.html" %}</a></li>
-          <li class="home-menu-item"><a href="{{ url('home') }}" class="nav-home">{{ _('Home') }}</a></li>
+          <div id="sidebar-toggle" onclick="toggleSidebar()">
+            <i class="fa fa-angle-double-left" id="sidebar-toggle-icon"></i>
+            <span class="nav-text">{{ _('Collapse') }}</span>
+          </div>
+          <li class="home-menu-item"><a href="{{ url('home') }}" class="nav-home">
+            <span class="nav-icon-container"><i class="fa fa-home"></i></span>
+            <span class="nav-text">{{ _('Home') }}</span>
+          </a></li>
           {% for node in mptt_tree(nav_bar) recursive %}
             <li>
               {% if node.key == "more" %}
@@ -131,6 +138,8 @@
                   <span class="nav-icon-container">
                     <i class="fa fa-ellipsis"></i>
                   </span>
+                  <span class="nav-text">{{ user_trans(node.label) }}</span>
+                  <i class="fa fa-angle-down" style="margin-left: auto;"></i>
                 </a>
                 {% with children=node.get_children() %}
                   {% if children %}
@@ -155,7 +164,15 @@
                     {% if node.key == "group" %} <i class="fa fa-building-columns"></i> {% endif %}
                     {% if node.key == "courses" %} <i class="fa fa-graduation-cap"></i> {% endif %}
                     {% if node.key == "quiz" %} <i class="fa fa-file-alt"></i> {% endif %}
+                    {% if node.key == "chat" %} <i class="fa fa-comment-dots"></i> {% endif %}
+                    {% if node.key == "about" %} <i class="fa fa-circle-info"></i> {% endif %}
                   </span>
+                  <span class="nav-text">{{ user_trans(node.label) }}</span>
+                  {% with children=node.get_children() %}
+                    {% if children %}
+                      <i class="fa fa-angle-down" style="margin-left: auto;"></i>
+                    {% endif %}
+                  {% endwith %}
                 </a>
                 {% with children=node.get_children() %}
                   {% if children %}
@@ -173,11 +190,12 @@
           {% endfor %}
         </ul>
 
-        <div style="display: flex; font-size: larger; align-items: center; height: 100%; gap: 1em; padding-left: 2em;">
+        <div class="nav-bottom-actions">
           {% if request.user.is_authenticated %}
             <span title="{{_('Chat')}}">
-              <a id="chat-icon" href="{{ url('chat', '') }}" class="fab fa-weixin navbar-icon" aria-hidden="true"
-                 style="font-size: 22.5px;">
+              <a id="chat-icon" href="{{ url('chat', '') }}" class="navbar-icon" aria-hidden="true">
+                <i class="fab fa-weixin"></i>
+                <span class="nav-text">{{ _('Chat') }}</span>
                 {% set unread_chat = request.profile.get_num_unread_chat_boxes() %}
                 {% if unread_chat %}
                   <sub class="unread_boxes">{{unread_chat}}</sub>
@@ -187,8 +205,9 @@
 
             {% set unseen_cnt = request.profile.get_num_unseen_notifications() %}
             <span title="{{_('Notification')}}" class="{{ 'notification-open' if unseen_cnt > 0 }}">
-              <a href="{{ url('notification') }}" class="far fa-bell navbar-icon" id="notification" aria-hidden="true"
-                 style="font-size: 22.5px;">
+              <a href="{{ url('notification') }}" class="navbar-icon" id="notification" aria-hidden="true">
+                <i class="far fa-bell"></i>
+                <span class="nav-text">{{ _('Notification') }}</span>
                 {% if unseen_cnt > 0 %}
                   <sub class="unread_boxes">{{unseen_cnt}}</sub>
                 {% endif %}
@@ -196,12 +215,13 @@
             </span>
           {% endif %}
           <span title="{{_('Language')}}">
-            <div class="navbar-icon" id="nav-lang-icon" aria-hidden="true" style="font-size: 22.5px;">
+            <div class="navbar-icon" id="nav-lang-icon" aria-hidden="true">
+              <i class="fa fa-language"></i>
               {% if LANGUAGE_CODE == "vi" %}
-                <h4 class="black nav-right-text">Tiếng Việt</h4>
+                <h4 class="nav-right-text">Tiếng Việt</h4>
               {% endif %}
               {% if LANGUAGE_CODE == "en" %}
-                <h4 class="black nav-right-text">English</h4>
+                <h4 class="nav-right-text">English</h4>
               {% endif %}
             </div>
             <div id="lang-dropdown" class="dropdown" role="tooltip">
@@ -215,13 +235,18 @@
             </div>
           </span>
           <span title="{{_('Dark Mode')}}">
-            <a class="far fa-moon navbar-icon black" id="nav-darkmode-icon" aria-hidden="true" href="?darkmode=1"
-               style="font-size: 22.5px;"></a>
+            <a class="navbar-icon black" id="nav-darkmode-icon" aria-hidden="true" href="?darkmode=1">
+              <i class="far fa-moon"></i>
+              <span class="nav-text">{{ _('Dark Mode') }}</span>
+            </a>
           </span>
           {% if request.user.is_authenticated %}
-            <span id="user-links">
-              <img class="user-img" src="{{ gravatar(request.profile.id, 32) }}" height="24" width="24">
-              <i class="fa fa-angle-down" style="font-size: 18px; padding-top: 8px;"></i>
+            <span>
+              <div id="user-links">
+                <img class="user-img" src="{{ gravatar(request.profile.id, 32) }}" height="24" width="24" style="border-radius: 50%; margin-right: 15px;">
+                <span class="nav-right-text" style="font-weight: bold; flex-grow: 1;">{{ request.user.username }}</span>
+                <i class="fa fa-angle-down"></i>
+              </div>
             </span>
             <div class="dropdown" id="userlink_dropdown" role="tooptip">
               <div class="popper-arrow" data-popper-arrow></div>
@@ -273,17 +298,20 @@
           {% else %}
             <span class="anon">
               <a href="{{ url('auth_login') }}?next={{ LOGIN_RETURN_PATH|urlencode }}">
+                <i class="fa fa-sign-in-alt"></i>
                 <h4 class="nav-right-text">{{ _('Log in') }}</h4>
               </a>
               <a href="{{ url('registration_register') }}">
+                <i class="fa fa-user-plus"></i>
                 <h4 class="nav-right-text">{{ _('Sign up') }}</h4>
               </a>
             </span>
           {% endif %}
         </div>
       </div>
-      <div id="nav-shadow"></div>
     </nav>
+    <script>if (localStorage.getItem('sidebar-collapsed') === 'true') { document.getElementById('navigation').classList.add('collapsed'); }</script>
+
     <div id="loading-bar"></div>
     {% if request.in_contest %}
       <div id="contest-info">
@@ -305,6 +333,8 @@
       </div>
     {% endif %}
     <div id="page-container">
+      <script>if (localStorage.getItem('sidebar-collapsed') === 'true') { document.getElementById('page-container').classList.add('collapsed'); }</script>
+
       <div id="media">
         {% block media %}{% endblock %}
       </div>

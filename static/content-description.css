@@ -1,0 +1,261 @@
+.content-description {
+  line-height: 1.7em;
+  font-size: 16px;
+  font-family: "Segoe UI", "Noto Sans", Arial, "Lucida Grande", sans-serif;
+  overflow-wrap: anywhere;
+}
+.content-description h1, .content-description h2, .content-description h3, .content-description h4, .content-description h5, .content-description .admonition-title, .content-description summary {
+  font-family: "Noto Sans", "Segoe UI", Arial, "Lucida Grande", sans-serif;
+}
+.content-description img {
+  max-width: 100%;
+  height: auto;
+}
+.content-description pre, .content-description code, .content-description kbd, .content-description samp, .content-description span.code {
+  page-break-inside: avoid;
+}
+.content-description .linenos pre {
+  padding-right: 0;
+}
+.content-description b, .content-description strong {
+  font-weight: bold;
+}
+.content-description dfn {
+  font-style: italic;
+}
+.content-description ins {
+  background: #ff9;
+  color: #000;
+  text-decoration: none;
+}
+.content-description mark {
+  background: #ff0;
+  color: #000;
+  font-style: italic;
+  font-weight: bold;
+}
+.content-description sub {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+.content-description sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+  top: -0.5em;
+}
+.content-description sub {
+  bottom: -0.25em;
+}
+.content-description ul, .content-description ol {
+  padding: 0 0 0 2em !important;
+}
+.content-description li p:last-child {
+  margin: 0;
+}
+.content-description dd {
+  margin: 0 0 0 2em;
+}
+.content-description img {
+  border: 0;
+  -ms-interpolation-mode: bicubic;
+  vertical-align: middle;
+}
+.content-description td {
+  vertical-align: top;
+}
+
+.display-math {
+  display: block;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.content-description .highlighttable, .content-description .codehilitetable {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  margin: 1.5em 0 !important;
+  border-radius: 8px;
+  overflow: hidden;
+  background: transparent !important;
+}
+.content-description .highlighttable pre, .content-description .codehilitetable pre {
+  padding: 0.5em;
+  padding-right: 0;
+  margin: 0 !important;
+  background-color: var(--md-code-bg-color, #2f3129);
+  color: var(--md-code-fg-color, #f8f8f2);
+  border: none !important;
+  border-radius: 0 !important;
+  -webkit-box-shadow: none !important;
+          box-shadow: none !important;
+}
+.content-description .highlighttable .linenos, .content-description .codehilitetable .linenos {
+  width: auto;
+  min-width: 3em;
+  vertical-align: top !important;
+}
+.content-description .highlighttable .linenos pre, .content-description .codehilitetable .linenos pre {
+  color: rgba(255, 255, 255, 0.4) !important;
+  background-color: rgba(0, 0, 0, 0.15) !important;
+  width: 100%;
+  border: none !important;
+  border-right: 1px solid var(--md-code-border-color, #444) !important;
+  text-align: right !important;
+  padding-right: 0.8em !important;
+  padding-left: 0.5em !important;
+}
+.content-description .highlighttable .linenos pre span, .content-description .codehilitetable .linenos pre span {
+  margin: 0 !important;
+}
+.content-description .highlighttable .code, .content-description .codehilitetable .code {
+  width: 100%;
+  vertical-align: top !important;
+}
+.content-description .highlighttable .code pre, .content-description .codehilitetable .code pre {
+  padding-left: 1em !important;
+  border: none !important;
+  width: 100%;
+}
+.content-description .highlighttable .filename, .content-description .codehilitetable .filename {
+  background: var(--md-filename-bg-color, black);
+  color: var(--md-filename-fg-color, #cccccc);
+  padding: 0.8em 1.2em;
+  font-weight: 500;
+  font-family: inherit;
+  border-bottom: 2px solid var(--md-code-border-color, #444);
+}
+.content-description .highlighttable td, .content-description .codehilitetable td, .content-description .highlighttable th, .content-description .codehilitetable th {
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  text-align: left !important;
+  vertical-align: top !important;
+}
+
+textarea,
+pre {
+  -moz-tab-size: 4;
+  tab-size: 4;
+}
+
+@media (min-width: 800px) {
+  .content-description pre:has(code) {
+    min-width: 3em;
+  }
+  #common-content {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -moz-box;
+    display: flex;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: reverse;
+    -webkit-flex-direction: row-reverse;
+       -moz-box-orient: horizontal;
+       -moz-box-direction: reverse;
+            flex-direction: row-reverse;
+  }
+  #content-left {
+    -webkit-box-flex: 86%;
+    -webkit-flex: 86%;
+       -moz-box-flex: 86%;
+            flex: 86%;
+    width: 100%;
+  }
+  #content-left.split-common-content {
+    width: 70%;
+  }
+  #content-left .content-description {
+    width: 100%;
+  }
+  #content-right {
+    -webkit-box-flex: 14%;
+    -webkit-flex: 14%;
+       -moz-box-flex: 14%;
+            flex: 14%;
+    max-width: 12.5em;
+    min-width: 8em;
+    padding-left: 1.5em;
+    padding-top: 1em;
+  }
+  #content-right .info-float {
+    float: none;
+    padding: 0;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 70px;
+    width: 100%;
+    max-height: -moz-calc(100vh - 80px);
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  #content-right .info-float::-webkit-scrollbar {
+    width: 4px;
+  }
+  #content-right .info-float::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  #content-right .info-float::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 2px;
+  }
+  #content-right .info-float::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+  }
+}
+@media not all and (min-width: 800px) {
+  #content-right .info-float {
+    float: none;
+    width: 100% !important;
+    position: static !important;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+  }
+}
+@media (max-width: 799px) {
+  .content-description {
+    font-size: 16px;
+    line-height: 1.7em;
+  }
+}
+a.view-pdf {
+  padding-top: 0.6em;
+  display: inline-block;
+}
+
+.problem-title {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: flex;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+     -moz-box-align: center;
+          align-items: center;
+}
+.problem-title .spacer {
+  display: inline-block;
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 1px;
+     -moz-box-flex: 1;
+          flex: 1 1 1px;
+}
+
+.info-float .fa {
+  color: #000;
+  padding-right: 0.2em;
+}
+
+details summary {
+  cursor: pointer;
+}
+
+/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3Jlc291cmNlcy9jb250ZW50LWRlc2NyaXB0aW9uLnNjc3MiLCIuLi9zYXNzX3Byb2Nlc3NlZC9jb250ZW50LWRlc2NyaXB0aW9uLmNzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFDQTtFQUNJLGtCQUFBO0VBQ0EsZUFBQTtFQUNBLHdFQUFBO0VBQ0EsdUJBQUE7QUNBSjtBREVJO0VBQ0ksd0VBQUE7QUNBUjtBREVJO0VBQ0ksZUFBQTtFQUNBLFlBQUE7QUNBUjtBREdJO0VBQ0ksd0JBQUE7QUNEUjtBRElJO0VBQ0ksZ0JBQUE7QUNGUjtBREtJO0VBQ0ksaUJBQUE7QUNIUjtBRE1JO0VBQ0ksa0JBQUE7QUNKUjtBRE9JO0VBQ0ksZ0JBQUE7RUFDQSxXQUFBO0VBQ0EscUJBQUE7QUNMUjtBRFFJO0VBQ0ksZ0JBQUE7RUFDQSxXQUFBO0VBQ0Esa0JBQUE7RUFDQSxpQkFBQTtBQ05SO0FEU0k7RUFDSSxjQUFBO0VBQ0EsY0FBQTtFQUNBLGtCQUFBO0VBQ0Esd0JBQUE7QUNQUjtBRFVJO0VBQ0ksY0FBQTtFQUNBLGNBQUE7RUFDQSxrQkFBQTtFQUNBLHdCQUFBO0VBQ0EsV0FBQTtBQ1JSO0FEV0k7RUFDSSxlQUFBO0FDVFI7QURZSTtFQUNJLDZCQUFBO0FDVlI7QURhSTtFQUNJLFNBQUE7QUNYUjtBRGNJO0VBQ0ksaUJBQUE7QUNaUjtBRGVJO0VBQ0ksU0FBQTtFQUNBLCtCQUFBO0VBQ0Esc0JBQUE7QUNiUjtBRGdCSTtFQUNJLG1CQUFBO0FDZFI7O0FEa0JBO0VBQ0ksY0FBQTtFQUNBLGtCQUFBO0VBQ0EsaUJBQUE7RUFDQSxrQkFBQTtBQ2ZKOztBRG1CQTtFQUNJLHNCQUFBO0VBQ0Esb0NBQUE7RUFDQSw0QkFBQTtFQUNBLDBCQUFBO0VBQ0Esa0JBQUE7RUFDQSxnQkFBQTtFQUNBLGtDQUFBO0FDaEJKO0FEa0JJO0VBQ0ksY0FBQTtFQUNBLGdCQUFBO0VBQ0Esb0JBQUE7RUFDQSxrREFBQTtFQUNBLHVDQUFBO0VBQ0EsdUJBQUE7RUFDQSwyQkFBQTtFQUNBLG1DQUFBO1VBQUEsMkJBQUE7QUNoQlI7QURtQkk7RUFDSSxXQUFBO0VBQ0EsY0FBQTtFQUNBLDhCQUFBO0FDakJSO0FEbUJRO0VBQ0ksMENBQUE7RUFDQSxnREFBQTtFQUNBLFdBQUE7RUFDQSx1QkFBQTtFQUNBLG9FQUFBO0VBQ0EsNEJBQUE7RUFDQSwrQkFBQTtFQUNBLDhCQUFBO0FDakJaO0FEbUJZO0VBQ0ksb0JBQUE7QUNqQmhCO0FEc0JJO0VBQ0ksV0FBQTtFQUNBLDhCQUFBO0FDcEJSO0FEc0JRO0VBQ0ksNEJBQUE7RUFDQSx1QkFBQTtFQUNBLFdBQUE7QUNwQlo7QUR5Qkk7RUFDSSw4Q0FBQTtFQUNBLDJDQUFBO0VBQ0Esb0JBQUE7RUFDQSxnQkFBQTtFQUNBLG9CQUFBO0VBQ0EsMERBQUE7QUN2QlI7QUQyQkk7RUFDSSx1QkFBQTtFQUNBLHFCQUFBO0VBQ0Esb0JBQUE7RUFDQSxrQ0FBQTtFQUNBLDJCQUFBO0VBQ0EsOEJBQUE7QUN6QlI7O0FEa0NBOztFQUVJLGdCQUFBO0VBRUEsV0FBQTtBQy9CSjs7QURtQ0E7RUFDSTtJQUNJLGNBQUE7RUNoQ047RURrQ0U7SUFDSSxvQkFBQTtJQUFBLHFCQUFBO0lBQUEsaUJBQUE7SUFBQSxhQUFBO0lBQ0EsOEJBQUE7SUFBQSw4QkFBQTtJQUFBLG1DQUFBO09BQUEsMkJBQUE7T0FBQSwyQkFBQTtZQUFBLDJCQUFBO0VDaENOO0VEbUNFO0lBQ0kscUJBQUE7SUFBQSxpQkFBQTtPQUFBLGtCQUFBO1lBQUEsU0FBQTtJQUNBLFdBQUE7RUNqQ047RURtQ007SUFDSSxVQUFBO0VDakNWO0VEb0NNO0lBQ0ksV0FBQTtFQ2xDVjtFRHNDRTtJQUNJLHFCQUFBO0lBQUEsaUJBQUE7T0FBQSxrQkFBQTtZQUFBLFNBQUE7SUFDQSxpQkFBQTtJQUNBLGNBQUE7SUFDQSxtQkFBQTtJQUNBLGdCQUFBO0VDcENOO0VEc0NNO0lBQ0ksV0FBQTtJQUNBLFVBQUE7SUFDQSx3QkFBQTtJQUFBLGdCQUFBO0lBQ0EsU0FBQTtJQUNBLFdBQUE7SUFDQSxtQ0FBQTtJQUFBLDhCQUFBO0lBQ0EsZ0JBQUE7SUFDQSxrQkFBQTtFQ3BDVjtFRHVDVTtJQUNJLFVBQUE7RUNyQ2Q7RUR3Q1U7SUFDSSx1QkFBQTtFQ3RDZDtFRHlDVTtJQUNJLGdCQUFBO0lBQ0Esa0JBQUE7RUN2Q2Q7RUR5Q2M7SUFDSSxnQkFBQTtFQ3ZDbEI7QUFDRjtBRDZDQTtFQUNJO0lBQ0ksV0FBQTtJQUNBLHNCQUFBO0lBQ0EsMkJBQUE7SUFDQSw4QkFBQTtPQUFBLDJCQUFBO1lBQUEsc0JBQUE7RUMzQ047QUFDRjtBRDhDQTtFQUNJO0lBQ0ksZUFBQTtJQUNBLGtCQUFBO0VDNUNOO0FBQ0Y7QUQrQ0E7RUFDSSxrQkFBQTtFQUNBLHFCQUFBO0FDN0NKOztBRGdEQTtFQUNJLG9CQUFBO0VBQ0EscUJBQUE7RUFFQSxpQkFBQTtFQUFBLGFBQUE7RUFDQSx5QkFBQTtFQUFBLDJCQUFBO0tBQUEsc0JBQUE7VUFBQSxtQkFBQTtBQzdDSjtBRCtDSTtFQUNJLHFCQUFBO0VBQ0EsbUJBQUE7RUFBQSxxQkFBQTtLQUFBLGdCQUFBO1VBQUEsYUFBQTtBQzdDUjs7QURpREE7RUFDSSxXQUFBO0VBQ0Esb0JBQUE7QUM5Q0o7O0FEZ0RBO0VBQ0ksZUFBQTtBQzdDSiIsImZpbGUiOiJjb250ZW50LWRlc2NyaXB0aW9uLmNzcyJ9 */

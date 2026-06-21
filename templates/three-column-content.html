@@ -11,13 +11,18 @@
     }
 
     @media(min-width: 800px) {
-      .middle-right-content {
-        margin-left: 15%;
+      #three-col-container {
         display: flex;
-        margin-right: 2%;
+        gap: 30px;
+      }
+      .middle-right-content {
+        display: flex;
+        gap: 30px;
+        flex: 1;
+        min-width: 0; /* Prevent flex overflow */
       }
       .middle-right-content.no-left-sidebar {
-        margin-left: 2%;
+        /* No special margin needed now */
       }
     }
 

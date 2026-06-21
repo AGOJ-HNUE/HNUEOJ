@@ -1,0 +1,1052 @@
+/* Modern Markdown Styling for LQDOJ - Simplified & Attractive with Original Admonitions */
+
+:root {
+  --primary: #1976D2;
+  --primary-light: #42A5F5;
+  --bg-alt: #f8f9fa;
+  --border: #e1e4e8;
+  --code-bg: #f6f8fa;
+  --radius: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+  
+  /* Always Dark Mode Code Colors (even in light mode) */
+  --md-code-font-family: var(--md-code-font,_),SFMono-Regular,Consolas,Menlo,monospace;
+  --md-code-fg-color: #f8f8f2;
+  --md-code-bg-color: #2f3129;
+  --md-code-border-color: #444;
+  --md-filename-bg-color: black;
+  --md-filename-fg-color: #cccccc;
+  --md-copy-indicator-bg: rgba(255, 255, 255, 0.1);
+  --md-copy-indicator-fg: #666;
+  
+  /* Always Dark Mode Syntax Highlighting Colors */
+  --md-code-hl-color: rgba(255,255,0,.6);
+  --md-code-hl-number-color: #fd971f;
+  --md-code-hl-special-color: #f92672;
+  --md-code-hl-function-color: #a6e22e;
+  --md-code-hl-constant-color: #ae81ff;
+  --md-code-hl-keyword-color: #66d9ef;
+  --md-code-hl-string-color: #e6db74;
+  --md-code-hl-name-color: var(--md-code-fg-color);
+  --md-code-hl-operator-color: #f92672;
+  --md-code-hl-punctuation-color: #f8f8f2;
+  --md-code-hl-comment-color: #75715e;
+  --md-code-hl-generic-color: #f8f8f2;
+  --md-code-hl-variable-color: #f8f8f2;
+}
+
+/* Original Material Design Variables for Admonitions */
+:root {
+  --md-default-fg-color:rgba(0,0,0,.87);
+  --md-default-fg-color--light:rgba(0,0,0,.54);
+  --md-default-fg-color--lighter:rgba(0,0,0,.32);
+  --md-default-fg-color--lightest:rgba(0,0,0,.07);
+  --md-default-bg-color:#fff;
+  --md-admonition-fg-color:var(--md-default-fg-color);
+  --md-admonition-bg-color:var(--md-default-bg-color);
+  --md-shadow-z1:0 0.2rem 0.5rem rgba(0,0,0,.05),0 0 0.05rem rgba(0,0,0,.1);
+  --md-details-icon:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42Z"/></svg>');
+  --md-admonition-icon--note:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2m3.1 5.07c.14 0 .28.05.4.16l1.27 1.27c.23.22.23.57 0 .78l-1 1-2.05-2.05 1-1c.1-.11.24-.16.38-.16m-1.97 1.74 2.06 2.06-6.06 6.06H7.07v-2.06l6.06-6.06Z"/></svg>');
+  --md-admonition-icon--abstract:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 9H7V7h10m0 6H7v-2h10m-3 6H7v-2h7M12 3a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1m7 0h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"/></svg>');
+  --md-admonition-icon--info:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9h-2V7h2m0 10h-2v-6h2m-1-9A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2Z"/></svg>');
+  --md-admonition-icon--tip:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.66 11.2c-.23-.3-.51-.56-.77-.82-.67-.6-1.43-1.03-2.07-1.66C13.33 7.26 13 4.85 13.95 3c-.95.23-1.78.75-2.49 1.32-2.59 2.08-3.61 5.75-2.39 8.9.04.1.08.2.08.33 0 .22-.15.42-.35.5-.23.1-.47.04-.66-.12a.58.58 0 0 1-.14-.17c-1.13-1.43-1.31-3.48-.55-5.12C5.78 10 4.87 12.3 5 14.47c.06.5.12 1 .29 1.5.14.6.41 1.2.71 1.73 1.08 1.73 2.95 2.97 4.96 3.22 2.14.27 4.43-.12 6.07-1.6 1.83-1.66 2.47-4.32 1.53-6.6l-.13-.26c-.21-.46-.77-1.26-.77-1.26m-3.16 6.3c-.28.24-.74.5-1.1.6-1.12.4-2.24-.16-2.9-.82 1.19-.28 1.9-1.16 2.11-2.05.17-.8-.15-1.46-.28-2.23-.12-.74-.1-1.37.17-2.06.19.38.39.76.63 1.06.77 1 1.98 1.44 2.24 2.8.04.14.06.28.06.43.03.82-.33 1.72-.93 2.27Z"/></svg>');
+  --md-admonition-icon--success:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 7 9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7Z"/></svg>');
+  --md-admonition-icon--question:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m15.07 11.25-.9.92C13.45 12.89 13 13.5 13 15h-2v-.5c0-1.11.45-2.11 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41a2 2 0 0 0-2-2 2 2 0 0 0-2 2H8a4 4 0 0 1 4-4 4 4 0 0 1 4 4 3.2 3.2 0 0 1-.93 2.25M13 19h-2v-2h2M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10c0-5.53-4.5-10-10-10Z"/></svg>');
+  --md-admonition-icon--warning:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 14h-2V9h2m0 9h-2v-2h2M1 21h22L12 2 1 21Z"/></svg>');
+  --md-admonition-icon--failure:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>');
+  --md-admonition-icon--danger:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m11.5 20 4.86-9.73H13V4l-5 9.73h3.5V20M12 2c2.75 0 5.1 1 7.05 2.95C21 6.9 22 9.25 22 12s-1 5.1-2.95 7.05C17.1 21 14.75 22 12 22s-5.1-1-7.05-2.95C3 17.1 2 14.75 2 12s1-5.1 2.95-7.05C6.9 3 9.25 2 12 2Z"/></svg>');
+  --md-admonition-icon--bug:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 13h2v1h-2v-1m10-8v6c0 5.5-3.8 10.7-9 12-5.2-1.3-9-6.5-9-12V5l9-4 9 4m-4 5h-2.2c-.2-.6-.6-1.1-1.1-1.5l1.2-1.2-.7-.7L12.8 8H12c-.2 0-.5 0-.7.1L9.9 6.6l-.8.8 1.2 1.2c-.5.3-.9.8-1.1 1.4H7v1h2v1H7v1h2v1H7v1h2.2c.4 1.2 1.5 2 2.8 2s2.4-.8 2.8-2H17v-1h-2v-1h2v-1h-2v-1h2v-1m-6 2h2v-1h-2v1Z"/></svg>');
+  --md-admonition-icon--example:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 2v2h1v14a4 4 0 0 0 4 4 4 4 0 0 0 4-4V4h1V2H7m4 14c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1m2-4c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1m1-5h-4V4h4v3Z"/></svg>');
+  --md-admonition-icon--quote:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 17h3l2-4V7h-6v6h3M6 17h3l2-4V7H5v6h3l-2 4Z"/></svg>');
+}
+
+/* Base Typography */
+.content-description {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  max-width: none;
+  word-wrap: break-word;
+}
+
+/* Improve readability on larger screens */
+@media (min-width: 1200px) {
+  .content-description {
+    font-size: 17px;
+    line-height: 1.8;
+  }
+}
+
+/* Headings - Compact styling */
+.content-description h1, .content-description h2, .content-description h3,
+.content-description h4, .content-description h5, .content-description h6 {
+  margin: 0.7em 0 0.4em 0;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--primary);
+}
+
+.content-description h1 {
+  font-size: 1.6em;
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: 0.2em;
+}
+.content-description h2 {
+  font-size: 1.35em;
+  padding-bottom: 0.15em;
+}
+.content-description h3 { font-size: 1.15em; }
+.content-description h4 { font-size: 1.05em; }
+.content-description h5 { font-size: 1em; }
+.content-description h6 { font-size: 0.95em; color: #555; }
+
+/* Text Elements */
+.content-description p {
+  margin: 0.7em 0;
+}
+
+.content-description strong {
+  font-weight: 600;
+}
+
+.content-description em {
+  font-style: italic;
+}
+
+/* Strikethrough text */
+.content-description del,
+.content-description s {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* Mark/highlight text */
+.content-description mark {
+  background: linear-gradient(120deg, #a8e6cf 0%, #dcedc1 100%);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+
+/* Links */
+.content-description a {
+  color: var(--primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+.content-description a:hover {
+  border-bottom-color: var(--primary);
+}
+
+/* Lists */
+.content-description ul, .content-description ol {
+  margin: 0.6em 0;
+  padding-left: 2em;
+}
+
+.content-description li {
+  margin: 0.25em 0;
+  line-height: 1.5;
+}
+
+/* Better bullet points for unordered lists */
+.content-description ul {
+  list-style: none;
+  padding-left: 1.5em;
+}
+
+.content-description ul > li {
+  position: relative;
+}
+
+.content-description ul > li::before {
+  content: "•";
+  color: var(--primary);
+  font-weight: bold;
+  position: absolute;
+  left: -1em;
+  top: 0;
+}
+
+/* Nested lists */
+.content-description ul ul > li::before {
+  content: "◦";
+  color: var(--primary-light);
+}
+
+.content-description ul ul ul > li::before {
+  content: "▪";
+  color: var(--primary);
+}
+
+/* Ordered lists with better numbering */
+.content-description ol {
+  counter-reset: list-counter;
+  list-style: none;
+  padding-left: 1.8em;
+}
+
+.content-description ol > li {
+  counter-increment: list-counter;
+  position: relative;
+}
+
+.content-description ol > li::before {
+  content: counter(list-counter) ".";
+  color: var(--primary);
+  font-weight: 600;
+  position: absolute;
+  left: -1.5em;
+  top: 0;
+}
+
+/* Task Lists (GitHub style) */
+.content-description ul.task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.content-description ul.task-list > li {
+  position: relative;
+  padding-left: 1.8em;
+}
+
+.content-description ul.task-list > li::before {
+  display: none;
+}
+
+.content-description ul.task-list > li input[type="checkbox"] {
+  position: absolute;
+  left: 0;
+  top: 0.3em;
+  margin: 0;
+  width: 1.2em;
+  height: 1.2em;
+  accent-color: var(--primary);
+}
+
+.content-description ul.task-list > li input[type="checkbox"]:checked + * {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* Dark Mode Code Blocks - HackMD Style */
+.content-description pre, .content-description code, .content-description kbd, .content-description samp, .content-description span.code {
+  page-break-inside: avoid;
+  font-family: var(--md-code-font-family);
+  font-size: 0.98em;
+}
+
+/* Inline code (light mode: light gray background, dark text) */
+.content-description code, .content-description span.code {
+  font-family: var(--md-code-font-family) !important;
+  margin: 0 2px;
+  padding: 2px 6px;
+  background-color: var(--code-bg, #f6f8fa);
+  border: 1px solid var(--border, #e1e4e8);
+  border-radius: 4px;
+  color: #24292f;
+}
+
+/* Code blocks - Responsive theme */
+.content-description pre {
+  position: relative;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  padding: 1em 1.2em;
+  background: var(--md-code-bg-color);
+  color: var(--md-code-fg-color);
+  border-radius: 8px;
+  margin: 1.5em 0;
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+/* Copy button - simple icon only */
+.content-description pre::after {
+  content: "📋";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: transparent;
+  color: var(--md-copy-indicator-fg);
+  padding: 6px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.7;
+  z-index: 5;
+  transition: all 0.2s ease;
+  line-height: 1;
+  border: 1px solid transparent;
+}
+
+.content-description pre::after:hover {
+  opacity: 1;
+  background: var(--md-copy-indicator-bg);
+  border: 1px solid var(--md-code-border-color);
+}
+
+.content-description pre code, .content-description pre div.code {
+  border: 0;
+  line-height: 1.4em;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-size: 1em;
+  color: var(--md-code-fg-color);
+}
+
+/* No-border code blocks - inherit parent styling except font */
+.content-description pre.no-border {
+  margin-top: 0.4em;
+  margin-bottom: 1em;
+  padding: 0.5em;
+  border: none;
+  background: inherit;
+  color: inherit;
+  border-radius: 0;
+  box-shadow: none;
+  font-family: var(--md-code-font-family);
+  font-size: 0.98em;
+}
+
+/* Code elements within no-border pre blocks */
+.content-description pre.no-border code,
+.content-description pre.no-border div.code {
+  background: inherit;
+  color: inherit;
+  border: none;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.content-description .linenos pre {
+  padding-right: 0;
+}
+
+/* Filename styling for code blocks - Responsive theme */
+.highlight span.filename {
+  background: var(--md-filename-bg-color);
+  color: var(--md-filename-fg-color);
+  border-bottom: 2px solid var(--md-code-border-color);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  display: flow-root;
+  font-size: 0.9em;
+  font-weight: 500;
+  margin-top: 1.5em;
+  padding: 0.8em 1.2em 0.8em 1.2em;
+  padding-right: 3.5em; /* Make space for normal-sized copy button */
+  position: relative;
+  font-family: inherit; /* Use normal page font, not monospace */
+  box-shadow: var(--shadow);
+}
+
+/* Copy button in filename span - always visible */
+.highlight span.filename::before {
+  content: "Copy";
+  position: absolute;
+  top: 50%;
+  right: 1.2em;
+  transform: translateY(-50%);
+  background: transparent;
+  color: var(--md-filename-fg-color);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  font-family: system-ui, sans-serif;
+}
+
+.highlight span.filename::before:hover {
+  background: var(--md-copy-indicator-bg);
+  opacity: 1;
+  border: 1px solid var(--md-code-border-color);
+}
+
+/* Hide the copy button when filename is present */
+.highlight span.filename + pre::after {
+  display: none;
+}
+
+.highlight span.filename + pre {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top: none;
+}
+
+.highlight span.filename + pre > code {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* Blockquotes */
+.content-description blockquote {
+  border-left: 4px solid var(--primary);
+  background: var(--bg-alt);
+  margin: 1.5em 0;
+  padding: 1em 1.5em;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-style: italic;
+  color: #555;
+  position: relative;
+  box-shadow: var(--shadow);
+}
+
+.content-description blockquote::before {
+  content: "\201C";
+  font-size: 3em;
+  color: var(--primary);
+  position: absolute;
+  left: 0.2em;
+  top: -0.1em;
+  font-family: Georgia, serif;
+  opacity: 0.3;
+}
+
+.content-description blockquote p {
+  margin: 0.5em 0;
+}
+
+.content-description blockquote p:first-child {
+  margin-top: 0;
+}
+
+.content-description blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Nested blockquotes */
+.content-description blockquote blockquote {
+  border-left-color: var(--primary-light);
+  margin: 1em 0;
+  background: rgba(248, 249, 250, 0.5);
+}
+
+/* Tables */
+.content-description table {
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  width: 100%;
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: white;
+}
+
+.content-description th, .content-description td {
+  border: 1px solid var(--border);
+  padding: 0.875em 1em;
+  text-align: left;
+  vertical-align: top;
+}
+
+.content-description th {
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  font-size: 0.95em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.content-description tr:nth-child(even) {
+  background: var(--bg-alt);
+}
+
+.content-description tr:hover {
+  background: rgba(25, 118, 210, 0.05);
+  transition: background-color 0.2s ease;
+}
+
+/* Table responsiveness */
+@media (max-width: 768px) {
+  .content-description table {
+    font-size: 0.9em;
+  }
+  
+  .content-description th, .content-description td {
+    padding: 0.5em 0.75em;
+  }
+}
+
+/* Horizontal Rules */
+.content-description hr {
+  border: none;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light), var(--primary));
+  margin: 2.5em 0;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(25, 118, 210, 0.3);
+}
+
+/* Alternative HR styles */
+.content-description hr.dashed {
+  background: none;
+  border-top: 2px dashed var(--primary);
+  height: 0;
+}
+
+.content-description hr.dotted {
+  background: none;
+  border-top: 3px dotted var(--primary);
+  height: 0;
+}
+
+/* ORIGINAL MATERIAL DESIGN ADMONITIONS & SPOILERS */
+
+.md-typeset .admonition,.md-typeset details{
+    background-color:var(--md-admonition-bg-color);
+    border:.05rem solid #448aff;
+    border-radius:.2rem;
+    box-shadow:var(--md-shadow-z1);
+    color:var(--md-admonition-fg-color);
+    display:flow-root;
+    margin:1.5625em 0;
+    padding:0 .6rem;
+    page-break-inside:avoid
+}
+.md-typeset .admonition>*,.md-typeset details>*{
+    box-sizing:border-box
+}
+.md-typeset .admonition .admonition,.md-typeset .admonition details,.md-typeset details .admonition,.md-typeset details details{
+    margin-bottom:1em;
+    margin-top:1em
+}
+.md-typeset .admonition .md-typeset__scrollwrap,.md-typeset details .md-typeset__scrollwrap{
+    margin:1em -.6rem
+}
+.md-typeset .admonition .md-typeset__table,.md-typeset details .md-typeset__table{
+    padding:0 .6rem
+}
+.md-typeset .admonition>.tabbed-set:only-child,.md-typeset details>.tabbed-set:only-child{
+    margin-top:0
+}
+html .md-typeset .admonition>:last-child,html .md-typeset details>:last-child{
+    margin-bottom:.6rem
+}
+.md-typeset .admonition-title,.md-typeset summary{
+    background-color:rgba(68,138,255,.1);
+    border:none;
+    font-weight:700;
+    margin:0 -.6rem;
+    padding:.4rem .6rem .4rem 2rem;
+    position:relative
+}
+html .md-typeset .admonition-title:last-child,html .md-typeset summary:last-child{
+    margin-bottom:0
+}
+.md-typeset .admonition-title:before,.md-typeset summary:before{
+    background-color:#448aff;
+    content:"";
+    height:1rem;
+    left:.6rem;
+    -webkit-mask-image:var(--md-admonition-icon--note);
+    mask-image:var(--md-admonition-icon--note);
+    -webkit-mask-position:center;
+    mask-position:center;
+    -webkit-mask-repeat:no-repeat;
+    mask-repeat:no-repeat;
+    -webkit-mask-size:contain;
+    mask-size:contain;
+    position:absolute;
+    top:.625em;
+    width:1rem
+}
+.md-typeset .admonition-title code,.md-typeset summary code{
+    box-shadow:0 0 0 .05rem var(--md-default-fg-color--lightest)
+}
+
+/* Admonition Types */
+.md-typeset .admonition.note,.md-typeset details.note{
+    border-color:#448aff
+}
+.md-typeset .note>.admonition-title,.md-typeset .note>summary{
+    background-color:rgba(68,138,255,.1)
+}
+.md-typeset .note>.admonition-title:before,.md-typeset .note>summary:before{
+    background-color:#448aff;
+    -webkit-mask-image:var(--md-admonition-icon--note);
+    mask-image:var(--md-admonition-icon--note)
+}
+
+.md-typeset .admonition.abstract,.md-typeset .admonition.summary,.md-typeset .admonition.tldr,.md-typeset details.abstract,.md-typeset details.summary,.md-typeset details.tldr{
+    border-color:#00b0ff
+}
+.md-typeset .abstract>.admonition-title,.md-typeset .summary>.admonition-title,.md-typeset .tldr>.admonition-title,.md-typeset .abstract>summary,.md-typeset .summary>summary,.md-typeset .tldr>summary{
+    background-color:rgba(0,176,255,.1)
+}
+.md-typeset .abstract>.admonition-title:before,.md-typeset .summary>.admonition-title:before,.md-typeset .tldr>.admonition-title:before,.md-typeset .abstract>summary:before,.md-typeset .summary>summary:before,.md-typeset .tldr>summary:before{
+    background-color:#00b0ff;
+    -webkit-mask-image:var(--md-admonition-icon--abstract);
+    mask-image:var(--md-admonition-icon--abstract)
+}
+
+.md-typeset .admonition.info,.md-typeset .admonition.todo,.md-typeset details.info,.md-typeset details.todo{
+    border-color:#00b8d4
+}
+.md-typeset .info>.admonition-title,.md-typeset .todo>.admonition-title,.md-typeset .info>summary,.md-typeset .todo>summary{
+    background-color:rgba(0,184,212,.1)
+}
+.md-typeset .info>.admonition-title:before,.md-typeset .todo>.admonition-title:before,.md-typeset .info>summary:before,.md-typeset .todo>summary:before{
+    background-color:#00b8d4;
+    -webkit-mask-image:var(--md-admonition-icon--info);
+    mask-image:var(--md-admonition-icon--info)
+}
+
+.md-typeset .admonition.tip,.md-typeset .admonition.hint,.md-typeset .admonition.important,.md-typeset details.tip,.md-typeset details.hint,.md-typeset details.important{
+    border-color:#00bfa5
+}
+.md-typeset .tip>.admonition-title,.md-typeset .hint>.admonition-title,.md-typeset .important>.admonition-title,.md-typeset .tip>summary,.md-typeset .hint>summary,.md-typeset .important>summary{
+    background-color:rgba(0,191,165,.1)
+}
+.md-typeset .tip>.admonition-title:before,.md-typeset .hint>.admonition-title:before,.md-typeset .important>.admonition-title:before,.md-typeset .tip>summary:before,.md-typeset .hint>summary:before,.md-typeset .important>summary:before{
+    background-color:#00bfa5;
+    -webkit-mask-image:var(--md-admonition-icon--tip);
+    mask-image:var(--md-admonition-icon--tip)
+}
+
+.md-typeset .admonition.success,.md-typeset .admonition.check,.md-typeset .admonition.done,.md-typeset details.success,.md-typeset details.check,.md-typeset details.done{
+    border-color:#00c853
+}
+.md-typeset .success>.admonition-title,.md-typeset .check>.admonition-title,.md-typeset .done>.admonition-title,.md-typeset .success>summary,.md-typeset .check>summary,.md-typeset .done>summary{
+    background-color:rgba(0,200,83,.1)
+}
+.md-typeset .success>.admonition-title:before,.md-typeset .check>.admonition-title:before,.md-typeset .done>.admonition-title:before,.md-typeset .success>summary:before,.md-typeset .check>summary:before,.md-typeset .done>summary:before{
+    background-color:#00c853;
+    -webkit-mask-image:var(--md-admonition-icon--success);
+    mask-image:var(--md-admonition-icon--success)
+}
+
+.md-typeset .admonition.question,.md-typeset .admonition.help,.md-typeset .admonition.faq,.md-typeset details.question,.md-typeset details.help,.md-typeset details.faq{
+    border-color:#64dd17
+}
+.md-typeset .question>.admonition-title,.md-typeset .help>.admonition-title,.md-typeset .faq>.admonition-title,.md-typeset .question>summary,.md-typeset .help>summary,.md-typeset .faq>summary{
+    background-color:rgba(100,221,23,.1)
+}
+.md-typeset .question>.admonition-title:before,.md-typeset .help>.admonition-title:before,.md-typeset .faq>.admonition-title:before,.md-typeset .question>summary:before,.md-typeset .help>summary:before,.md-typeset .faq>summary:before{
+    background-color:#64dd17;
+    -webkit-mask-image:var(--md-admonition-icon--question);
+    mask-image:var(--md-admonition-icon--question)
+}
+
+.md-typeset .admonition.warning,.md-typeset .admonition.caution,.md-typeset .admonition.attention,.md-typeset details.warning,.md-typeset details.caution,.md-typeset details.attention{
+    border-color:#ff9100
+}
+.md-typeset .warning>.admonition-title,.md-typeset .caution>.admonition-title,.md-typeset .attention>.admonition-title,.md-typeset .warning>summary,.md-typeset .caution>summary,.md-typeset .attention>summary{
+    background-color:rgba(255,145,0,.1)
+}
+.md-typeset .warning>.admonition-title:before,.md-typeset .caution>.admonition-title:before,.md-typeset .attention>.admonition-title:before,.md-typeset .warning>summary:before,.md-typeset .caution>summary:before,.md-typeset .attention>summary:before{
+    background-color:#ff9100;
+    -webkit-mask-image:var(--md-admonition-icon--warning);
+    mask-image:var(--md-admonition-icon--warning)
+}
+
+.md-typeset .admonition.failure,.md-typeset .admonition.fail,.md-typeset .admonition.missing,.md-typeset details.failure,.md-typeset details.fail,.md-typeset details.missing{
+    border-color:#ff5252
+}
+.md-typeset .failure>.admonition-title,.md-typeset .fail>.admonition-title,.md-typeset .missing>.admonition-title,.md-typeset .failure>summary,.md-typeset .fail>summary,.md-typeset .missing>summary{
+    background-color:rgba(255,82,82,.1)
+}
+.md-typeset .failure>.admonition-title:before,.md-typeset .fail>.admonition-title:before,.md-typeset .missing>.admonition-title:before,.md-typeset .failure>summary:before,.md-typeset .fail>summary:before,.md-typeset .missing>summary:before{
+    background-color:#ff5252;
+    -webkit-mask-image:var(--md-admonition-icon--failure);
+    mask-image:var(--md-admonition-icon--failure)
+}
+
+.md-typeset .admonition.danger,.md-typeset .admonition.error,.md-typeset details.danger,.md-typeset details.error{
+    border-color:#ff1744
+}
+.md-typeset .danger>.admonition-title,.md-typeset .error>.admonition-title,.md-typeset .danger>summary,.md-typeset .error>summary{
+    background-color:rgba(255,23,68,.1)
+}
+.md-typeset .danger>.admonition-title:before,.md-typeset .error>.admonition-title:before,.md-typeset .danger>summary:before,.md-typeset .error>summary:before{
+    background-color:#ff1744;
+    -webkit-mask-image:var(--md-admonition-icon--danger);
+    mask-image:var(--md-admonition-icon--danger)
+}
+
+.md-typeset .admonition.bug,.md-typeset details.bug{
+    border-color:#f50057
+}
+.md-typeset .bug>.admonition-title,.md-typeset .bug>summary{
+    background-color:rgba(245,0,87,.1)
+}
+.md-typeset .bug>.admonition-title:before,.md-typeset .bug>summary:before{
+    background-color:#f50057;
+    -webkit-mask-image:var(--md-admonition-icon--bug);
+    mask-image:var(--md-admonition-icon--bug)
+}
+
+.md-typeset .admonition.example,.md-typeset details.example{
+    border-color:#651fff
+}
+.md-typeset .example>.admonition-title,.md-typeset .example>summary{
+    background-color:rgba(101,31,255,.1)
+}
+.md-typeset .example>.admonition-title:before,.md-typeset .example>summary:before{
+    background-color:#651fff;
+    -webkit-mask-image:var(--md-admonition-icon--example);
+    mask-image:var(--md-admonition-icon--example)
+}
+
+.md-typeset .admonition.quote,.md-typeset .admonition.cite,.md-typeset details.quote,.md-typeset details.cite{
+    border-color:#9e9e9e
+}
+.md-typeset .quote>.admonition-title,.md-typeset .cite>.admonition-title,.md-typeset .quote>summary,.md-typeset .cite>summary{
+    background-color:rgba(158,158,158,.1)
+}
+.md-typeset .quote>.admonition-title:before,.md-typeset .cite>.admonition-title:before,.md-typeset .quote>summary:before,.md-typeset .cite>summary:before{
+    background-color:#9e9e9e;
+    -webkit-mask-image:var(--md-admonition-icon--quote);
+    mask-image:var(--md-admonition-icon--quote)
+}
+
+/* Details/Spoiler Styles */
+.md-typeset details[open]>summary:after{
+    transform:rotate(90deg)
+}
+.md-typeset details:not([open]){
+    box-shadow:none;
+    padding-bottom:0
+}
+.md-typeset details:not([open])>summary{
+    border-radius:.1rem
+}
+.md-typeset summary{
+    cursor:pointer;
+    display:block;
+    min-height:1rem;
+    padding-right:1.8rem
+}
+.md-typeset summary:after{
+    background-color:currentcolor;
+    content:"";
+    height:1rem;
+    -webkit-mask-image:var(--md-details-icon);
+    mask-image:var(--md-details-icon);
+    -webkit-mask-position:center;
+    mask-position:center;
+    -webkit-mask-repeat:no-repeat;
+    mask-repeat:no-repeat;
+    -webkit-mask-size:contain;
+    mask-size:contain;
+    position:absolute;
+    right:.4rem;
+    top:.625em;
+    transform:rotate(0deg);
+    transition:transform .25s;
+    width:1rem
+}
+.md-typeset summary::marker{
+    display:none
+}
+.md-typeset summary::-webkit-details-marker{
+    display:none
+}
+
+/* Original Syntax Highlighting Styles */
+.highlight .o, .highlight .ow {
+  color: var(--md-code-hl-operator-color);
+}
+.highlight .p {
+  color: var(--md-code-hl-punctuation-color);
+}
+.highlight .cpf, .highlight .l, .highlight .s, .highlight .sb, .highlight .sc, .highlight .s2, .highlight .si, .highlight .s1, .highlight .ss {
+  color: var(--md-code-hl-string-color);
+}
+.highlight .cp, .highlight .se, .highlight .sh, .highlight .sr, .highlight .sx {
+  color: var(--md-code-hl-special-color);
+}
+.highlight .m, .highlight .mb, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo {
+  color: var(--md-code-hl-number-color);
+}
+.highlight .k, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kt {
+  color: var(--md-code-hl-keyword-color);
+}
+.highlight .kc, .highlight .n {
+  color: var(--md-code-hl-name-color);
+}
+.highlight .no, .highlight .nb, .highlight .bp {
+  color: var(--md-code-hl-constant-color);
+}
+.highlight .nc, .highlight .ne, .highlight .nf, .highlight .nn {
+  color: var(--md-code-hl-function-color);
+}
+.highlight .nd, .highlight .ni, .highlight .nl, .highlight .nt {
+  color: var(--md-code-hl-keyword-color);
+}
+.highlight .c, .highlight .cm, .highlight .c1, .highlight .ch, .highlight .cs, .highlight .sd {
+  color: var(--md-code-hl-comment-color);
+}
+.highlight .na, .highlight .nv, .highlight .vc, .highlight .vg, .highlight .vi {
+  color: var(--md-code-hl-variable-color);
+}
+.highlight .w {
+  color: var(--md-code-hl-generic-color);
+}
+
+/* Tabbed Code Blocks (alternate style) */
+.content-description .tabbed-set {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 1.5em 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.content-description .tabbed-set > input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.content-description .tabbed-set .tabbed-labels {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  background: var(--md-filename-bg-color);
+  scrollbar-width: none;
+}
+
+.content-description .tabbed-set .tabbed-labels::-webkit-scrollbar {
+  display: none;
+}
+
+.content-description .tabbed-set .tabbed-labels label {
+  width: auto;
+  padding: 0.7em 1.2em;
+  font-weight: 600;
+  font-size: 0.85em;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  color: var(--md-filename-fg-color);
+  opacity: 0.6;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.content-description .tabbed-set .tabbed-labels label:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.content-description .tabbed-set .tabbed-labels label.tabbed-label--active {
+  opacity: 1;
+  color: var(--primary-light);
+  border-bottom-color: var(--primary-light);
+  background: var(--md-code-bg-color);
+}
+
+.content-description .tabbed-set .tabbed-content {
+  width: 100%;
+}
+
+.content-description .tabbed-set .tabbed-block {
+  display: none;
+}
+
+.content-description .tabbed-set .tabbed-block.tabbed-block--active {
+  display: block;
+}
+
+/* Remove extra margin/border-radius on code blocks inside tabs */
+.content-description .tabbed-set .tabbed-block pre {
+  margin: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  box-shadow: none;
+}
+
+.content-description .tabbed-set .tabbed-block .highlight span.filename {
+  display: none;
+}
+
+/* Restore pre copy button inside tabs (filename is hidden so its copy button is gone) */
+.content-description .tabbed-set .tabbed-block .highlight span.filename + pre::after {
+  display: block;
+}
+
+/* Non-code content inside tabs */
+.content-description .tabbed-set .tabbed-block > :first-child {
+  margin-top: 0;
+}
+
+.content-description .tabbed-set .tabbed-block > :last-child {
+  margin-bottom: 0;
+}
+
+@media print {
+  .content-description .tabbed-set .tabbed-block {
+    display: block;
+  }
+  .content-description .tabbed-set .tabbed-labels label {
+    background: white !important;
+    color: black !important;
+  }
+  .content-description .tabbed-set .tabbed-labels label.tabbed-label--active {
+    border-bottom-color: black !important;
+    font-weight: 800;
+  }
+}
+
+/* Copy feedback tooltip styling */
+.copy-feedback {
+  font-size: 12px !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.5px !important;
+  backdrop-filter: blur(4px) !important;
+  /* Fixed positioning ensures no parent container overflow */
+  position: fixed !important;
+  z-index: 10000 !important;
+}
+
+/* Print Media Styles */
+@media print {
+  /* Headers - use black color */
+  .content-description h1, .content-description h2, .content-description h3, 
+  .content-description h4, .content-description h5, .content-description h6 {
+    color: black !important;
+    border-color: black !important;
+  }
+
+  /* Hide copy buttons */
+  .content-description pre::after,
+  .highlight span.filename::before {
+    display: none !important;
+  }
+
+  /* Admonitions - remove all colors, use black */
+  .md-typeset .admonition, .md-typeset details {
+    border-color: black !important;
+    color: black !important;
+    background-color: white !important;
+  }
+
+  .md-typeset .admonition-title, .md-typeset summary {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  /* Hide all admonition icons */
+  .md-typeset .admonition-title:before, .md-typeset summary:before {
+    display: none !important;
+  }
+
+  /* Hide spoiler/details arrow icons */
+  .md-typeset summary:after {
+    display: none !important;
+  }
+
+  /* Spoilers - remove all type-specific colors */
+  .md-typeset .admonition.note, .md-typeset details.note,
+  .md-typeset .admonition.abstract, .md-typeset .admonition.summary, .md-typeset .admonition.tldr, 
+  .md-typeset details.abstract, .md-typeset details.summary, .md-typeset details.tldr,
+  .md-typeset .admonition.info, .md-typeset .admonition.todo, .md-typeset details.info, .md-typeset details.todo,
+  .md-typeset .admonition.tip, .md-typeset .admonition.hint, .md-typeset .admonition.important, 
+  .md-typeset details.tip, .md-typeset details.hint, .md-typeset details.important,
+  .md-typeset .admonition.success, .md-typeset .admonition.check, .md-typeset .admonition.done, 
+  .md-typeset details.success, .md-typeset details.check, .md-typeset details.done,
+  .md-typeset .admonition.question, .md-typeset .admonition.help, .md-typeset .admonition.faq, 
+  .md-typeset details.question, .md-typeset details.help, .md-typeset details.faq,
+  .md-typeset .admonition.warning, .md-typeset .admonition.caution, .md-typeset .admonition.attention, 
+  .md-typeset details.warning, .md-typeset details.caution, .md-typeset details.attention,
+  .md-typeset .admonition.failure, .md-typeset .admonition.fail, .md-typeset .admonition.missing, 
+  .md-typeset details.failure, .md-typeset details.fail, .md-typeset details.missing,
+  .md-typeset .admonition.danger, .md-typeset .admonition.error, .md-typeset details.danger, .md-typeset details.error,
+  .md-typeset .admonition.bug, .md-typeset details.bug,
+  .md-typeset .admonition.example, .md-typeset details.example,
+  .md-typeset .admonition.quote, .md-typeset .admonition.cite, .md-typeset details.quote, .md-typeset details.cite {
+    border-color: black !important;
+    color: black !important;
+    background-color: white !important;
+  }
+
+  /* All admonition titles - remove colors */
+  .md-typeset .note>.admonition-title, .md-typeset .note>summary,
+  .md-typeset .abstract>.admonition-title, .md-typeset .summary>.admonition-title, .md-typeset .tldr>.admonition-title,
+  .md-typeset .abstract>summary, .md-typeset .summary>summary, .md-typeset .tldr>summary,
+  .md-typeset .info>.admonition-title, .md-typeset .todo>.admonition-title,
+  .md-typeset .info>summary, .md-typeset .todo>summary,
+  .md-typeset .tip>.admonition-title, .md-typeset .hint>.admonition-title, .md-typeset .important>.admonition-title,
+  .md-typeset .tip>summary, .md-typeset .hint>summary, .md-typeset .important>summary,
+  .md-typeset .success>.admonition-title, .md-typeset .check>.admonition-title, .md-typeset .done>.admonition-title,
+  .md-typeset .success>summary, .md-typeset .check>summary, .md-typeset .done>summary,
+  .md-typeset .question>.admonition-title, .md-typeset .help>.admonition-title, .md-typeset .faq>.admonition-title,
+  .md-typeset .question>summary, .md-typeset .help>summary, .md-typeset .faq>summary,
+  .md-typeset .warning>.admonition-title, .md-typeset .caution>.admonition-title, .md-typeset .attention>.admonition-title,
+  .md-typeset .warning>summary, .md-typeset .caution>summary, .md-typeset .attention>summary,
+  .md-typeset .failure>.admonition-title, .md-typeset .fail>.admonition-title, .md-typeset .missing>.admonition-title,
+  .md-typeset .failure>summary, .md-typeset .fail>summary, .md-typeset .missing>summary,
+  .md-typeset .danger>.admonition-title, .md-typeset .error>.admonition-title,
+  .md-typeset .danger>summary, .md-typeset .error>summary,
+  .md-typeset .bug>.admonition-title, .md-typeset .bug>summary,
+  .md-typeset .example>.admonition-title, .md-typeset .example>summary,
+  .md-typeset .quote>.admonition-title, .md-typeset .cite>.admonition-title,
+  .md-typeset .quote>summary, .md-typeset .cite>summary {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  /* Links - use black color for print */
+  .content-description a {
+    color: black !important;
+    border-bottom-color: black !important;
+  }
+
+  /* Code blocks - ensure readability in print */
+  .content-description pre {
+    background: white !important;
+    color: black !important;
+    border: 1px solid black !important;
+  }
+
+  .content-description pre code, .content-description pre div.code {
+    color: black !important;
+  }
+
+  /* Inline code */
+  .content-description code, .content-description span.code {
+    background-color: #f0f0f0 !important;
+    color: black !important;
+  }
+
+  /* Tables - ensure borders are visible */
+  .content-description table {
+    border-collapse: collapse !important;
+  }
+
+  .content-description th {
+    background: white !important;
+    color: black !important;
+    border: 1px solid black !important;
+  }
+
+  .content-description td {
+    border: 1px solid black !important;
+  }
+
+  /* Remove shadows and rounded corners for print */
+  .content-description pre,
+  .content-description table,
+  .md-typeset .admonition,
+  .md-typeset details {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}

@@ -9,8 +9,8 @@ fi
 
 judge_id="$1"
 config_file="${JUDGE_CONFIG:-/problems/__conf__/general.yml}"
-problems_dir="${PROBLEMS_DIR:?Set PROBLEMS_DIR to your problems directory (e.g. export PROBLEMS_DIR=/mnt/problems)}"
-judge_image="${JUDGE_IMAGE:-vnoj/judge-tierlqdoj:latest}"
+problems_dir="${PROBLEMS_DIR:?Set PROBLEMS_DIR to your problems directory (e.g. export PROBLEMS_DIR=/home/agoj/site/problems)}"
+judge_image="${JUDGE_IMAGE:-vnoj/judge-tier1:latest}"
 
 docker rm --force "$judge_id" 2>/dev/null || true
 

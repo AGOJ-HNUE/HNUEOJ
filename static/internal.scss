@@ -1,0 +1,345 @@
+@use "vars" as *;
+
+.internal-table-scroll {
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow-x: auto;
+    width: 100%;
+
+    table {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    th,
+    td {
+        overflow-wrap: anywhere;
+        vertical-align: top;
+        word-break: break-word;
+    }
+
+    code {
+        overflow-wrap: anywhere;
+        white-space: normal;
+        word-break: break-word;
+    }
+}
+
+.internal-chat-moderation-page {
+    max-width: 100%;
+    min-width: 0;
+
+    .chat-moderation-controls {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: $space-sm;
+        margin-bottom: $space-md;
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: $space-xs;
+        }
+    }
+
+    .chat-moderation-table {
+        .chat-time-column {
+            width: 8.5em;
+        }
+
+        .chat-user-column,
+        .chat-action-column,
+        .chat-source-column {
+            width: 7em;
+        }
+
+        .chat-button-column {
+            width: 6em;
+        }
+    }
+
+    .chat-pagination {
+        margin-top: $space-md;
+    }
+}
+
+.semantic-search-page {
+    .semantic-search-tabs {
+        display: flex;
+        gap: $space-xs;
+        margin-top: $space-lg;
+    }
+
+    .semantic-search-tab {
+        background: white;
+        border: $space-hairline solid $border_gray;
+        border-radius: $radius-md $radius-md 0 0;
+        cursor: pointer;
+        padding: $space-sm $space-lg;
+
+        &.active {
+            background: $background_light_gray;
+            border-bottom-color: $background_light_gray;
+            font-weight: bold;
+        }
+    }
+
+    .semantic-search-controls {
+        margin: 0 0 $space-lg;
+    }
+
+    .semantic-search-card {
+        border: $space-hairline solid $border_gray;
+        border-radius: $radius-md;
+        padding: $space-lg;
+        background: $background_light_gray;
+        max-width: 64em;
+
+        h3 {
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: $space-xs;
+        }
+
+        input,
+        select,
+        textarea {
+            box-sizing: border-box;
+            display: block;
+            margin-bottom: $space-md;
+            width: 100%;
+        }
+
+        textarea {
+            min-height: 9em;
+            padding: $space-sm;
+            resize: vertical;
+            text-align: left;
+
+            &::placeholder {
+                color: $text-lighter;
+                opacity: 1;
+                text-align: left;
+            }
+        }
+    }
+
+    .semantic-query-card {
+        textarea {
+            font-size: 1.05em;
+            line-height: 1.5;
+        }
+    }
+
+    @media(max-width: 700px) {
+        .semantic-search-tabs {
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .semantic-search-tab {
+            border-radius: 0;
+            text-align: left;
+        }
+    }
+
+    .semantic-limit-row {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: $space-sm;
+        margin-bottom: $space-md;
+
+        input {
+            width: 5em;
+        }
+    }
+
+    .semantic-empty-state,
+    .semantic-results-table {
+        display: none;
+    }
+
+    .semantic-result-name {
+        color: $widget_black;
+        font-size: 0.9em;
+        margin-top: $space-xs;
+    }
+
+    .semantic-type-tag {
+        display: inline-block;
+        background: $background_light_gray;
+        border: 1px solid $border_gray;
+        border-radius: 3px;
+        font-size: 0.8em;
+        padding: 1px 5px;
+        margin: 1px 2px 1px 0;
+        white-space: nowrap;
+    }
+}
+
+.internal-duplicate-problems-page,
+.internal-duplicate-problem-detail-page {
+    max-width: 100%;
+    min-width: 0;
+
+    .duplicate-report-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $space-xs;
+        margin: $space-lg 0;
+    }
+
+    .duplicate-report-tab {
+        background: white;
+        border: $space-hairline solid $border_gray;
+        border-radius: $radius-md;
+        padding: $space-sm $space-lg;
+
+        &.active {
+            background: $background_light_gray;
+            font-weight: bold;
+        }
+    }
+
+    .duplicate-report-controls,
+    .duplicate-review-actions {
+        align-items: flex-end;
+        display: flex;
+        flex-wrap: wrap;
+        gap: $space-md;
+        margin: $space-lg 0;
+
+        label {
+            display: flex;
+            flex-direction: column;
+            font-weight: bold;
+            gap: $space-xs;
+        }
+
+        input {
+            max-width: 9em;
+        }
+    }
+
+    .duplicate-candidates-table,
+    .duplicate-dry-run-table,
+    .duplicate-merge-history-table,
+    .duplicate-verification-table {
+        margin-top: $space-md;
+        table-layout: fixed;
+        width: 100%;
+
+        th, td {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+    }
+
+    .duplicate-table-details,
+    .duplicate-error-text {
+        line-break: anywhere;
+        overflow-wrap: anywhere;
+        white-space: normal;
+        word-break: break-all;
+    }
+
+    .duplicate-error-text {
+        display: block;
+    }
+
+    .duplicate-problem-name {
+        color: $widget_black;
+        margin-top: $space-xs;
+        overflow-wrap: anywhere;
+    }
+}
+
+.internal-duplicate-problem-detail-page {
+    .duplicate-review-grid {
+        display: grid;
+        gap: $space-md;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin: $space-lg 0;
+    }
+
+    .duplicate-review-card {
+        background: $background_light_gray;
+        border: $space-hairline solid $border_gray;
+        border-radius: $radius-md;
+        margin-bottom: $space-lg;
+        padding: $space-lg;
+
+        h3 {
+            margin-top: 0;
+        }
+    }
+
+    .duplicate-review-actions {
+        align-items: stretch;
+
+        form {
+            background: $background_gray;
+            border: $space-hairline solid $border_gray;
+            border-radius: $radius-sm;
+            padding: $space-md;
+        }
+    }
+
+    .verification-passed {
+        background: rgba($theme_color, 0.12);
+    }
+
+    .verification-failed {
+        background: rgba($announcement_red, 0.12);
+    }
+
+    .duplicate-merge-card {
+        border-color: $announcement_red;
+    }
+
+    .duplicate-false-positive-form {
+        margin-top: $space-md;
+    }
+
+    @media(max-width: 800px) {
+        .duplicate-review-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+
+// Auto-review verdict badges in the request_public queue.
+.auto-review-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    padding: 0.25em 0.7em;
+    margin-left: 0.4em;
+    font-weight: 600;
+    font-size: 0.95em;
+    border: 1.5px solid currentColor;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background 0.15s ease;
+
+    i { font-size: 0.9em; }
+
+    &:hover {
+        text-decoration: none;
+        background: rgba(0, 0, 0, 0.06);
+    }
+}
+.auto-review-badge.auto-review-badge-pass { color: #2ca44a; }
+.auto-review-badge.auto-review-badge-fail,
+.auto-review-badge.auto-review-badge-error { color: $announcement_red; }
+.auto-review-badge.auto-review-badge-running,
+.auto-review-badge.auto-review-badge-none {
+    color: $widget_black;
+    opacity: 0.7;
+}

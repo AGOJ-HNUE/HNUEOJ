@@ -1,0 +1,281 @@
+
+.content-description {
+    line-height: 1.7em;
+    font-size: 16px;
+    font-family: "Segoe UI", "Noto Sans", Arial, "Lucida Grande", sans-serif;
+    overflow-wrap: anywhere;
+
+    h1, h2, h3, h4, h5, .admonition-title, summary {
+        font-family: "Noto Sans", "Segoe UI", Arial, "Lucida Grande", sans-serif;
+    }
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    pre, code, kbd, samp, span.code {
+        page-break-inside: avoid;
+    }
+
+    .linenos pre {
+        padding-right: 0;
+    }
+
+    b, strong {
+        font-weight: bold;
+    }
+
+    dfn {
+        font-style: italic;
+    }
+
+    ins {
+        background: #ff9;
+        color: #000;
+        text-decoration: none;
+    }
+
+    mark {
+        background: #ff0;
+        color: #000;
+        font-style: italic;
+        font-weight: bold;
+    }
+
+    sub {
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+    }
+
+    sup {
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+        top: -0.5em;
+    }
+
+    sub {
+        bottom: -0.25em;
+    }
+
+    ul, ol {
+        padding: 0 0 0 2em !important;
+    }
+
+    li p:last-child {
+        margin: 0;
+    }
+
+    dd {
+        margin: 0 0 0 2em;
+    }
+
+    img {
+        border: 0;
+        -ms-interpolation-mode: bicubic;
+        vertical-align: middle;
+    }
+
+    td {
+        vertical-align: top;
+    }
+}
+
+.display-math {
+    display: block;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+// Code highlighting table styles for PyMdown Extensions
+.content-description .highlighttable {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    margin: 1.5em 0 !important;
+    border-radius: 8px;
+    overflow: hidden;
+    background: transparent !important;
+
+    pre {
+        padding: 0.5em;
+        padding-right: 0;
+        margin: 0 !important;
+        background-color: var(--md-code-bg-color, #2f3129);
+        color: var(--md-code-fg-color, #f8f8f2);
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .linenos {
+        width: auto;
+        min-width: 3em;
+        vertical-align: top !important;
+
+        pre {
+            color: rgba(255,255,255,.4) !important;
+            background-color: rgba(0,0,0,.15) !important;
+            width: 100%;
+            border: none !important;
+            border-right: 1px solid var(--md-code-border-color, #444) !important;
+            text-align: right !important;
+            padding-right: 0.8em !important;
+            padding-left: 0.5em !important;
+
+            span {
+                margin: 0 !important;
+            }
+        }
+    }
+
+    .code {
+        width: 100%;
+        vertical-align: top !important;
+
+        pre {
+            padding-left: 1em !important;
+            border: none !important;
+            width: 100%;
+        }
+    }
+
+    // Filename header styling
+    .filename {
+        background: var(--md-filename-bg-color, black);
+        color: var(--md-filename-fg-color, #cccccc);
+        padding: 0.8em 1.2em;
+        font-weight: 500;
+        font-family: inherit;
+        border-bottom: 2px solid var(--md-code-border-color, #444);
+    }
+
+    // Remove table cell borders and spacing - with high specificity
+    td, th {
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        text-align: left !important;
+        vertical-align: top !important;
+    }
+}
+
+// Legacy support for older codehilitetable class name  
+.codehilitetable {
+    @extend .highlighttable;
+}
+
+textarea,
+pre {
+    -moz-tab-size : 4;
+    -o-tab-size : 4;
+    tab-size : 4;
+}
+
+
+@media (min-width: 800px) {
+    .content-description pre:has(code) {
+        min-width: 3em;
+    }
+    #common-content {
+        display: flex;
+        flex-direction: row-reverse;
+    }
+
+    #content-left {
+        flex: 86%;
+        width: 100%;
+
+        &.split-common-content {
+            width: 70%;
+        }
+
+        .content-description {
+            width: 100%;
+        }
+    }
+
+    #content-right {
+        flex: 14%;
+        max-width: 12.5em;
+        min-width: 8em;
+        padding-left: 1.5em;
+        padding-top: 1em;
+
+        .info-float {
+            float: none;
+            padding: 0;
+            position: sticky;
+            top: 70px;
+            width: 100%;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            // Custom scrollbar styling
+            &::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            &::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: #ccc;
+                border-radius: 2px;
+
+                &:hover {
+                    background: #aaa;
+                }
+            }
+        }
+    }
+}
+
+@media not all and (min-width: 800px) {
+    #content-right .info-float {
+        float: none;
+        width: 100% !important;
+        position: static !important;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 799px) {
+    .content-description {
+        font-size: 16px;
+        line-height: 1.7em;
+    }
+}
+
+a.view-pdf {
+    padding-top: 0.6em;
+    display: inline-block;
+}
+
+.problem-title {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    align-items: center;
+
+    .spacer {
+        display: inline-block;
+        flex: 1 1 1px;
+    }
+}
+
+.info-float .fa {
+    color: #000;
+    padding-right: 0.2em;
+}
+details summary {
+    cursor: pointer;
+}

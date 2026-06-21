@@ -458,6 +458,52 @@ class ProblemDetail(
         # Add comment context
         context = self.get_comment_context(context)
 
+        # Inline submit form context
+        if authed:
+            if self.object.is_editable_by(user):
+                judge_choices = tuple(
+                    Judge.objects.filter(online=True, problems=self.object).values_list(
+                        "name", "name"
+                    )
+                )
+            else:
+                judge_choices = ()
+
+            initial = {"language": user.profile.language}
+            form = ProblemSubmitForm(judge_choices=judge_choices, initial=initial)
+            form.fields["language"].queryset = self.object.usable_languages.order_by(
+                "name", "key"
+            ).prefetch_related(
+                Prefetch(
+                    "runtimeversion_set", RuntimeVersion.objects.order_by("priority")
+                )
+            )
+            if "language" in initial:
+                form.fields["source"].widget.mode = initial["language"].ace
+            form.fields["source"].widget.theme = user.profile.ace_theme
+
+            context["form"] = form
+            context["langs"] = Language.objects.all()
+            context["no_judges"] = not form.fields["language"].queryset
+            context["ACE_URL"] = settings.ACE_URL
+            context["default_lang"] = user.profile.language
+            context["problem_id"] = self.object.id
+            context["output_only"] = (
+                self.object.data_files.output_only
+                if hasattr(self.object, "data_files")
+                else False
+            )
+
+            if contest_problem and user.profile.current_contest.contest.rate_limit:
+                t = last_nth_submitted_date_in_contest(
+                    user.profile,
+                    user.profile.current_contest.contest,
+                    user.profile.current_contest.contest.rate_limit,
+                )
+                if t is not None:
+                    next_valid = t + timezone.timedelta(minutes=1)
+                    context["next_valid_submit_time"] = next_valid.isoformat()
+
         return context
 
 

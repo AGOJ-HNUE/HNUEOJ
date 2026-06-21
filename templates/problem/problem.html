@@ -3,7 +3,12 @@
 {% set has_hidden_subtasks = request.in_contest and request.participation.contest.format.has_hidden_subtasks %}
 
 {% block content_media %}
-  {% include "comments/media-css.html" %}
+  {% if not comment_lock %}
+    {% include "comments/media-css.html" %}
+  {% endif %}
+  {% if request.user.is_authenticated and form %}
+    {{ form.media.css }}
+  {% endif %}
   <style>
     .title-state {
       font-size: 2em;
@@ -54,7 +59,12 @@
 {% endblock %}
 
 {% block content_js_media %}
-  {% include "comments/media-js.html" %}
+  {% if not comment_lock %}
+    {% include "comments/media-js.html" %}
+  {% endif %}
+  {% if request.user.is_authenticated and form %}
+    {% include "problem/submit-js.html" %}
+  {% endif %}
   {% include "actionbar/media-js.html" %}
   {% if request.in_contest %}
     {% include "contest/clarification-notification-js.html" %}
@@ -97,6 +107,33 @@
       {% if not available_judges %}
         $('#judge-toggle').click();
       {% endif %}
+
+      // Tab switching functionality
+      $('.problem-tabs a').click(function(e) {
+        e.preventDefault();
+        var target = $(this).attr('href');
+
+        // Update active tab
+        $('.problem-tabs a').removeClass('active');
+        $(this).addClass('active');
+
+        // Update active content
+        $('.tab-content').removeClass('active');
+        $(target).addClass('active');
+
+        // Update URL hash without scrolling
+        if (history.pushState) {
+          history.pushState(null, null, target);
+        } else {
+          location.hash = target;
+        }
+      });
+
+      // Handle initial hash in URL
+      var hash = window.location.hash;
+      if (hash && $(hash).length) {
+        $('.problem-tabs a[href="' + hash + '"]').click();
+      }
     });
   </script>
 {% endblock %}
@@ -154,42 +191,6 @@
 
 
 {% block info_float %}
-  {% if request.user.is_authenticated and request.in_contest and submission_limit %}
-    {% if submissions_left > 0 %}
-      <a href="{{ url('problem_submit', problem.code) }}">
-        <button class="submit-btn btn-green btn btn-primary btn-block btn-round">
-          <span>{{ _('Submit') }}</span>
-          <div class="icon icon-round d-flex align-items-center justify-content-center">
-            <i class="fa fa-paper-plane"></i>
-          </div>
-        </button>
-      </a>
-      <div class="submissions-left">
-        {% trans trimmed counter=submissions_left %}
-          {{ counter }} submission left
-          {% pluralize %}
-          {{ counter }} submissions left
-        {% endtrans %}
-      </div>
-    {% else %}
-      <button class="submit-btn btn btn-disabled btn-block btn-round">
-        <span>{{ _('Submit') }}</span>
-        <div class="icon icon-round d-flex align-items-center justify-content-center">
-          <i class="fa fa-paper-plane"></i>
-        </div>
-      </button>
-      <div class="no-submissions-left submissions-left">{{ _('0 submissions left') }}</div>
-    {% endif %}
-  {% else %}
-    <a href="{{ url('problem_submit', problem.code) }}">
-      <button class="submit-btn btn-green btn btn-primary btn-block btn-round">
-        <span>{{ _('Submit') }}</span>
-        <div class="icon icon-round d-flex align-items-center justify-content-center">
-          <i class="fa fa-paper-plane"></i>
-        </div>
-      </button>
-    </a>
-  {% endif %}
 
   <hr style="padding-bottom: 0.3em">
 
@@ -470,30 +471,49 @@
 {% endblock %}
 
 {% block comments %}
-  {% if contest_problem and contest_problem.contest.use_clarifications %}
-    <div class="clarifications-area">
-      <h2><i class="fa fa-question-circle"></i> {{ _('Clarifications') }}</h2>
-      {% if has_clarifications %}
-        {% for clarification in clarifications %}
-          <div class="problem-clarification">
-            <div class="time">{{ relative_time(clarification.date) }}</div>
-            <span class="body">
-              {% if not clarification.problem %}
-                <span class="clarification-target">{{ _('Entire contest') }}</span>
-              {% endif %}
-              {{ clarification.description|markdown|reference }}
-            </span>
-          </div>
-        {% endfor %}
-      {% else %}
-        <p class="no-comments-message">{{ _('No clarifications have been made at this time.') }}</p>
+  <div class="problem-tabs">
+    <ul>
+      {% if request.user.is_authenticated %}
+        <li><a href="#submit" class="active"><i class="fa fa-code"></i> {% if LANGUAGE_CODE == 'vi' %}Gửi bài giải{% else %}Submit Solution{% endif %}</a></li>
       {% endif %}
-    </div>
-  {% else %}
-    <div id="comment-section">
-      {% include "comments/list.html" %}
+      <li><a href="#comments" {% if not request.user.is_authenticated %}class="active"{% endif %}><i class="fa fa-comments"></i> {% if LANGUAGE_CODE == 'vi' %}Thảo luận{% else %}Comments{% endif %}</a></li>
+    </ul>
+  </div>
+
+  {% if request.user.is_authenticated %}
+    <div id="submit" class="tab-content active">
+      <div class="submit-tab-content">
+        {% include "problem/submit-form.html" %}
+      </div>
     </div>
   {% endif %}
+
+  <div id="comments" class="tab-content {% if not request.user.is_authenticated %}active{% endif %}">
+    {% if contest_problem and contest_problem.contest.use_clarifications %}
+      <div class="clarifications-area">
+        <h2><i class="fa fa-question-circle"></i> {{ _('Clarifications') }}</h2>
+        {% if has_clarifications %}
+          {% for clarification in clarifications %}
+            <div class="problem-clarification">
+              <div class="time">{{ relative_time(clarification.date) }}</div>
+              <span class="body">
+                {% if not clarification.problem %}
+                  <span class="clarification-target">{{ _('Entire contest') }}</span>
+                {% endif %}
+                {{ clarification.description|markdown|reference }}
+              </span>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="no-comments-message">{{ _('No clarifications have been made at this time.') }}</p>
+        {% endif %}
+      </div>
+    {% else %}
+      <div id="comment-section" style="display: block;">
+        {% include "comments/list.html" %}
+      </div>
+    {% endif %}
+  </div>
   {% include "problem/related_problems.html" %}
   {% include "problem/contest_list_sidebar.html" %}
   <iframe name="raw_problem" id="raw_problem"></iframe>

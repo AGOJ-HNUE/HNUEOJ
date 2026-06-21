@@ -1,0 +1,742 @@
+@use "vars" as *;
+@use "sass:color";
+
+.leave-organization, .leave-organization:hover {
+    color: red;
+}
+#control-list li {
+    border-bottom: 1px solid black;
+}
+#pending-count-box {
+    float: right;
+    text-align: center;
+    background: red;
+    color: white;
+    border-radius: 3px;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+}
+.org-field-wrapper {
+    input[type=text], textarea {
+        width: 100%;
+    }
+    .select2 {
+        width: 100% !important;
+    }
+}
+.org-field-wrapper {
+    margin-top: 0.4em;
+}
+.org-field-wrapper:has(> input[type=checkbox]) {
+    display: contents;
+}
+
+.organization-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em;
+    justify-content: flex-start;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 1em;
+}
+
+.organization-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    padding: 1em;
+    transition: transform 0.3s;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-bottom: 1em;
+    text-decoration: none;
+    color: inherit;
+
+    &:hover {
+        transform: translateY(-5px);
+        color: $theme_color;
+    }
+
+    img.org-logo {
+        width: 100%;
+        border-radius: 8px 8px 0 0;
+        object-fit: contain;
+        object-position: center;
+        flex-shrink: 0;
+        background-color: #f0f0f0;
+    }
+
+    .org-details {
+        padding: 1em 0;
+
+        span {
+            display: block;
+            margin-bottom: 0.5em;
+        }
+    }
+}
+
+@media(min-width: 800px) {
+    .organization-card {
+        flex: 1 1 calc(33.33% - 1em);
+        max-width: calc(33.33% - 1em);
+
+        img.org-logo {
+            height: 150px;
+        }
+    }
+}
+
+@media(max-width: 799px) {
+    .organization-card {
+        flex: 1 1 calc(50% - 1em);
+        max-width: calc(50% - 1em);
+
+        img.org-logo {
+            height: 120px;
+        }
+    }
+}
+
+.organization-row {
+    display: block;
+    padding: 0.5em;
+    border-bottom: 1px #ccc solid;
+    border-top: none;
+    color: black;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+
+    &:hover {
+        background-color: #f3f3f3;
+    }
+}
+
+.org-help-text {
+    display: block;
+    color: gray;
+}
+
+#search-organization {
+    width: 100%;
+    height: 2.3em;
+}
+
+.org-about {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #4b5563;
+
+    .content-description {
+        font-size: inherit;
+        line-height: inherit;
+        color: inherit;
+    }
+
+    p {
+        margin: 0 0 0.5em 0;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-size: 1em;
+        margin: 0.5em 0 0.3em 0;
+        font-weight: 600;
+        color: #374151;
+
+        &:first-child {
+            margin-top: 0;
+        }
+    }
+
+    ul, ol {
+        margin: 0.3em 0;
+        padding-left: 1.5em;
+    }
+
+    li {
+        margin-bottom: 0.2em;
+    }
+
+    img {
+        max-width: 100%;
+        max-height: 150px;
+        border-radius: 4px;
+    }
+
+    a {
+        color: $theme_color;
+    }
+
+    code {
+        font-size: 0.9em;
+        background: $background_light_gray;
+        padding: 0.1em 0.3em;
+        border-radius: 3px;
+    }
+
+    pre {
+        font-size: 0.85em;
+        margin: 0.5em 0;
+        padding: 0.5em;
+        background: $background_light_gray;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.organization-image {
+    height: 3rem;
+    width: 3rem;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ddd;
+}
+
+.organization-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.organization-tag-edit {
+    margin-left: 0.3em;
+    color: $theme_color;
+    &:hover {
+        color: color.adjust($theme_color, $lightness: -15%);
+    }
+}
+
+// Organization tag - used in posts, problems, contests, courses
+.organization-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2em;
+    background: linear-gradient(135deg, #4b5563, #374151);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+
+    a {
+        color: white;
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    .user-img {
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .organization-edit {
+        color: rgba(255, 255, 255, 0.8);
+        margin-left: 0.3rem;
+        font-size: 0.75rem;
+        transition: color 0.15s ease;
+
+        &:hover {
+            color: white;
+        }
+    }
+}
+
+// Organization cover image
+.org-cover-image {
+    height: 8rem;
+    max-height: 8rem;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+    margin: -1.5rem -1.5rem 0 -1.5rem;
+    width: calc(100% + 3rem);
+    position: relative;
+
+    img {
+        width: 100%;
+        height: 8rem;
+        max-height: 8rem;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+    }
+
+    // Gradient overlay for better text readability
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 80px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
+        pointer-events: none;
+    }
+}
+
+// Enhanced organization header
+.org-header {
+    background: linear-gradient(135deg, color.adjust($theme_color, $lightness: 35%, $saturation: -20%), color.adjust($theme_color, $lightness: 45%, $saturation: -30%));
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid $border_gray;
+    overflow: hidden;
+
+    // When header has cover image, adjust styles
+    &:has(.org-cover-image) {
+        background: $background_light_gray;
+        padding-top: 0;
+    }
+}
+
+.org-header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1rem 0 0 0;
+
+    // When following a cover image
+    &.has-cover {
+        padding-top: 1rem;
+    }
+}
+
+.org-header-left {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    flex: 1;
+    min-width: 0;
+}
+
+.org-logo-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+.org-logo-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, $theme_color, color.adjust($theme_color, $lightness: -10%));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+
+    i {
+        font-size: 2rem;
+        color: white;
+    }
+}
+
+.org-header-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.org-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    color: $widget_black;
+    line-height: 1.2;
+    word-wrap: break-word;
+}
+
+.org-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.org-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    i {
+        font-size: 0.7rem;
+    }
+}
+
+.org-badge-public {
+    background: rgba(255, 255, 255, 0.9);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.org-badge-private {
+    background: rgba(255, 255, 255, 0.9);
+    color: #b45309;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.org-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #374151;
+
+    i {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+}
+
+.org-member-preview {
+    display: flex;
+    align-items: center;
+
+    a {
+        display: block;
+        margin-right: -8px;
+        transition: transform 0.2s;
+
+        &:hover {
+            transform: scale(1.1);
+            z-index: 1;
+        }
+    }
+
+    img {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+}
+
+.org-member-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: $background_gray;
+    border: 2px solid white;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: $widget_black;
+    margin-left: 8px;
+
+    &:hover {
+        background: color.adjust($background_gray, $lightness: -5%);
+    }
+}
+
+.org-header-actions {
+    flex-shrink: 0;
+}
+
+.org-join-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    background: $theme_color;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    text-decoration: none;
+
+    &:hover {
+        background: color.adjust($theme_color, $lightness: -10%);
+        transform: translateY(-1px);
+        color: white;
+    }
+
+    i {
+        font-size: 0.85rem;
+    }
+}
+
+.org-request-btn {
+    background: color.adjust($theme_color, $lightness: 10%);
+}
+
+.org-invite-join {
+    max-width: 400px;
+    margin: 3em auto;
+    text-align: center;
+
+    .org-invite-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin-bottom: 1em;
+    }
+
+    .org-invite-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin: 0 auto 1em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2em;
+    }
+
+    h2 {
+        margin: 0 0 0.5em;
+    }
+
+    .org-invite-actions {
+        margin-top: 1.5em;
+        display: flex;
+        gap: 0.75em;
+        justify-content: center;
+    }
+
+    .org-cancel-btn {
+        background: $border_gray;
+
+        &:hover {
+            background: color.adjust($border_gray, $lightness: -10%);
+            color: white;
+        }
+    }
+}
+
+.org-joined-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    i {
+        font-size: 0.8rem;
+    }
+}
+
+// Mobile responsive
+@media (max-width: 600px) {
+    .org-cover-image {
+        height: 6rem;
+        max-height: 6rem;
+        margin: -1rem -1rem 0.75rem -1rem;
+        width: calc(100% + 2rem);
+
+        img {
+            height: 6rem;
+            max-height: 6rem;
+        }
+    }
+
+    .org-header {
+        padding: 1rem;
+    }
+
+    .org-header-main {
+        flex-direction: column;
+    }
+
+    .org-header-left {
+        width: 100%;
+    }
+
+    .org-logo-large,
+    .org-logo-placeholder {
+        width: 60px;
+        height: 60px;
+
+        i {
+            font-size: 1.5rem;
+        }
+    }
+
+    .org-name {
+        font-size: 1.25rem;
+    }
+
+    .org-meta {
+        gap: 0.5rem;
+    }
+
+    .org-stat {
+        font-size: 0.8rem;
+    }
+
+    .org-header-actions {
+        width: 100%;
+
+        form, a {
+            width: 100%;
+        }
+
+        .org-join-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+}
+
+// Post Composer - Facebook-style post creation box
+.post-composer {
+    background: white;
+    border: 1px solid $border_gray;
+    border-radius: 8px;
+    padding: 0.75em;
+    margin-bottom: 1em;
+
+    .composer-trigger {
+        display: flex;
+        align-items: center;
+        gap: 0.75em;
+        text-decoration: none;
+        color: inherit;
+        padding: 0.5em;
+        border-radius: 8px;
+        background: $background_light_gray;
+        transition: background 0.2s;
+
+        &:hover {
+            background: color.adjust($background_light_gray, $lightness: -5%);
+        }
+    }
+
+    .composer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .composer-placeholder {
+        color: #6b7280;
+        flex: 1;
+    }
+
+    .composer-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4em;
+        padding: 0.4em 0.8em;
+        background: $theme_color;
+        color: white;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.9em;
+        flex-shrink: 0;
+    }
+}
+
+// Moderation log table
+.moderation-log-table {
+    overflow-x: auto;
+
+    .table td,
+    .table th {
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .badge {
+        white-space: nowrap;
+        font-size: 0.85em;
+    }
+}
+
+.expandable-text {
+    .text-full {
+        display: none;
+    }
+
+    .toggle-text {
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+}
+
+// Mobile responsive for composer
+@media (max-width: 600px) {
+    .post-composer {
+        padding: 0.5em;
+
+        .composer-trigger {
+            padding: 0.4em;
+            flex-wrap: wrap;
+        }
+
+        .composer-avatar {
+            width: 32px;
+            height: 32px;
+        }
+
+        .composer-placeholder {
+            font-size: 0.85em;
+        }
+
+        .composer-btn {
+            font-size: 0.8em;
+            padding: 0.3em 0.6em;
+        }
+    }
+}
+
+// White card around org form pages embedded in the 3-column org layout
+// (e.g. Add Contest). Mirrors the .middle-right-content.wrapper styling
+// used on 2-column pages so themed backgrounds don't bleed through and
+// hurt text contrast.
+.org-form-card {
+    background: white;
+    padding: 1.5em 2em;
+    border-radius: 1em;
+}
