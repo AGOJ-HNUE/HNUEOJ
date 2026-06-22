@@ -8,9 +8,9 @@
  * Handles Content/Metadata tab switching
  */
 function initTabs() {
-    // Hide all tab panes except the first one
-    $('.tab-pane').hide();
-    $('.tab-pane.active').show();
+    // Tab panes are handled by CSS via .active class
+    // .tab-pane { display: none; }
+    // .tab-pane.active { display: block; }
     
     // Tab click handler
     $('.tab-button').off('click').on('click', function(e) {
@@ -19,13 +19,13 @@ function initTabs() {
         var $clickedTab = $(this);
         var targetPane = $clickedTab.attr('data-target');
                 
-        // Remove active class from all tabs and hide all panes
+        // Remove active class from all tabs and panes
         $('.tab-button').removeClass('active');
-        $('.tab-pane').removeClass('active').hide();
+        $('.tab-pane').removeClass('active');
         
-        // Add active class to clicked tab and show target pane
+        // Add active class to clicked tab and target pane
         $clickedTab.addClass('active');
-        $(targetPane).addClass('active').show();
+        $(targetPane).addClass('active');
     });
 }
 

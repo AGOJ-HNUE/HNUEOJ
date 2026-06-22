@@ -118,7 +118,7 @@
         $(this).addClass('active');
 
         // Update active content
-        $('.tab-content').removeClass('active');
+        $('.problem-tab-content').removeClass('active');
         $(target).addClass('active');
 
         // Update URL hash without scrolling
@@ -481,14 +481,14 @@
   </div>
 
   {% if request.user.is_authenticated %}
-    <div id="submit" class="tab-content active">
+    <div id="submit" class="problem-tab-content active">
       <div class="submit-tab-content">
         {% include "problem/submit-form.html" %}
       </div>
     </div>
   {% endif %}
 
-  <div id="comments" class="tab-content {% if not request.user.is_authenticated %}active{% endif %}">
+  <div id="comments" class="problem-tab-content {% if not request.user.is_authenticated %}active{% endif %}">
     {% if contest_problem and contest_problem.contest.use_clarifications %}
       <div class="clarifications-area">
         <h2><i class="fa fa-question-circle"></i> {{ _('Clarifications') }}</h2>

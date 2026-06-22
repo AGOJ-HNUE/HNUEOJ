@@ -251,13 +251,8 @@ function registerPopper($trigger, $dropdown) {
     }
     $trigger.data('popper-initialized', true);
 
-    // Prevent clipping by moving dropdown to body
-    if ($dropdown.parent()[0] !== document.body) {
-        $dropdown.appendTo(document.body);
-    }
-
     const popper = Popper.createPopper($trigger[0], $dropdown[0], {
-        placement: 'bottom-start',
+        placement: 'bottom-end',
         modifiers: [
             {
                 name: 'offset',
@@ -938,21 +933,3 @@ $(function() {
         window.location.href = e.currentTarget.location.href;
     });
 });
-
-window.toggleSidebar = function() {
-    var nav = document.getElementById('navigation');
-    var container = document.getElementById('page-container');
-    
-    if (nav) {
-        var isCollapsed = nav.classList.toggle('collapsed');
-        if (container) {
-            container.classList.toggle('collapsed', isCollapsed);
-        }
-        localStorage.setItem('sidebar-collapsed', isCollapsed);
-        
-        // Update popper instances if any
-        if (typeof Popper !== 'undefined') {
-            window.dispatchEvent(new Event('resize'));
-        }
-    }
-};
