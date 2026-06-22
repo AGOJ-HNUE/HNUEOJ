@@ -939,10 +939,12 @@ body:has(.chat-page) {
     #chat-area {
       flex-grow: 1;
       min-width: 0;
+      max-width: 80%;
     }
 
     #chat-input-container {
       padding-left: 16px;
+
     }
 
     .back-button {
@@ -1158,6 +1160,7 @@ body:has(.chat-page) {
     #chat-area {
       display: none;
       height: 100%;
+      max-width: 80%;
     }
 
     #chat-online {

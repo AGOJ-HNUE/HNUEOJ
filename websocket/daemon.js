@@ -1,5 +1,4 @@
 const config = require('./config');
-const Queue = require('queue');
 const { Server } = require('socket.io');
 const http = require('http');
 const express = require('express');
@@ -26,14 +25,14 @@ const io = new Server(server, {
 // Connection tracking
 let connection_count = 0;
 let message_id = Date.now();
-const messages = new Queue();
+const messages = [];
 const max_queue = config.max_queue || 50;
 const max_subscriptions_per_connection = config.max_subscriptions_per_connection || 10;
 const max_connections = config.max_connections || 5000;
 
 // Queue methods
 messages.catch_up = function(client) {
-  this.each(message => {
+  this.forEach(message => {
     if (message.id > client.last_msg && client.channels.has(message.channel)) {
       client.got_message(message);
     }
@@ -60,7 +59,7 @@ messages.post = function(channel, message) {
 };
 
 messages.last = function() {
-  return this.tail()?.id || 0;
+  return this.length > 0 ? this[this.length - 1].id : 0;
 };
 
 // Authentication middleware for socket connections
