@@ -4,13 +4,33 @@
   {% if request.organization %}
     {{ request.organization.about|markdown|reference|str|safe }}
   {% else %}
-    <h4>
-      <a target="_blank" href="">LQDOJ (Le Quy Don Online Judge)</a> là một trang web chấm bài tự động được phát triển dựa trên nền tảng mã nguồn mở <a target="_blank" href="https://dmoj.ca/">DMOJ</a>. Được xây dựng với mục đích ban đầu là tạo ra một môi trường học tập cho học sinh khối chuyên Tin <a target="_blank" href="http://thpt-lequydon-danang.edu.vn/">trường THPT chuyên Lê Quý Đôn (TP Đà Nẵng)</a>, hiện nay LQDOJ đã cho phép đăng ký tự do để trở thành một sân chơi rộng mở cho toàn bộ cộng đồng học sinh yêu Tin học. Trang web cung cấp lượng bài luyện tập đồ sộ từ các kỳ thi HSG Quốc Gia, ACM ICPC, Olympic Duyên Hải Bắc Bộ, etc. cho đến các contest định kỳ để xếp loại khả năng (rating) giúp các bạn có thêm động lực cạnh tranh và khí thế phấn đấu rèn luyện nâng cao trình độ lập trình. Các bạn có thể tham khảo mã nguồn của trang web tại <a target="_blank" href="https://github.com/LQDJudge/online-judge">Github repo chính thức</a>. Mọi ý kiến đóng góp và thắc mắc xin gửi về:
-      <ul>
-        <li>Thầy <a target="_blank" href="https://www.facebook.com/dovannho">Đỗ Văn Nhỏ</a> (handle: <span class="rating rate-none user"><a target="_blank" href="../user/Small">Small</a></span>), giáo viên Tin học trường THPT chuyên Lê Quý Đôn, email: <a href="mailto:admin@lqdoj.edu.vn">admin@lqdoj.edu.vn</a></li>
-        <li><a target="_blank" href="https://www.facebook.com/profile.php?id=100011662657075">Lê Phước Định</a> (handle: <span class="rating rate-grandmaster user"><a target="_blank" href="../user/cuom1999">cuom1999</a></span>), email: <a href="mailto:dinh@lqdoj.edu.vn">dinh@lqdoj.edu.vn</a></li>
-        <li><a target="_blank" href="https://www.facebook.com/doannguyenthanhluong">Đoàn Nguyễn Thành Lương</a> (handle: <span class="rating rate-master user"><a target="_blank" href="../user/CaiWinDao">CaiWinDao</a></span>), email: <a href="mailto:luong@lqdoj.edu.vn">luong@lqdoj.edu.vn</a></li>
+    <div class="about-container">
+      <h3 style="color: #2c3e50; font-weight: bold; margin-bottom: 20px;">
+        Chào mừng bạn đến với HNUE OJ 🚀
+      </h3>
+      
+      <p style="font-size: 16px; line-height: 1.6;">
+        <strong><a target="_blank" href="/">HNUE OJ</a> (Hanoi National University of Education Online Judge)</strong> là nền tảng rèn luyện và đánh giá kỹ năng lập trình tự động được xây dựng dựa trên mã nguồn mở <a target="_blank" href="https://dmoj.ca/">DMOJ</a>. 
+      </p>
+
+      <p style="font-size: 16px; line-height: 1.6;">
+        Mang trong mình sứ mệnh thúc đẩy phong trào học thuật, HNUE OJ được thiết kế để tạo ra một không gian tối ưu cho việc rèn luyện tư duy logic và thi đấu thuật toán. Tại đây, chúng tôi tự hào cung cấp:
+      </p>
+
+      <ul style="font-size: 16px; line-height: 1.8; margin-top: 15px; margin-bottom: 20px; list-style-type: none; padding-left: 0;">
+        <li>🎯 <strong>Kho bài tập đa dạng:</strong> Được phân loại hệ thống từ những bài toán làm quen ngôn ngữ cơ bản đến các chuyên đề thuật toán và cấu trúc dữ liệu chuyên sâu.</li>
+        <li>⚡ <strong>Chấm bài siêu tốc:</strong> Đánh giá mã nguồn tự động, phản hồi kết quả tức thì với sự hỗ trợ của các ngôn ngữ lập trình phổ biến nhất (C++, Python, Java,...).</li>
+        <li>🏆 <strong>Đấu trường kịch tính:</strong> Nơi thường xuyên diễn ra các kỳ thi (Contests) học kỳ, thi thử, cùng bảng xếp hạng (Rating) thời gian thực đầy tính cạnh tranh.</li>
+        <li>🤝 <strong>Môi trường mở:</strong> Không chỉ phục vụ riêng sinh viên Đại học Sư phạm Hà Nội, hệ thống luôn rộng mở đón chào cộng đồng học sinh chuyên Tin và những người đam mê lập trình trên toàn quốc.</li>
       </ul>
-    </h4>
+
+      <blockquote style="background-color: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; font-style: italic; color: #555; margin-top: 25px;">
+        "Dù bạn là người mới bắt đầu viết dòng lệnh đầu tiên hay một chiến binh đang ngày đêm ôn luyện cho các kỳ thi Olypiad, HNUE OJ sẽ luôn là người bạn đồng hành tin cậy trên con đường chinh phục đỉnh cao thuật toán."
+      </blockquote>
+      
+      <p style="font-size: 18px; font-weight: bold; text-align: center; margin-top: 30px; color: #e74c3c;">
+        Chúc các bạn có những giờ phút Coding thật bùng nổ! 💻✨
+      </p>
+    </div>
   {% endif %}
 {% endblock %}

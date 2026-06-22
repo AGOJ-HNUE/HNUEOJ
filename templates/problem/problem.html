@@ -3,518 +3,519 @@
 {% set has_hidden_subtasks = request.in_contest and request.participation.contest.format.has_hidden_subtasks %}
 
 {% block content_media %}
-  {% if not comment_lock %}
-    {% include "comments/media-css.html" %}
-  {% endif %}
-  {% if request.user.is_authenticated and form %}
-    {{ form.media.css }}
-  {% endif %}
-  <style>
-    .title-state {
-      font-size: 2em;
-      float: left;
-      width: 1.1em;
-      display: block;
-      margin-top: 0.16em;
-    }
+{% if not comment_lock %}
+{% include "comments/media-css.html" %}
+{% endif %}
+{% if request.user.is_authenticated and form %}
+{{ form.media.css }}
+{% endif %}
+<style>
+  .title-state {
+    font-size: 2em;
+    float: left;
+    width: 1.1em;
+    display: block;
+    margin-top: 0.16em;
+  }
 
-    .info-float a {
-      vertical-align: middle;
-    }
+  .info-float a {
+    vertical-align: middle;
+  }
 
-    .clarifications-area h2 {
-      margin-bottom: 20px;
-    }
+  .clarifications-area h2 {
+    margin-bottom: 20px;
+  }
 
-    .problem-clarification .body {
-      display: inline-block;
-      padding-left: 3em;
-    }
+  .problem-clarification .body {
+    display: inline-block;
+    padding-left: 3em;
+  }
 
-    .problem-clarification .clarification-target {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 0.25em;
-    }
+  .problem-clarification .clarification-target {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.25em;
+  }
 
-    #content-right {
-      max-width: 12.5em;
-      min-width: 12.5em;
-    }
+  #content-right {
+    max-width: 12.5em;
+    min-width: 12.5em;
+  }
 
-    .problem-info-entry {
-      padding-top: 0.5em;
-    }
+  .problem-info-entry {
+    padding-top: 0.5em;
+  }
 
-    #raw_problem {
-      visibility: hidden;
-      width: 0;
-      height: 0;
-    }
+  #raw_problem {
+    visibility: hidden;
+    width: 0;
+    height: 0;
+  }
 
-    #comment-section {
-      display: none;
-    }
-  </style>
+  #comment-section {
+    display: none;
+  }
+</style>
 {% endblock %}
 
 {% block content_js_media %}
-  {% if not comment_lock %}
-    {% include "comments/media-js.html" %}
-  {% endif %}
-  {% if request.user.is_authenticated and form %}
-    {% include "problem/submit-js.html" %}
-  {% endif %}
-  {% include "actionbar/media-js.html" %}
-  {% if request.in_contest %}
-    {% include "contest/clarification-notification-js.html" %}
-    <script type="text/javascript">
-      window.register_contest_notification("{{url('contest_clarification_ajax', request.participation.contest.key)}}");
-    </script>
-  {% endif %}
-  <script type="text/javascript">
-    $(function() {
-      $('#pdf_button').click(async function(e) {
-        e.preventDefault();
-        if (!$('#raw_problem').attr('src')) {
-          $('#raw_problem').attr('src', "{{url('problem_raw', problem.code)}}");
-          $('#raw_problem').on('load', function() {
-            renderKatex(frames['raw_problem'].document);
-            // Auto-open all spoilers/details elements in the PDF view
-            const details = frames['raw_problem'].document.querySelectorAll('details');
-            details.forEach(function(detail) {
-              detail.open = true;
-            });
-            setTimeout(() => {
-              frames['raw_problem'].print();
-            }, 500);
+{% if not comment_lock %}
+{% include "comments/media-js.html" %}
+{% endif %}
+{% if request.user.is_authenticated and form %}
+{% include "problem/submit-js.html" %}
+{% endif %}
+{% include "actionbar/media-js.html" %}
+{% if request.in_contest %}
+{% include "contest/clarification-notification-js.html" %}
+<script type="text/javascript">
+  window.register_contest_notification("{{url('contest_clarification_ajax', request.participation.contest.key)}}");
+</script>
+{% endif %}
+<script type="text/javascript">
+  $(function () {
+    $('#pdf_button').click(async function (e) {
+      e.preventDefault();
+      if (!$('#raw_problem').attr('src')) {
+        $('#raw_problem').attr('src', "{{url('problem_raw', problem.code)}}");
+        $('#raw_problem').on('load', function () {
+          renderKatex(frames['raw_problem'].document);
+          // Auto-open all spoilers/details elements in the PDF view
+          const details = frames['raw_problem'].document.querySelectorAll('details');
+          details.forEach(function (detail) {
+            detail.open = true;
           });
-        }
-        else {
-          frames['raw_problem'].print();
-          return;
-        }
-      });
-      $('#clarification_header').on('click', function() {
-        $('#clarification_header_container').hide();
-        window.scrollTo(0, document.body.scrollHeight);
-      })
-
-      if (window.location.href.includes('#comment')) {
-        $('#comment-section').show();
+          setTimeout(() => {
+            frames['raw_problem'].print();
+          }, 500);
+        });
       }
-
-      {% if not available_judges %}
-        $('#judge-toggle').click();
-      {% endif %}
-
-      // Tab switching functionality
-      $('.problem-tabs a').click(function(e) {
-        e.preventDefault();
-        var target = $(this).attr('href');
-
-        // Update active tab
-        $('.problem-tabs a').removeClass('active');
-        $(this).addClass('active');
-
-        // Update active content
-        $('.problem-tab-content').removeClass('active');
-        $(target).addClass('active');
-
-        // Update URL hash without scrolling
-        if (history.pushState) {
-          history.pushState(null, null, target);
-        } else {
-          location.hash = target;
-        }
-      });
-
-      // Handle initial hash in URL
-      var hash = window.location.hash;
-      if (hash && $(hash).length) {
-        $('.problem-tabs a[href="' + hash + '"]').click();
+      else {
+        frames['raw_problem'].print();
+        return;
       }
     });
-  </script>
+    $('#clarification_header').on('click', function () {
+      $('#clarification_header_container').hide();
+      window.scrollTo(0, document.body.scrollHeight);
+    })
+
+    if (window.location.href.includes('#comment')) {
+      $('#comment-section').show();
+    }
+
+    {% if not available_judges %}
+    $('#judge-toggle').click();
+    {% endif %}
+
+    // Tab switching functionality
+    $('.problem-tabs a').click(function (e) {
+      e.preventDefault();
+      var target = $(this).attr('href');
+
+      // Update active tab
+      $('.problem-tabs a').removeClass('active');
+      $(this).addClass('active');
+
+      // Update active content
+      $('.problem-tab-content').removeClass('active');
+      $(target).addClass('active');
+
+      // Update URL hash without scrolling
+      if (history.pushState) {
+        history.pushState(null, null, target);
+      } else {
+        location.hash = target;
+      }
+    });
+
+    // Handle initial hash in URL
+    var hash = window.location.hash;
+    if (hash && $(hash).length) {
+      $('.problem-tabs a[href="' + hash + '"]').click();
+    }
+  });
+</script>
 {% endblock %}
 
 {% block title_row %}
-  <div class="problem-title">
-    {% if request.user.is_authenticated and not has_hidden_subtasks and not problem_result_hidden %}
-      {% if request.in_contest and contest_problem %}
-        {% set my_subs_link = url('contest_user_submissions', request.profile.current_contest.contest.key, request.user.username, problem.code) %}
-      {% else %}
-        {% set my_subs_link = url('user_submissions', problem.code, request.user.username) %}
-      {% endif %}
-      {% if problem.id in completed_problem_ids %}
-        <a href="{{ my_subs_link }}">
-          {% if problem.is_public or request.in_contest %}
-            <i class="solved-problem-color title-state fa fa-check-circle"></i>
-          {% else %}
-            <i class="solved-problem-color title-state fa fa-lock"></i>
-          {% endif %}
-        </a>
-      {% elif problem.id in attempted_problems %}
-        <a href="{{ my_subs_link }}">
-          {% if problem.is_public or request.in_contest %}
-            <i class="attempted-problem-color title-state fa fa-minus-circle"></i>
-          {% else %}
-            <i class="attempted-problem-color title-state fa fa-lock"></i>
-          {% endif %}
-        </a>
-      {% endif %}
-    {% endif %}
-    <h2 class="title-row" style="display: inline-block">{{ title }}</h2>
-    {% if problem.is_organization_private and not request.in_contest %}
-      <span class="organization-tags">
-        {% for org in problem.get_organizations() %}
-          {% include "organization/tag.html" %}
-        {% endfor %}
-      </span>
-    {% endif %}
-    <span class="spacer"></span>
-    {% if has_render %}
-      <a href="{{ url('problem_pdf', problem.code) }}" class="view-pdf" target="_blank">
-    {% elif problem.pdf_description %}
-      <a href="{{ url('problem_pdf_description', problem.code) }}" class="view-pdf" target="_blank">
+<div class="problem-title">
+  {% if request.user.is_authenticated and not has_hidden_subtasks and not problem_result_hidden %}
+  {% if request.in_contest and contest_problem %}
+  {% set my_subs_link = url('contest_user_submissions', request.profile.current_contest.contest.key,
+  request.user.username, problem.code) %}
+  {% else %}
+  {% set my_subs_link = url('user_submissions', problem.code, request.user.username) %}
+  {% endif %}
+  {% if problem.id in completed_problem_ids %}
+  <a href="{{ my_subs_link }}">
+    {% if problem.is_public or request.in_contest %}
+    <i class="solved-problem-color title-state fa fa-check-circle"></i>
     {% else %}
-      <a id="pdf_button" class="view-pdf" href='#'>
+    <i class="solved-problem-color title-state fa fa-lock"></i>
     {% endif %}
-    <span class="pdf-icon">
-      <span class="fa fa-file-pdf pdf-icon-logo"></span>
-      <span class="pdf-icon-bar"></span>
-    </span>
-    {{ _('View as PDF') }}
   </a>
-  </div>
+  {% elif problem.id in attempted_problems %}
+  <a href="{{ my_subs_link }}">
+    {% if problem.is_public or request.in_contest %}
+    <i class="attempted-problem-color title-state fa fa-minus-circle"></i>
+    {% else %}
+    <i class="attempted-problem-color title-state fa fa-lock"></i>
+    {% endif %}
+  </a>
+  {% endif %}
+  {% endif %}
+  <h2 class="title-row" style="display: inline-block">{{ title }}</h2>
+  {% if problem.is_organization_private and not request.in_contest %}
+  <span class="organization-tags">
+    {% for org in problem.get_organizations() %}
+    {% include "organization/tag.html" %}
+    {% endfor %}
+  </span>
+  {% endif %}
+  <span class="spacer"></span>
+  {% if has_render %}
+  <a href="{{ url('problem_pdf', problem.code) }}" class="view-pdf" target="_blank">
+    {% elif problem.pdf_description %}
+    <a href="{{ url('problem_pdf_description', problem.code) }}" class="view-pdf" target="_blank">
+      {% else %}
+      <a id="pdf_button" class="view-pdf" href='#'>
+        {% endif %}
+        <span class="pdf-icon">
+          <span class="fa fa-file-pdf pdf-icon-logo"></span>
+          <span class="pdf-icon-bar"></span>
+        </span>
+        {{ _('View as PDF') }}
+      </a>
+</div>
 {% endblock %}
 
 
 {% block info_float %}
 
-  <hr style="padding-bottom: 0.3em">
+<hr style="padding-bottom: 0.3em">
 
-  {% if request.in_contest and contest_problem %}
-    {% set contest_key = request.profile.current_contest.contest.key %}
-    {% if request.user.is_authenticated and has_submissions %}
-      <div class="link-row">
-        <a href="{{ url('contest_user_submissions', contest_key, request.user.username, problem.code) }}">
-          <i class="fa fa-address-book"></i><span> {{ _('My submissions') }}</span>
-        </a>
-      </div>
-    {% endif %}
-    <div class="link-row">
-      <a href="{{ url('contest_submissions', contest_key) }}?user_filter=all&problem={{ problem.code }}">
-        <i class="fa fa-rectangle-list"></i><span> {{ _('All submissions') }}</span>
-      </a>
-    </div>
-  {% else %}
-    {% if request.user.is_authenticated and has_submissions %}
-      <div class="link-row">
-        <a href="{{ url('user_submissions', problem.code, request.user.username) }}">
-          <i class="fa fa-address-book"></i><span> {{ _('My submissions') }}</span>
-        </a>
-      </div>
-    {% endif %}
-    <div class="link-row">
-      <a href="{{ url('chronological_submissions', problem.code) }}">
-        <i class="fa fa-rectangle-list"></i><span> {{ _('All submissions') }}</span>
-      </a>
-    </div>
-    <div class="link-row">
-      <a href="{{ url('ranked_submissions', problem.code) }}">
-        <i class="fa fa-list-check"></i><span> {{ _('Best submissions') }}</span>
-      </a>
-    </div>
-  {% endif %}
-  {% if problem.has_public_editorial() and not request.in_contest %}
-    <hr>
-    <div class="link-row">
-      <a href="{{ url('problem_editorial', problem.code) }}">
-        <i class="fa fa-newspaper"></i><span> {{ _('Read editorial') }}</span>
-      </a>
-    </div>
-  {% endif %}
+{% if request.in_contest and contest_problem %}
+{% set contest_key = request.profile.current_contest.contest.key %}
+{% if request.user.is_authenticated and has_submissions %}
+<div class="link-row">
+  <a href="{{ url('contest_user_submissions', contest_key, request.user.username, problem.code) }}">
+    <i class="fa fa-address-book"></i><span> {{ _('My submissions') }}</span>
+  </a>
+</div>
+{% endif %}
+<div class="link-row">
+  <a href="{{ url('contest_submissions', contest_key) }}?user_filter=all&problem={{ problem.code }}">
+    <i class="fa fa-rectangle-list"></i><span> {{ _('All submissions') }}</span>
+  </a>
+</div>
+{% else %}
+{% if request.user.is_authenticated and has_submissions %}
+<div class="link-row">
+  <a href="{{ url('user_submissions', problem.code, request.user.username) }}">
+    <i class="fa fa-address-book"></i><span> {{ _('My submissions') }}</span>
+  </a>
+</div>
+{% endif %}
+<div class="link-row">
+  <a href="{{ url('chronological_submissions', problem.code) }}">
+    <i class="fa fa-rectangle-list"></i><span> {{ _('All submissions') }}</span>
+  </a>
+</div>
+<div class="link-row">
+  <a href="{{ url('ranked_submissions', problem.code) }}">
+    <i class="fa fa-list-check"></i><span> {{ _('Best submissions') }}</span>
+  </a>
+</div>
+{% endif %}
+{% if problem.has_public_editorial() and not request.in_contest %}
+<hr>
+<div class="link-row">
+  <a href="{{ url('problem_editorial', problem.code) }}">
+    <i class="fa fa-newspaper"></i><span> {{ _('Read editorial') }}</span>
+  </a>
+</div>
+{% endif %}
 
-  {% if can_edit_problem %}
-    <hr>
-    <div class="link-row">
-      <a href="{{ url('problem_edit', problem.code) }}">
-        <i class="fa fa-edit"></i><span> {{ _('Edit problem') }}</span>
-      </a>
-    </div>
-    <div class="link-row">
-      <a href="{{ url('problem_ticket_list', problem.code) }}">
-        <i class="fa fa-clipboard-list"></i><span> {{ _('Manage tickets') }}
-          {% if num_open_tickets %}<span class="badge">{{ num_open_tickets }}</span>{% endif %}
-        </span>
-      </a>
-    </div>
-  {% elif request.user.is_authenticated and has_tickets %}
-    <hr>
-    <div class="link-row">
-      <a href="{{ url('problem_ticket_list', problem.code) }}">
-        <i class="fa fa-inbox"></i><span> {{ _('My tickets') }}
-          {% if num_open_tickets %}<span class="badge">{{ num_open_tickets }}</span>{% endif %}
-        </span>
-      </a>
-    </div>
-  {% endif %}
+{% if can_edit_problem %}
+<hr>
+<div class="link-row">
+  <a href="{{ url('problem_edit', problem.code) }}">
+    <i class="fa fa-edit"></i><span> {{ _('Edit problem') }}</span>
+  </a>
+</div>
+<div class="link-row">
+  <a href="{{ url('problem_ticket_list', problem.code) }}">
+    <i class="fa fa-clipboard-list"></i><span> {{ _('Manage tickets') }}
+      {% if num_open_tickets %}<span class="badge">{{ num_open_tickets }}</span>{% endif %}
+    </span>
+  </a>
+</div>
+{% elif request.user.is_authenticated and has_tickets %}
+<hr>
+<div class="link-row">
+  <a href="{{ url('problem_ticket_list', problem.code) }}">
+    <i class="fa fa-inbox"></i><span> {{ _('My tickets') }}
+      {% if num_open_tickets %}<span class="badge">{{ num_open_tickets }}</span>{% endif %}
+    </span>
+  </a>
+</div>
+{% endif %}
 
-  {% if problem.is_subs_manageable_by(request.user) %}
-    <div class="link-row">
-      <a href="{{ url('problem_manage_submissions', problem.code) }}">
-        <i class="fas fa-table"></i><span> {{ _('Manage submissions') }}</span>
-      </a>
-    </div>
-  {% endif %}
+{% if problem.is_subs_manageable_by(request.user) %}
+<div class="link-row">
+  <a href="{{ url('problem_manage_submissions', problem.code) }}">
+    <i class="fas fa-table"></i><span> {{ _('Manage submissions') }}</span>
+  </a>
+</div>
+{% endif %}
 
-  {% if request.user.is_superuser %}
-    <div class="link-row">
-      <a href="{{ url('problem_clone', problem.code) }}">
-        <i class="fas fa-clone"></i><span> {{ _('Clone problem') }}</span>
-      </a>
-    </div>
+{% if request.user.is_superuser %}
+<div class="link-row">
+  <a href="{{ url('problem_clone', problem.code) }}">
+    <i class="fas fa-clone"></i><span> {{ _('Clone problem') }}</span>
+  </a>
+</div>
 
-    <div class="link-row">
-      <a href="{{ url('admin:judge_problem_change', problem.id) }}">
-        <i class="fa fa-user-shield"></i><span> {{ _('Admin') }}</span>
-      </a>
-    </div>
-  {% endif %}
+<div class="link-row">
+  <a href="{{ url('admin:judge_problem_change', problem.id) }}">
+    <i class="fa fa-user-shield"></i><span> {{ _('Admin') }}</span>
+  </a>
+</div>
+{% endif %}
 
-  {% if problem.language_time_limit or problem.language_memory_limit %}
-    <hr style="padding-top: 0.3em">
-  {% endif %}
-  {% if problem.language_time_limit %}
-    <div class="problem-info-entry">
-      <i class="fa fa-clock"></i><span class="pi-name"> {{ _('Time limit:') }}</span>
-    </div>
-    <div class="problem-lang-limits">
-      {% for name, limit in problem.language_time_limit %}
-        <div class="lang-limit">
-          <span class="lang-name">{{ name }}</span>
-          <span class="lang-tl">{{ limit }}s</span>
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
-  {% if problem.language_memory_limit %}
-    <div class="problem-info-entry">
-      <i class="fa fa-server"></i><span class="pi-name"> {{ _('Memory limit:') }}</span>
-    </div>
-    <div class="problem-lang-limits">
-      {% for name, limit in problem.language_memory_limit %}
-        <div class="lang-limit">
-          <span class="lang-name">{{ name }}</span>
-          <span class="lang-ml">{{ limit|kbsimpleformat }}</span>
-        </div>
-      {% endfor %}
-    </div>
-  {% endif%}
+{% if problem.language_time_limit or problem.language_memory_limit %}
+<hr style="padding-top: 0.3em">
+{% endif %}
+{% if problem.language_time_limit %}
+<div class="problem-info-entry">
+  <i class="fa fa-clock"></i><span class="pi-name"> {{ _('Time limit:') }}</span>
+</div>
+<div class="problem-lang-limits">
+  {% for name, limit in problem.language_time_limit %}
+  <div class="lang-limit">
+    <span class="lang-name">{{ name }}</span>
+    <span class="lang-tl">{{ limit }}s</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% if problem.language_memory_limit %}
+<div class="problem-info-entry">
+  <i class="fa fa-server"></i><span class="pi-name"> {{ _('Memory limit:') }}</span>
+</div>
+<div class="problem-lang-limits">
+  {% for name, limit in problem.language_memory_limit %}
+  <div class="lang-limit">
+    <span class="lang-name">{{ name }}</span>
+    <span class="lang-ml">{{ limit|kbsimpleformat }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif%}
 
-  <hr style="padding-top: 0.7em">
+<hr style="padding-top: 0.7em">
 
-  {% with authors=problem.get_authors() %}
-    {% if authors %}
-      <div class="problem-info-entry">
-        <i class="far fa-pen-to-square"></i><span
-          class="pi-name"> {% trans trimmed count=authors|length %}
-            Author:
-            {% pluralize count %}
-            Authors:
-          {% endtrans %}</span>
-        <div class="pi-value authors-value">{{ link_users(authors) }}</div>
-      </div>
-    {% endif %}
+{% with authors=problem.get_authors() %}
+{% if authors %}
+<div class="problem-info-entry">
+  <i class="far fa-pen-to-square"></i><span class="pi-name"> {% trans trimmed count=authors|length %}
+    Author:
+    {% pluralize count %}
+    Authors:
+    {% endtrans %}</span>
+  <div class="pi-value authors-value">{{ link_users(authors) }}</div>
+</div>
+{% endif %}
+{% endwith %}
+
+{% if not contest_problem or not contest_problem.contest.hide_problem_tags %}
+<div id="problem-types">
+  {% with types=problem.get_types_name() %}
+  <div class="toggle closed unselectable">
+    <i class="fa fa-chevron-right"></i> {% trans trimmed count=problem.get_types_name()|length %}
+    Problem type
+    {% pluralize count %}
+    Problem types
+    {% endtrans %}
+  </div>
+  <div style="display:none" class="toggled">{{ problem.get_types_name()|join(", ") }}</div>
   {% endwith %}
-
-  {% if not contest_problem or not contest_problem.contest.hide_problem_tags %}
-    <div id="problem-types">
-      {% with types=problem.get_types_name() %}
-        <div class="toggle closed unselectable">
-          <i class="fa fa-chevron-right"></i> {% trans trimmed count=problem.get_types_name()|length %}
-            Problem type
-            {% pluralize count %}
-            Problem types
-          {% endtrans %}
-        </div>
-        <div style="display:none" class="toggled">{{ problem.get_types_name()|join(", ") }}</div>
-      {% endwith %}
-    </div>
-  {% endif %}
-  {% if show_languages %}
-    <div id="allowed-langs">
-      <div class="toggle open unselectable">
-        <i class="fa fa-chevron-right"></i> {{ _('Allowed languages') }}
-      </div>
-      <div class="toggled">
-        {% with usable=problem.usable_common_names, langs=problem.languages_list() %}
-          {% for lang in langs %}
-            {%- if lang in usable -%}
-              {{ lang }}
-            {%- else -%}
-              <s title="{{ _('No %(lang)s judge online', lang=lang) }}">{{ lang }}</s>
-            {%- endif -%}
-            {% if not loop.last %}, {% endif -%}
-          {% endfor %}
-        {% endwith %}
-      </div>
-    </div>
-  {% endif %}
-  {% if can_edit_problem %}
-    <div id="available-judges">
-      <div class="toggle closed" id="judge-toggle">
-        <i class="fa fa-chevron-right"></i><span
-          class="pi-name"> {% trans trimmed count=available_judges|length %}
-            Judge
-            {% pluralize count %}
-            Judges
-          {% endtrans %}
-        </span>
-      </div>
-      <div class="pi-value judges-value toggled" style="display: none;">
-        {% if available_judges %}
-          {% if perms.judge.change_judge %}
-            {% for judge in available_judges %}
-              <a href="{{ url('admin:judge_judge_change', judge.id) }}">{{ judge.name }}</a>
-              {%- if not loop.last %}, {% endif %}
-            {% endfor %}
-          {% else %}
-            {{ available_judges|join(", ") }}
-          {% endif %}
-        {% else %}
-          <i class="red">{{ _('none available') }}</i>
-        {% endif %}
-      </div>
-    </div>
-  {% endif %}
+</div>
+{% endif %}
+{% if show_languages %}
+<div id="allowed-langs">
+  <div class="toggle open unselectable">
+    <i class="fa fa-chevron-right"></i> {{ _('Allowed languages') }}
+  </div>
+  <div class="toggled">
+    {% with usable=problem.usable_common_names, langs=problem.languages_list() %}
+    {% for lang in langs %}
+    {%- if lang in usable -%}
+    {{ lang }}
+    {%- else -%}
+    <s title="{{ _('No %(lang)s judge online', lang=lang) }}">{{ lang }}</s>
+    {%- endif -%}
+    {% if not loop.last %}, {% endif -%}
+    {% endfor %}
+    {% endwith %}
+  </div>
+</div>
+{% endif %}
+{% if can_edit_problem %}
+<div id="available-judges">
+  <div class="toggle closed" id="judge-toggle">
+    <i class="fa fa-chevron-right"></i><span class="pi-name"> {% trans trimmed count=available_judges|length %}
+      Judge
+      {% pluralize count %}
+      Judges
+      {% endtrans %}
+    </span>
+  </div>
+  <div class="pi-value judges-value toggled" style="display: none;">
+    {% if available_judges %}
+    {% if perms.judge.change_judge %}
+    {% for judge in available_judges %}
+    <a href="{{ url('admin:judge_judge_change', judge.id) }}">{{ judge.name }}</a>
+    {%- if not loop.last %}, {% endif %}
+    {% endfor %}
+    {% else %}
+    {{ available_judges|join(", ") }}
+    {% endif %}
+    {% else %}
+    <i class="red">{{ _('none available') }}</i>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block description %}
-  {% if contest_problem and contest_problem.contest.use_clarifications and has_clarifications %}
-    <div id="clarification_header_container">
-      <i class="fa fa-question-circle"></i>
-      <a id="clarification_header">
-        {% trans trimmed length=clarifications|length %}
-          This problem has {{length}} clarification(s)
-        {% endtrans %}
-      </a>
-    </div>
-  {% endif %}
-  <div class = "new-problem-info d-flex-problem">
-    <span class="info-block">
-      <i class="fa fa-check"></i><span class="pi-name"> {{ _('Points:') }}</span>
-      <span class="new-pi-value">
-        {% if contest_problem %}
-          {{ contest_problem.points }} {% if contest_problem.partial %}(p){% endif %}
-        {% else %}
-          {{ problem.points|floatformat }} {% if problem.partial %}(p){% endif %}
-        {% endif %}
-      </span>
+{% if contest_problem and contest_problem.contest.use_clarifications and has_clarifications %}
+<div id="clarification_header_container">
+  <i class="fa fa-question-circle"></i>
+  <a id="clarification_header">
+    {% trans trimmed length=clarifications|length %}
+    This problem has {{length}} clarification(s)
+    {% endtrans %}
+  </a>
+</div>
+{% endif %}
+<div class="new-problem-info d-flex-problem">
+  <span class="info-block">
+    <i class="fa fa-check"></i><span class="pi-name"> {{ _('Points:') }}</span>
+    <span class="new-pi-value">
+      {% if contest_problem %}
+      {{ contest_problem.points }} {% if contest_problem.partial %}(p){% endif %}
+      {% else %}
+      {{ problem.points|floatformat }} {% if problem.partial %}(p){% endif %}
+      {% endif %}
     </span>
+  </span>
 
-    <span class="info-block">
-      <i class="fa fa-clock"></i><span class="pi-name"> {{ _('Time limit:') }}</span>
-      <span class="new-pi-value">{{ problem.time_limit }}s</span>
+  <span class="info-block">
+    <i class="fa fa-clock"></i><span class="pi-name"> {{ _('Time limit:') }}</span>
+    <span class="new-pi-value">{{ problem.time_limit }}s</span>
+  </span>
+
+  <span class="info-block">
+    <i class="fa fa-server"></i><span class="pi-name"> {{ _('Memory limit:') }}</span>
+    <span class="new-pi-value">{{ problem.memory_limit|kbsimpleformat }}</span>
+  </span>
+
+  <span class="info-block">
+    <i class="fa fa-file"></i><span class="pi-name"> {{ _('Input:') }}</span>
+    <span class="new-pi-value">
+      {{ fileio_input or _('stdin') }}
     </span>
+  </span>
 
-    <span class="info-block">
-      <i class="fa fa-server"></i><span class="pi-name"> {{ _('Memory limit:') }}</span>
-      <span class="new-pi-value">{{ problem.memory_limit|kbsimpleformat }}</span>
-    </span>
+  <span class="info-block">
+    <i class="fa fa-file"></i><span class="pi-name"> {{ _('Output:') }}</span>
+    <span class="new-pi-value">{{ fileio_output or _('stdout') }}</span>
+  </span>
+</div>
 
-    <span class="info-block">
-      <i class="fa fa-file"></i><span class="pi-name"> {{ _('Input:') }}</span>
-      <span class="new-pi-value">
-        {{ fileio_input or _('stdin') }}
-      </span>
-    </span>
+{{ problem.translated_description(LANGUAGE_CODE)|markdown(lazy_load=True)|reference|str|safe }}
 
-    <span class="info-block">
-      <i class="fa fa-file"></i><span class="pi-name"> {{ _('Output:') }}</span>
-      <span class="new-pi-value">{{ fileio_output or _('stdout') }}</span>
-    </span>
-  </div>
+{% if problem.get_pdf_description() %}
+<embed src="{{url('problem_pdf_description', problem.code)}}" width="100%" height="1000px" type="application/pdf">
+{% endif %}
 
-  {{ problem.translated_description(LANGUAGE_CODE)|markdown(lazy_load=True)|reference|str|safe }}
+{% with license=problem.license %}
+{% if license %}
+<span class="license">
+  <a href="{{ url('license', license.key) }}">{{ license.display or license.name }}</a>
+</span>
+<div style="clear:both"></div>
+{% endif %}
+{% endwith %}
 
-  {% if problem.get_pdf_description() %}
-    <embed src="{{url('problem_pdf_description', problem.code)}}" width="100%" height="500" type="application/pdf">
-  {% endif %}
-
-  {% with license=problem.license %}
-    {% if license %}
-      <span class="license">
-        <a href="{{ url('license', license.key) }}">{{ license.display or license.name }}</a>
-      </span>
-      <div style="clear:both"></div>
-    {% endif %}
-  {% endwith %}
-
-  {% include "problem/attachment_section.html" %}
+{% include "problem/attachment_section.html" %}
 {% endblock %}
 
 {% block post_description_end %}
-  {% if request.user.is_authenticated and not request.profile.mute %}
-    {%- if contest_problem and contest_problem.contest.use_clarifications and request.profile.current_contest.live -%}
-      <a href="{{ url('new_problem_ticket', problem.code) }}" class="clarify">
-        <i class="fa fa-flag" style="margin-right:0.5em"></i>
-        {{ _('Request clarification') }}
-      </a>
-      <div style="clear: both"></div>
-    {%- else -%}
-      {% set actionbar_report_url = url('new_problem_ticket', problem.code) %}
-      {% include "actionbar/list.html" %}
-    {%- endif -%}
-  {% endif %}
+{% if request.user.is_authenticated and not request.profile.mute %}
+{%- if contest_problem and contest_problem.contest.use_clarifications and request.profile.current_contest.live -%}
+<a href="{{ url('new_problem_ticket', problem.code) }}" class="clarify">
+  <i class="fa fa-flag" style="margin-right:0.5em"></i>
+  {{ _('Request clarification') }}
+</a>
+<div style="clear: both"></div>
+{%- else -%}
+{% set actionbar_report_url = url('new_problem_ticket', problem.code) %}
+{% include "actionbar/list.html" %}
+{%- endif -%}
+{% endif %}
 {% endblock %}
 
 {% block comments %}
-  <div class="problem-tabs">
-    <ul>
-      {% if request.user.is_authenticated %}
-        <li><a href="#submit" class="active"><i class="fa fa-code"></i> {% if LANGUAGE_CODE == 'vi' %}Gửi bài giải{% else %}Submit Solution{% endif %}</a></li>
-      {% endif %}
-      <li><a href="#comments" {% if not request.user.is_authenticated %}class="active"{% endif %}><i class="fa fa-comments"></i> {% if LANGUAGE_CODE == 'vi' %}Thảo luận{% else %}Comments{% endif %}</a></li>
-    </ul>
+<div class="problem-tabs">
+  <ul>
+    {% if request.user.is_authenticated %}
+    <li><a href="#submit" class="active"><i class="fa fa-code"></i> {% if LANGUAGE_CODE == 'vi' %}Gửi bài giải{% else
+        %}Submit Solution{% endif %}</a></li>
+    {% endif %}
+    <li><a href="#comments" {% if not request.user.is_authenticated %}class="active" {% endif %}><i
+          class="fa fa-comments"></i> {% if LANGUAGE_CODE == 'vi' %}Thảo luận{% else %}Comments{% endif %}</a></li>
+  </ul>
+</div>
+
+{% if request.user.is_authenticated %}
+<div id="submit" class="problem-tab-content active">
+  <div class="submit-tab-content">
+    {% include "problem/submit-form.html" %}
   </div>
+</div>
+{% endif %}
 
-  {% if request.user.is_authenticated %}
-    <div id="submit" class="problem-tab-content active">
-      <div class="submit-tab-content">
-        {% include "problem/submit-form.html" %}
-      </div>
-    </div>
-  {% endif %}
-
-  <div id="comments" class="problem-tab-content {% if not request.user.is_authenticated %}active{% endif %}">
-    {% if contest_problem and contest_problem.contest.use_clarifications %}
-      <div class="clarifications-area">
-        <h2><i class="fa fa-question-circle"></i> {{ _('Clarifications') }}</h2>
-        {% if has_clarifications %}
-          {% for clarification in clarifications %}
-            <div class="problem-clarification">
-              <div class="time">{{ relative_time(clarification.date) }}</div>
-              <span class="body">
-                {% if not clarification.problem %}
-                  <span class="clarification-target">{{ _('Entire contest') }}</span>
-                {% endif %}
-                {{ clarification.description|markdown|reference }}
-              </span>
-            </div>
-          {% endfor %}
-        {% else %}
-          <p class="no-comments-message">{{ _('No clarifications have been made at this time.') }}</p>
+<div id="comments" class="problem-tab-content {% if not request.user.is_authenticated %}active{% endif %}">
+  {% if contest_problem and contest_problem.contest.use_clarifications %}
+  <div class="clarifications-area">
+    <h2><i class="fa fa-question-circle"></i> {{ _('Clarifications') }}</h2>
+    {% if has_clarifications %}
+    {% for clarification in clarifications %}
+    <div class="problem-clarification">
+      <div class="time">{{ relative_time(clarification.date) }}</div>
+      <span class="body">
+        {% if not clarification.problem %}
+        <span class="clarification-target">{{ _('Entire contest') }}</span>
         {% endif %}
-      </div>
+        {{ clarification.description|markdown|reference }}
+      </span>
+    </div>
+    {% endfor %}
     {% else %}
-      <div id="comment-section" style="display: block;">
-        {% include "comments/list.html" %}
-      </div>
+    <p class="no-comments-message">{{ _('No clarifications have been made at this time.') }}</p>
     {% endif %}
   </div>
-  {% include "problem/related_problems.html" %}
-  {% include "problem/contest_list_sidebar.html" %}
-  <iframe name="raw_problem" id="raw_problem"></iframe>
+  {% else %}
+  <div id="comment-section" style="display: block;">
+    {% include "comments/list.html" %}
+  </div>
+  {% endif %}
+</div>
+{% include "problem/related_problems.html" %}
+{% include "problem/contest_list_sidebar.html" %}
+<iframe name="raw_problem" id="raw_problem"></iframe>
 {% endblock %}

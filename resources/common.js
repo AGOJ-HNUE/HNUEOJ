@@ -933,3 +933,16 @@ $(function() {
         window.location.href = e.currentTarget.location.href;
     });
 });
+
+function toggleSidebar() {
+    var isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+    if (isCollapsed) {
+        localStorage.setItem('sidebar-collapsed', 'false');
+        document.getElementById('navigation').classList.remove('collapsed');
+        document.getElementById('page-container').classList.remove('collapsed');
+    } else {
+        localStorage.setItem('sidebar-collapsed', 'true');
+        document.getElementById('navigation').classList.add('collapsed');
+        document.getElementById('page-container').classList.add('collapsed');
+    }
+}
