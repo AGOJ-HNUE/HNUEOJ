@@ -1,14 +1,16 @@
 {% if request.in_contest and request.participation.contest.logo_override_image %}
-  <img src="{{ request.participation.contest.logo_override_image|camo }}" alt="{{ SITE_NAME }}" height="44" style="border: none">
+<img src="{{ request.participation.contest.logo_override_image|camo }}" alt="{{ SITE_NAME }}" height="44"
+  style="border: none">
 {% elif request.course and request.course.course_image %}
-  <img src="{{ request.course.course_image.url|camo }}" alt="{{ SITE_NAME }}" height="44" style="border: none">
+<img src="{{ request.course.course_image.url|camo }}" alt="{{ SITE_NAME }}" height="44" style="border: none">
 {% elif request.organization and request.organization.organization_image %}
-  <img src="{{ request.organization.organization_image.url|camo }}" alt="{{ SITE_NAME }}" height="44" style="border: none">
+<img src="{{ request.organization.organization_image.url|camo }}" alt="{{ SITE_NAME }}" height="44"
+  style="border: none">
 {% elif organization_image is defined and organization_image %}
-  <img src="{{ organization_image.url|camo }}" alt="{{ SITE_NAME }}" height="44" style="border: none">
+<img src="{{ organization_image.url|camo }}" alt="{{ SITE_NAME }}" height="44" style="border: none">
 {% elif logo_override_image is defined and logo_override_image %}
-  <img src="{{ logo_override_image|camo }}" alt="{{ SITE_NAME }}" height="44" style="border: none">
+<img src="{{ logo_override_image|camo }}" alt="{{ SITE_NAME }}" height="44" style="border: none">
 {% else %}
-  <img src="{{ static('icons/logo.svg') }}" alt="{{ SITE_NAME }}" height="44"
-       onerror="this.src=&quot;{{ static('icons/logo.png') }}&quot;; this.onerror=null" style="border: none">
+<img src="{{ static('icons/logo.png') }}" alt="{{ SITE_NAME }}" height="44"
+  onerror="this.src=&quot;{{ static('icons/logo.png') }}&quot;; this.onerror=null" style="border: none">
 {% endif %}

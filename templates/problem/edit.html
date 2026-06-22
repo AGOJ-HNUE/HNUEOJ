@@ -309,6 +309,17 @@
   </script>
 {% endblock %}
 
+{% block edit_media %}
+  <style>
+    .form-tab-content > .tab-pane {
+      display: none;
+    }
+    .form-tab-content > .tab-pane.active {
+      display: block;
+    }
+  </style>
+{% endblock %}
+
 {% block edit_content %}
   <div class="problem-edit-form">
     <form method="post" enctype="multipart/form-data">
@@ -336,7 +347,7 @@
       </div>
 
       <!-- Tab Content -->
-      <div class="tab-content">
+      <div class="form-tab-content">
         <!-- Content Tab -->
         <div class="tab-pane active" id="pane-content">
           <div class="form-row">

@@ -36,6 +36,13 @@
       }
     }
 
+    .form-tab-content > .tab-pane {
+      display: none;
+    }
+    .form-tab-content > .tab-pane.active {
+      display: block;
+    }
+
   </style>
 {% endblock %}
 
@@ -63,7 +70,7 @@
       </div>
 
             <!-- Tab Content -->
-      <div class="tab-content">
+      <div class="form-tab-content">
                 <!-- Content Tab -->
         <div class="tab-pane active" id="pane-content">
           <div class="form-row">
