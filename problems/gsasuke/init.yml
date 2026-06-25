@@ -1,0 +1,36 @@
+archive: GSASUKE.zip
+checker: standard
+file_io:
+  input: GSASUKE.INP
+  output: GSASUKE.OUT
+test_cases:
+- in: GSASUKE/test00/GSASUKE.INP
+  out: GSASUKE/test00/GSASUKE.OUT
+  points: 1
+- in: GSASUKE/test01/GSASUKE.INP
+  out: GSASUKE/test01/GSASUKE.OUT
+  points: 1
+- in: GSASUKE/test02/GSASUKE.INP
+  out: GSASUKE/test02/GSASUKE.OUT
+  points: 1
+- in: GSASUKE/test03/GSASUKE.INP
+  out: GSASUKE/test03/GSASUKE.OUT
+  points: 1
+- in: GSASUKE/test04/GSASUKE.INP
+  out: GSASUKE/test04/GSASUKE.OUT
+  points: 1
+- in: GSASUKE/test05/GSASUKE.INP
+  out: GSASUKE/test05/GSASUKE.OUT
+  points: 1
+- in: GSASUKE/test06/GSASUKE.INP
+  out: GSASUKE/test06/GSASUKE.OUT
+  points: 1
+- in: GSASUKE/test07/GSASUKE.INP
+  out: GSASUKE/test07/GSASUKE.OUT
+  points: 1
+- in: GSASUKE/test08/GSASUKE.INP
+  out: GSASUKE/test08/GSASUKE.OUT
+  points: 1
+- in: GSASUKE/test09/GSASUKE.INP
+  out: GSASUKE/test09/GSASUKE.OUT
+  points: 1

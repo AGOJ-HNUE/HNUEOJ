@@ -1001,6 +1001,8 @@ class LanguageTemplateAjax(View):
         try:
             problem = request.GET.get("problem", None)
             lang_id = int(request.GET.get("id", 0))
+            if not lang_id:
+                return HttpResponse("", content_type="text/plain")
             res = None
             if problem:
                 try:

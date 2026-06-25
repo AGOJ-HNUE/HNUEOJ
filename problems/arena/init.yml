@@ -1,0 +1,35 @@
+archive: FAIRPLAY.zip
+file_io:
+  input: ARENA.INP
+  output: ARENA.OUT
+test_cases:
+- in: Fairplay0.in
+  out: Fairplay0.out
+  points: 1
+- in: Fairplay1.in
+  out: Fairplay1.out
+  points: 1
+- in: Fairplay2.in
+  out: Fairplay2.out
+  points: 1
+- in: Fairplay3.in
+  out: Fairplay3.out
+  points: 1
+- in: Fairplay4.in
+  out: Fairplay4.out
+  points: 1
+- in: Fairplay5.in
+  out: Fairplay5.out
+  points: 1
+- in: Fairplay6.in
+  out: Fairplay6.out
+  points: 1
+- in: Fairplay7.in
+  out: Fairplay7.out
+  points: 1
+- in: Fairplay8.in
+  out: Fairplay8.out
+  points: 1
+- in: Fairplay9.in
+  out: Fairplay9.out
+  points: 1

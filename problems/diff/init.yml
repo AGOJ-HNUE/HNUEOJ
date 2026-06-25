@@ -1,0 +1,24 @@
+archive: DIFF.zip
+checker: standard
+file_io:
+  input: DIFF.INP
+  output: DIFF.OUT
+test_cases:
+- in: DIFF/TEST01/DIFF.INP
+  out: DIFF/TEST01/DIFF.OUT
+  points: 1
+- in: DIFF/TEST02/DIFF.INP
+  out: DIFF/TEST02/DIFF.OUT
+  points: 1
+- in: DIFF/TEST03/DIFF.INP
+  out: DIFF/TEST03/DIFF.OUT
+  points: 1
+- in: DIFF/TEST04/DIFF.INP
+  out: DIFF/TEST04/DIFF.OUT
+  points: 1
+- in: DIFF/TEST05/DIFF.INP
+  out: DIFF/TEST05/DIFF.OUT
+  points: 1
+- in: DIFF/TEST06/DIFF.INP
+  out: DIFF/TEST06/DIFF.OUT
+  points: 1

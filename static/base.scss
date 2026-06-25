@@ -600,7 +600,7 @@ header {
             padding: 0 !important;
 
             img {
-                content: url('/static/icons/icon.svg');
+                content: url('/static/icons/icon.png');
                 width: 100% !important;
                 height: auto !important;
                 object-fit: contain;
@@ -1807,6 +1807,15 @@ input::placeholder {
                 padding-right: 0;
                 justify-content: center;
                 width: calc(100% - 40px);
+
+                #navigation.collapsed & {
+                    margin: 15px 12px !important;
+                    width: calc(100% - 24px) !important;
+                    
+                    img {
+                        content: url('/static/icons/icon.png');
+                    }
+                }
             }
 
             &.home-menu-item {

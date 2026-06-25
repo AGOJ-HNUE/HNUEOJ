@@ -1,0 +1,17 @@
+archive: ARRAYM.zip
+file_io:
+  input: ARRAYM.INP
+  output: ARRAYM.OUT
+test_cases:
+- in: arrayM0.in
+  out: arrayM0.out
+  points: 1
+- in: arrayM1.in
+  out: arrayM1.out
+  points: 1
+- in: arrayM2.in
+  out: arrayM2.out
+  points: 1
+- in: arrayM3.in
+  out: arrayM3.out
+  points: 1

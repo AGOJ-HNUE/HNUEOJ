@@ -1,0 +1,11 @@
+archive: SUMSEQ.zip
+file_io:
+  input: SUMSEQ.INP
+  output: SUMSEQ.OUT
+test_cases:
+- in: SUMSEQ0.in
+  out: SUMSEQ0.out
+  points: 1
+- in: SUMSEQ1.in
+  out: SUMSEQ1.out
+  points: 1

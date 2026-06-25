@@ -1,0 +1,35 @@
+archive: BWPOINTS.zip
+file_io:
+  input: YINYANG.INP
+  output: YINYANG.OUT
+test_cases:
+- in: 1.in
+  out: 1.out
+  points: 1
+- in: 10.in
+  out: 10.out
+  points: 1
+- in: 2.in
+  out: 2.out
+  points: 1
+- in: 3.in
+  out: 3.out
+  points: 1
+- in: 4.in
+  out: 4.out
+  points: 1
+- in: 5.in
+  out: 5.out
+  points: 1
+- in: 6.in
+  out: 6.out
+  points: 1
+- in: 7.in
+  out: 7.out
+  points: 1
+- in: 8.in
+  out: 8.out
+  points: 1
+- in: 9.in
+  out: 9.out
+  points: 1

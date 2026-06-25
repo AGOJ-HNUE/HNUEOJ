@@ -1,56 +1,57 @@
 <li class="status-row" id="lobby_row">
   <div class="status-container">
-    <img loading="lazy" src="{{ static('icons/icon.svg') }}" class="status-pic lobby-icon">
+    <img loading="lazy" src="{{ static('icons/icon.png') }}" class="status-pic lobby-icon">
   </div>
   <div class="status-user">
     <span class="status-username"><b>{{_('Lobby')}}</b></span>
   </div>
   {% if unread_count_lobby and unread_count_lobby > 0 %}
-    <span class="unread-count" id="unread-count-lobby">{{unread_count_lobby}}</span>
+  <span class="unread-count" id="unread-count-lobby">{{unread_count_lobby}}</span>
   {% endif %}
 </li>
 {% for section in status_sections %}
-  {% if section.user_list %}
-    <div class="status-section-title toggle open">
-      <h4>
-        <i class="fa fa-chevron-right fa-fw"></i>{{_(section.title)}}
-      </h4>
-      <hr/>
+{% if section.user_list %}
+<div class="status-section-title toggle open">
+  <h4>
+    <i class="fa fa-chevron-right fa-fw"></i>{{_(section.title)}}
+  </h4>
+  <hr />
+</div>
+<ul class="status-list toggled">
+  {% for user_dict in section.user_list %}
+  <li class="click_space status-row" id="click_space_{{user_dict.user.id}}" value="{{user_dict.url}}">
+    <div class="status-container">
+      <img loading="lazy" src="{{ gravatar(user_dict.user.id, 135) }}" class="status-pic user-img">
+      <span class="status-circle {{ 'online' if user_dict.is_online else 'offline' }}"></span>
     </div>
-    <ul class="status-list toggled">
-      {% for user_dict in section.user_list %}
-        <li class="click_space status-row" id="click_space_{{user_dict.user.id}}" value="{{user_dict.url}}">
-          <div class="status-container">
-            <img loading="lazy" src="{{ gravatar(user_dict.user.id, 135) }}" class="status-pic user-img">
-            <span class="status-circle {{ 'online' if user_dict.is_online else 'offline' }}"></span>
-          </div>
-          <div class="status-user">
-            <span class="username {{ user_dict.user.css_class }} wrapline">
-              {{ user_dict.user.username }}
-            </span>
-            {% if user_dict.last_msg %}
-              <span class="status_last_message status-last-message wrapline" {% if user_dict.room %}id="last_msg-{{user_dict.room}}"{% endif %}>
-                {{ user_dict.last_msg }}
-              </span>
-            {% endif %}
-          </div>
-          {% if user_dict.unread_count and user_dict.unread_count > 0 %}
-            <span class="unread-count" id="unread-count-{{user_dict.user.id}}">
-              {{user_dict.unread_count}}
-            </span>
-          {% endif %}
-          <div class="setting-wrapper">
-            <div class="control-button small setting-button">
-              <i class="fa fa-ellipsis-h"></i>
-            </div>
-            <div class="setting-content">
-              <a href="{{url('toggle_ignore', user_dict.user.id)}}" class="red">
-                {{_('Ignore')}}
-              </a>
-            </div>
-          </div>
-        </li>
-      {% endfor %}
-    </ul>
-  {% endif %}
+    <div class="status-user">
+      <span class="username {{ user_dict.user.css_class }} wrapline">
+        {{ user_dict.user.username }}
+      </span>
+      {% if user_dict.last_msg %}
+      <span class="status_last_message status-last-message wrapline" {% if user_dict.room
+        %}id="last_msg-{{user_dict.room}}" {% endif %}>
+        {{ user_dict.last_msg }}
+      </span>
+      {% endif %}
+    </div>
+    {% if user_dict.unread_count and user_dict.unread_count > 0 %}
+    <span class="unread-count" id="unread-count-{{user_dict.user.id}}">
+      {{user_dict.unread_count}}
+    </span>
+    {% endif %}
+    <div class="setting-wrapper">
+      <div class="control-button small setting-button">
+        <i class="fa fa-ellipsis-h"></i>
+      </div>
+      <div class="setting-content">
+        <a href="{{url('toggle_ignore', user_dict.user.id)}}" class="red">
+          {{_('Ignore')}}
+        </a>
+      </div>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
 {% endfor %}

@@ -1,0 +1,6 @@
+archive: C5.2.zip
+checker: checker.py
+test_cases:
+- in: C5.2/1.inp
+  out: C5.2/1.out
+  points: 1

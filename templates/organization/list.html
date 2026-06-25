@@ -1,150 +1,152 @@
 {% extends "three-column-content.html" %}
 
 {% block js_media %}
-  <script type="text/javascript">
-    $(document).ready(function () {
-      $('#community-tab').attr('href', changeTabParameter('community'));
-      $('#mine-tab').attr('href', changeTabParameter('mine'));
-      $('#public-tab').attr('href', changeTabParameter('public'));
-      $('#private-tab').attr('href', changeTabParameter('private'));
-      $('#blocked-tab').attr('href', changeTabParameter('blocked'));
-      registerNavigation();
+<script type="text/javascript">
+  $(document).ready(function () {
+    $('#community-tab').attr('href', changeTabParameter('community'));
+    $('#mine-tab').attr('href', changeTabParameter('mine'));
+    $('#public-tab').attr('href', changeTabParameter('public'));
+    $('#private-tab').attr('href', changeTabParameter('private'));
+    $('#blocked-tab').attr('href', changeTabParameter('blocked'));
+    registerNavigation();
 
-      var $form = $('form#filter-form');
+    var $form = $('form#filter-form');
 
-      $('#go').click(function() {
-        submitFormWithParams($form, "GET");
-      });
-
-      $form.on('keypress', function(e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-        }
-      });
-
-      $('#search-organization').keypress(function (e) {
-        if (e.keyCode === 13) {
-          $('#go').click();
-        }
-      });
-
-      $('#order').select2();
+    $('#go').click(function () {
+      submitFormWithParams($form, "GET");
     });
-  </script>
-  {% block contest_list_js %}{% endblock %}
+
+    $form.on('keypress', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+      }
+    });
+
+    $('#search-organization').keypress(function (e) {
+      if (e.keyCode === 13) {
+        $('#go').click();
+      }
+    });
+
+    $('#order').select2();
+  });
+</script>
+{% block contest_list_js %}{% endblock %}
 {% endblock %}
 
 {% block left_sidebar %}
-  <div class="left-sidebar">
-    {{ make_tab_item('community', 'fa fa-comments', request.path + '?tab=community', _('Communities')) }}
-    {% if request.user.is_authenticated %}
-      {{ make_tab_item('mine', 'fa fa-user', request.path + '?tab=mine', _('Mine')) }}
-    {% endif %}
-    {{ make_tab_item('public', 'fa fa-globe', request.path + '?tab=public', _('Public')) }}
-    {{ make_tab_item('private', 'fa fa-lock', request.path + '?tab=private', _('Private')) }}
-    {% if request.user.is_authenticated %}
-      {{ make_tab_item('blocked', 'fa fa-ban', request.path + '?tab=blocked', _('Blocked')) }}
-    {% endif %}
-  </div>
+<div class="left-sidebar">
+  {{ make_tab_item('community', 'fa fa-comments', request.path + '?tab=community', _('Communities')) }}
+  {% if request.user.is_authenticated %}
+  {{ make_tab_item('mine', 'fa fa-user', request.path + '?tab=mine', _('Mine')) }}
+  {% endif %}
+  {{ make_tab_item('public', 'fa fa-globe', request.path + '?tab=public', _('Public')) }}
+  {{ make_tab_item('private', 'fa fa-lock', request.path + '?tab=private', _('Private')) }}
+  {% if request.user.is_authenticated %}
+  {{ make_tab_item('blocked', 'fa fa-ban', request.path + '?tab=blocked', _('Blocked')) }}
+  {% endif %}
+</div>
 {% endblock %}
 
 {% block right_sidebar %}
-  <div class="right-sidebar">
-    {% include "organization/search-form.html" %}
-  </div>
+<div class="right-sidebar">
+  {% include "organization/search-form.html" %}
+</div>
 {% endblock %}
 
 {% macro org_list(queryset, tab) %}
-  {% if queryset %}
-    <div class="organization-container">
-      {% for org in queryset %}
-        <div class="organization-card" style="cursor: pointer;" onclick="location.href='{{ org.get_absolute_url() }}';">
-          {% if org.organization_image %}
-            <img class="org-logo" loading="lazy" src="{{ org.organization_image.url }}">
-          {% else %}
-            <img class="org-logo" loading="lazy" src="{{ static('icons/icon.svg') }}" onerror="this.onerror=null;this.src='{{ static('icons/logo.svg') }}';">
-          {% endif %}
-          <div class="org-details">
-            <span style="font-weight: bold;">
-              {{ org.name }}
-              {% if org.is_community %}
-                <span class="community-badge" title="{{ _('Community') }}">
-                  <i class="fa fa-comments"></i>
-                </span>
-              {% endif %}
-            </span>
-            <span style="margin-bottom: 0"><i>{{ org.member_count }} {{ _('members') }}</i>
-              {% if request.profile and org.id in request.profile.get_admin_organization_ids() %}
-                <i class="fa fa-crown" style="color: gold;" title="{{ _('You are an admin of this organization') }}"></i>
-              {% endif %}
-            </span>
-          </div>
-          {% if tab == 'mine' %}
-            <div class="background-royalblue button small">{{ _('View') }}</div>
-          {% elif tab == 'public' or tab == 'community' %}
-            {% if request.profile and org.id in request.profile.get_organization_ids() %}
-              <div class="background-royalblue button small">{{ _('View') }}</div>
-            {% else %}
-              <form method="post" action="{{ url('join_organization', org.id, org.slug) }}">
-                {% csrf_token %}
-                <input type="submit" style="width: 100%" class="background-royalblue button small" value="{{ _('Join') }}">
-              </form>
-            {% endif %}
-          {% elif tab == 'private' %}
-            <a href="{{ url('request_organization', org.id, org.slug) }}" style="font-size: 15px;" class="background-royalblue button small">{{ _('Request membership') }}</a>
-          {% else %}
-            <form method="post" action="{{ url('unblock_organization', org.id, org.slug) }}">
-              {% csrf_token %}
-              <input type="submit" style="width: 100%" class="background-royalblue button small" value="{{ _('Unblock') }}">
-            </form>
-          {% endif %}
-        </div>
-      {% endfor %}
-    </div>
-    {% if page_obj and page_obj.num_pages > 1 %}
-      {% include "list-pages.html" %}
+{% if queryset %}
+<div class="organization-container">
+  {% for org in queryset %}
+  <div class="organization-card" style="cursor: pointer;" onclick="location.href='{{ org.get_absolute_url() }}';">
+    {% if org.organization_image %}
+    <img class="org-logo" loading="lazy" src="{{ org.organization_image.url }}">
+    {% else %}
+    <img class="org-logo" loading="lazy" src="{{ static('icons/icon.png') }}"
+      onerror="this.onerror=null;this.src='{{ static('icons/logo.png') }}';">
     {% endif %}
-  {% endif %}
+    <div class="org-details">
+      <span style="font-weight: bold;">
+        {{ org.name }}
+        {% if org.is_community %}
+        <span class="community-badge" title="{{ _('Community') }}">
+          <i class="fa fa-comments"></i>
+        </span>
+        {% endif %}
+      </span>
+      <span style="margin-bottom: 0"><i>{{ org.member_count }} {{ _('members') }}</i>
+        {% if request.profile and org.id in request.profile.get_admin_organization_ids() %}
+        <i class="fa fa-crown" style="color: gold;" title="{{ _('You are an admin of this organization') }}"></i>
+        {% endif %}
+      </span>
+    </div>
+    {% if tab == 'mine' %}
+    <div class="background-royalblue button small">{{ _('View') }}</div>
+    {% elif tab == 'public' or tab == 'community' %}
+    {% if request.profile and org.id in request.profile.get_organization_ids() %}
+    <div class="background-royalblue button small">{{ _('View') }}</div>
+    {% else %}
+    <form method="post" action="{{ url('join_organization', org.id, org.slug) }}">
+      {% csrf_token %}
+      <input type="submit" style="width: 100%" class="background-royalblue button small" value="{{ _('Join') }}">
+    </form>
+    {% endif %}
+    {% elif tab == 'private' %}
+    <a href="{{ url('request_organization', org.id, org.slug) }}" style="font-size: 15px;"
+      class="background-royalblue button small">{{ _('Request membership') }}</a>
+    {% else %}
+    <form method="post" action="{{ url('unblock_organization', org.id, org.slug) }}">
+      {% csrf_token %}
+      <input type="submit" style="width: 100%" class="background-royalblue button small" value="{{ _('Unblock') }}">
+    </form>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% if page_obj and page_obj.num_pages > 1 %}
+{% include "list-pages.html" %}
+{% endif %}
+{% endif %}
 {% endmacro %}
 
 {% block middle_content %}
-  {% if current_tab == 'community' %}
-    {% if organizations %}
-      {{ org_list(organizations, 'community') }}
-    {% else %}
-      <i> {{ _('There are no communities yet.') }} </i>
-    {% endif %}
-  {% endif %}
+{% if current_tab == 'community' %}
+{% if organizations %}
+{{ org_list(organizations, 'community') }}
+{% else %}
+<i> {{ _('There are no communities yet.') }} </i>
+{% endif %}
+{% endif %}
 
-  {% if current_tab == 'mine' %}
-    {% if organizations %}
-      {{ org_list(organizations, 'mine') }}
-    {% else %}
-      <i> {{ _('You have not joined any group yet.') }} </i>
-    {% endif %}
-  {% endif %}
+{% if current_tab == 'mine' %}
+{% if organizations %}
+{{ org_list(organizations, 'mine') }}
+{% else %}
+<i> {{ _('You have not joined any group yet.') }} </i>
+{% endif %}
+{% endif %}
 
-  {% if current_tab == 'public' %}
-    {% if organizations %}
-      {{ org_list(organizations, 'public') }}
-    {% else %}
-      <i> {{ _('There is no public group.') }} </i>
-    {% endif %}
-  {% endif %}
+{% if current_tab == 'public' %}
+{% if organizations %}
+{{ org_list(organizations, 'public') }}
+{% else %}
+<i> {{ _('There is no public group.') }} </i>
+{% endif %}
+{% endif %}
 
-  {% if current_tab == 'private' %}
-    {% if organizations %}
-      {{ org_list(organizations, 'private') }}
-    {% else %}
-      <i> {{ _('There is no private group.') }} </i>
-    {% endif %}
-  {% endif %}
+{% if current_tab == 'private' %}
+{% if organizations %}
+{{ org_list(organizations, 'private') }}
+{% else %}
+<i> {{ _('There is no private group.') }} </i>
+{% endif %}
+{% endif %}
 
-  {% if current_tab == 'blocked' %}
-    {% if organizations %}
-      {{ org_list(organizations, 'blocked') }}
-    {% else %}
-      <i> {{ _('There is no blocked group.') }} </i>
-    {% endif %}
-  {% endif %}
+{% if current_tab == 'blocked' %}
+{% if organizations %}
+{{ org_list(organizations, 'blocked') }}
+{% else %}
+<i> {{ _('There is no blocked group.') }} </i>
+{% endif %}
+{% endif %}
 {% endblock %}

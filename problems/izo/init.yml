@@ -1,0 +1,38 @@
+archive: IZO.zip
+file_io:
+  input: IZO.INP
+  output: IZO.OUT
+test_cases:
+- in: IZO0.in
+  out: IZO0.out
+  points: 1
+- in: IZO1.in
+  out: IZO1.out
+  points: 1
+- in: IZO10.in
+  out: IZO10.out
+  points: 1
+- in: IZO2.in
+  out: IZO2.out
+  points: 1
+- in: IZO3.in
+  out: IZO3.out
+  points: 1
+- in: IZO4.in
+  out: IZO4.out
+  points: 1
+- in: IZO5.in
+  out: IZO5.out
+  points: 1
+- in: IZO6.in
+  out: IZO6.out
+  points: 1
+- in: IZO7.in
+  out: IZO7.out
+  points: 1
+- in: IZO8.in
+  out: IZO8.out
+  points: 1
+- in: IZO9.in
+  out: IZO9.out
+  points: 1

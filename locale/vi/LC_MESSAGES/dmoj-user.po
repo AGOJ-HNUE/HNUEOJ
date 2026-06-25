@@ -611,3 +611,7 @@ msgstr "Chèn hình ảnh"
 
 msgid "Save"
 msgstr "Lưu"
+
+msgid "Organizations"
+msgstr "Tổ chức"
+

@@ -2,45 +2,47 @@
   <i class="fa fa-arrow-left"></i>
 </div>
 {% if other_user %}
-  <div class="status-container chat-header-avatar">
-    <img src="{{ gravatar(other_user.id, 135) }}" class="info-pic user-img">
-    <span class="info-circle {{ 'online' if other_online else 'offline' }}"></span>
-  </div>
+<div class="status-container chat-header-avatar">
+  <img src="{{ gravatar(other_user.id, 135) }}" class="info-pic user-img">
+  <span class="info-circle {{ 'online' if other_online else 'offline' }}"></span>
+</div>
 {% else %}
-  <div class="status-container chat-header-avatar">
-    <img src="{{ static('icons/icon.svg') }}" class="info-pic lobby-icon">
-  </div>
+<div class="status-container chat-header-avatar">
+  <img src="{{ static('icons/icon.png') }}" class="info-pic lobby-icon">
+</div>
 {% endif %}
 <span class="info-name username">
   {% if other_user %}
-    {{link_user(other_user)}}
-    {% if not other_online %}
-      <span class="active-span-mobile">{{ relative_time(other_user.last_access, abs=_('Online {time}'), rel=_('Online {time}'), format=_('d/m')) }}</span>
-    {% endif %}
+  {{link_user(other_user)}}
+  {% if not other_online %}
+  <span class="active-span-mobile">{{ relative_time(other_user.last_access, abs=_('Online {time}'), rel=_('Online
+    {time}'), format=_('d/m')) }}</span>
+  {% endif %}
   {% else%}
-    {{ _('Lobby') }}
+  {{ _('Lobby') }}
   {% endif %}
 </span>
 <span class="spacer"></span>
 {% if other_user and not other_online %}
-  <span class="active-span">{{ relative_time(other_user.last_access, abs=_('Last online on {time}'), rel=_('Online {time}'), format=_('g:i a d/m/Y')) }}</span>
+<span class="active-span">{{ relative_time(other_user.last_access, abs=_('Last online on {time}'), rel=_('Online
+  {time}'), format=_('g:i a d/m/Y')) }}</span>
 {% endif %}
 
 {% if other_user %}
-  <div class="setting-wrapper">
-    <div class="control-button small user-setting-button">
-      <i class="fa fa-ellipsis-h"></i>
-    </div>
-    <div class="setting-content">
-      <a href="{{url('toggle_ignore', other_user.id)}}" class="{{'green' if is_ignored else 'red'}}">
-        {% if is_ignored %}
-          {{_('Unignore')}}
-        {% else %}
-          {{_('Ignore')}}
-        {% endif %}
-      </a>
-    </div>
+<div class="setting-wrapper">
+  <div class="control-button small user-setting-button">
+    <i class="fa fa-ellipsis-h"></i>
   </div>
+  <div class="setting-content">
+    <a href="{{url('toggle_ignore', other_user.id)}}" class="{{'green' if is_ignored else 'red'}}">
+      {% if is_ignored %}
+      {{_('Unignore')}}
+      {% else %}
+      {{_('Ignore')}}
+      {% endif %}
+    </a>
+  </div>
+</div>
 {% else %}
-  <span class="active-span">{{online_count}} {{_('users are online')}}</span>
+<span class="active-span">{{online_count}} {{_('users are online')}}</span>
 {% endif %}

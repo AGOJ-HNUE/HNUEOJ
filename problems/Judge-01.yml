@@ -1,0 +1,33 @@
+id: Judge-01
+key: "12435"
+problem_storage_globs:
+- /problems/*
+runtime:
+  g++: /usr/bin/g++
+  g++-themis: /usr/bin/g++
+  g++11: /usr/bin/g++
+  g++14: /usr/bin/g++
+  g++17: /usr/bin/g++
+  g++20: /usr/bin/g++
+  g++23: /usr/bin/g++
+  clang: /usr/bin/clang
+  clang++: /usr/bin/clang++
+  fpc: /usr/bin/fpc
+  fpc-themis: /usr/bin/fpc
+  gcc: /usr/bin/gcc
+  gcc11: /usr/bin/gcc
+  gcc23: /usr/bin/gcc
+  java: /usr/lib/jvm/java-25-openjdk-amd64/bin/java
+  java8: /usr/lib/jvm/java-8-openjdk-amd64/bin/java
+  javac: /usr/lib/jvm/java-25-openjdk-amd64/bin/javac
+  javac8: /usr/lib/jvm/java-8-openjdk-amd64/bin/javac
+  pypy: /opt/pypy2/bin/pypy
+  pypy3: /opt/pypy3/bin/pypy3
+  python: /usr/bin/python2.7
+  python3: /usr/bin/python3
+  pypy: /opt/pypy2/bin/pypy
+  pypy3: /opt/pypy3/bin/pypy3
+  python: /usr/bin/python2.7
+  python3: /usr/bin/python3
+  php: /usr/bin/php
+  node: /usr/bin/node
