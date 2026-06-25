@@ -677,7 +677,7 @@ header {
   padding: 0 !important;
 }
 #navigation.collapsed .home-nav-element img {
-  content: url("/static/icons/icon.svg");
+  content: url("/static/icons/icon.png");
   width: 100% !important;
   height: auto !important;
   object-fit: contain;
