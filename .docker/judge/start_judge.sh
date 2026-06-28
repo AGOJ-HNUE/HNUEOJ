@@ -8,9 +8,9 @@ if [ "$#" -ne 1 ]; then
 fi
 
 judge_id="$1"
-config_file="${JUDGE_CONFIG:-/problems/__conf__/general.yml}"
+config_file="${JUDGE_CONFIG:-/problems/}"
 problems_dir="${PROBLEMS_DIR:?Set PROBLEMS_DIR to your problems directory (e.g. export PROBLEMS_DIR=/home/agoj/site/problems)}"
-judge_image="${JUDGE_IMAGE:-vnoj/judge-tier1:latest}"
+judge_image="${JUDGE_IMAGE:-vnoj/judge-tierlqdoj:latest}"
 
 docker rm --force "$judge_id" 2>/dev/null || true
 
@@ -21,6 +21,6 @@ docker run -d \
     --restart=always \
     -v "$problems_dir":/problems \
     "$judge_image" \
-    run -c "$config_file" --no-watchdog 0.0.0.0 "$judge_id"
+    run -p 9999 -c "$config_file$judge_id" --no-watchdog 0.0.0.0 "$judge_id"
 
 echo "Judge container started: $judge_id"

@@ -1258,6 +1258,7 @@ def problem_submit(request, problem, submission=None):
         request,
         "problem/submit.html",
         {
+            "problem": problem,
             "form": form,
             "title": _("Submit to %(problem)s")
             % {
