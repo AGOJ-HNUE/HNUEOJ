@@ -1,0 +1,4 @@
+id: Judge-01
+key: "452131"
+problem_storage_globs:
+  - /problems/*

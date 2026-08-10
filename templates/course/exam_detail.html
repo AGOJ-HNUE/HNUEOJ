@@ -1,0 +1,827 @@
+{% extends "base.html" %}
+
+{% block media %}
+<link rel="stylesheet" href="{{ static('course_lms.css') }}">
+<script src="{{ ACE_URL }}/ace.js"></script>
+{% endblock %}
+
+{% block js_media %}
+<script src="{{ static('libs/clipboard/clipboard.js') }}"></script>
+<script src="{{ static('libs/clipboard/tooltip.js') }}"></script>
+<script type="text/javascript">
+    $(function () {
+        window.add_code_copy_buttons = function ($container) {
+            $container.find('pre code').each(function () {
+                if ($(this).parent().prev().hasClass('copy-clipboard')) return;
+                var copyButton;
+                $(this).parent().before($('<div>', { 'class': 'copy-clipboard' })
+                    .append(copyButton = $('<span>', {
+                        'class': 'btn-clipboard',
+                        'data-clipboard-text': $(this).text(),
+                        'title': '{{ _("Sao chép mã nguồn")|escapejs }}'
+                    }).text('{{ _("Copy")|escapejs }}')));
+
+                $(copyButton.get(0)).mouseleave(function () {
+                    $(this).attr('class', 'btn-clipboard');
+                    $(this).removeAttr('aria-label');
+                });
+
+                var curClipboard = new Clipboard(copyButton.get(0));
+                curClipboard.on('success', function (e) {
+                    e.clearSelection();
+                    showTooltip(e.trigger, '{{ _("Đã sao chép!")|escapejs }}');
+                });
+            });
+        };
+        window.add_code_copy_buttons($(document));
+    });
+</script>
+{% endblock %}
+
+{% block title_row %}{% endblock %}
+{% block title_ruler %}{% endblock %}
+
+{% block body %}
+<div class="lms-container">
+    <div class="lms-header">
+        <div class="lms-breadcrumb">
+            <a href="{{ url('home') }}"><i class="fa fa-home"></i> {{ _('Trang chủ') }}</a>
+            <i class="fa fa-angle-right"></i>
+            <a href="{{ url('course_list') }}">{{ _('Cổng Học tập LMS HNUEOJ') }}</a>
+            <i class="fa fa-angle-right"></i>
+            <a href="{{ course.get_absolute_url() }}">{{ course.title }}</a>
+            <i class="fa fa-angle-right"></i>
+            <span>{{ exam.title }}</span>
+        </div>
+
+        <div class="lms-title-row">
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                    <span class="lms-badge" style="background: rgba(245, 158, 11, 0.15); color: #b45309;">
+                        <i class="fa fa-flag-checkered"></i> {{ exam.get_exam_type_display() }}
+                    </span>
+                    <span class="lms-badge" style="background: var(--lms-primary-light); color: var(--lms-primary);">
+                        {{ exam.chapter.title }}
+                    </span>
+                </div>
+                <h1 class="lms-page-title">{{ exam.title }}</h1>
+                {% if exam.description %}
+                <p style="color: var(--lms-text-muted); margin: 6px 0 0; font-size: 0.9375rem;">
+                    {{ exam.description }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div>
+                {% if is_passed %}
+                <span class="lms-badge lms-badge-completed" style="font-size: 0.9375rem; padding: 8px 16px;">
+                    <i class="fa fa-check-circle"></i> {{ _('Đã đạt yêu cầu') }}
+                </span>
+                {% else %}
+                <span class="lms-badge lms-badge-draft" style="font-size: 0.9375rem; padding: 8px 16px;">
+                    <i class="fa fa-hourglass-half"></i> {{ _('Chưa đạt yêu cầu') }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam Meta Overview -->
+    <div
+        style="background: var(--lms-card-bg); border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-lg); padding: 24px; margin-bottom: 24px; box-shadow: var(--lms-shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div
+                    style="font-size: 0.875rem; color: var(--lms-text-muted); display: flex; gap: 20px; flex-wrap: wrap;">
+                    <span><i class="fa fa-bullseye"></i> {{ _('Điểm đạt yêu cầu:') }} <strong>{{ exam.pass_percentage
+                            }}%</strong></span>
+                    {% if exam.time_limit %}
+                    <span><i class="fa fa-clock-o"></i> {{ _('Thời gian làm bài:') }} <strong>{{ exam.time_limit
+                            }}</strong></span>
+                    {% endif %}
+                    <span><i class="fa fa-list-ol"></i> {{ _('Số bài tập:') }} <strong>{{ exam_problems.count()
+                            }}</strong></span>
+                </div>
+            </div>
+
+            <!-- Score Summary Card -->
+            <div
+                style="background: var(--lms-bg); border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); padding: 20px 28px; text-align: center; min-width: 200px;">
+                <div style="font-size: 0.8125rem; font-weight: 600; color: var(--lms-text-muted);">{{ _('Điểm số của
+                    bạn') }}</div>
+                <div id="overallUserScore"
+                    style="font-size: 2rem; font-weight: 800; color: {% if is_passed %}var(--lms-success){% else %}var(--lms-primary){% endif %}; margin: 4px 0;">
+                    {{ user_score }} / {{ total_score }}
+                </div>
+                <div id="overallPercentage" style="font-size: 0.75rem; font-weight: 600; color: var(--lms-text-muted);">
+                    {% if total_score > 0 %}
+                    {{ (user_score / total_score * 100)|round(1) }}%
+                    {% else %}
+                    0%
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Problems List Table -->
+    <div
+        style="background: var(--lms-card-bg); border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-lg); overflow: hidden; margin-bottom: 32px; box-shadow: var(--lms-shadow-sm);">
+        <div style="padding: 16px 20px; background: var(--lms-bg); border-bottom: 1px solid var(--lms-card-border);">
+            <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0;">{{ _('Danh sách bài tập trong kỳ thi') }}</h2>
+        </div>
+
+        <table class="lms-table">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">#</th>
+                    <th>{{ _('Tên bài tập') }}</th>
+                    <th style="width: 120px; text-align: center;">{{ _('Điểm tối đa') }}</th>
+                    <th style="width: 120px; text-align: center;">{{ _('Điểm của bạn') }}</th>
+                    <th style="width: 140px; text-align: center;">{{ _('Trạng thái') }}</th>
+                    <th style="width: 120px; text-align: right;">{{ _('Thao tác') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ep in exam_problems %}
+                {% set score_info = problem_scores.get(ep.id, {}) %}
+                {% set best_sub = score_info.get('best_submission') %}
+
+                <!-- Pre-rendered Hidden Statement Template for Instant 0ms Loading -->
+                <template id="exam_statement_tmpl_{{ ep.id }}">
+                    <div class="content-description screen lms-problem-statement-content">
+                        {% if ep.problem.absolute_pdf_url %}
+                        <div style="margin-bottom: 16px;">
+                            <object data="{{ ep.problem.absolute_pdf_url }}" type="application/pdf"
+                                style="width: 100%; height: 600px; border-radius: var(--lms-radius-md);"></object>
+                        </div>
+                        {% endif %}
+                        {{ (ep.problem.i18n_description or ep.problem.description)|markdown(ep.problem.markdown_style,
+                        MATH_ENGINE)|reference|str|safe }}
+                    </div>
+                </template>
+
+                <tr id="examProblemRow_{{ ep.id }}">
+                    <td style="font-weight: 700; color: var(--lms-text-muted);">{{ loop.index }}</td>
+                    <td>
+                        <span
+                            onclick="openExamProblemWorkspace({{ ep.id }}, '{{ ep.problem.code }}', '{{ ep.display_title|escapejs }}', {{ ep.display_points }}, {{ ep.problem.time_limit }}, {{ (ep.problem.memory_limit / 1024)|int }})"
+                            style="font-weight: 600; color: var(--lms-primary); cursor: pointer; font-size: 0.9375rem;">
+                            {{ ep.display_title }}
+                        </span>
+                        <span style="font-size: 0.75rem; color: var(--lms-text-light); margin-left: 6px;">
+                            ({{ ep.problem.code }})
+                        </span>
+                    </td>
+                    <td style="text-align: center; font-weight: 600;">
+                        {{ ep.display_points }}
+                    </td>
+                    <td id="epScore_{{ ep.id }}"
+                        style="text-align: center; font-weight: 700; color: {% if score_info.get('points', 0) >= ep.display_points %}var(--lms-success){% else %}var(--lms-primary){% endif %};">
+                        {{ score_info.get('points', 0) }}
+                    </td>
+                    <td style="text-align: center;" id="epVerdict_{{ ep.id }}">
+                        {% if best_sub %}
+                        {% if best_sub.result == 'AC' %}
+                        <span class="lms-badge lms-badge-completed">AC</span>
+                        {% elif best_sub.result == 'PAC' %}
+                        <span class="lms-badge lms-badge-review">PAC</span>
+                        {% else %}
+                        <span class="lms-badge"
+                            style="background: var(--lms-danger-light); color: var(--lms-danger);">{{ best_sub.result
+                            }}</span>
+                        {% endif %}
+                        {% else %}
+                        <span class="lms-badge lms-badge-draft">{{ _('Chưa nộp') }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right;">
+                        <button type="button" class="lms-btn lms-btn-primary lms-btn-sm" style="padding: 5px 14px;"
+                            onclick="openExamProblemWorkspace({{ ep.id }}, '{{ ep.problem.code }}', '{{ ep.display_title|escapejs }}', {{ ep.display_points }}, {{ ep.problem.time_limit }}, {{ (ep.problem.memory_limit / 1024)|int }})">
+                            <i class="fa fa-code"></i> {{ _('Làm bài') }}
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Submissions in Exam -->
+    {% if recent_submissions %}
+    <div
+        style="background: var(--lms-card-bg); border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-lg); overflow: hidden; box-shadow: var(--lms-shadow-sm);">
+        <div style="padding: 16px 20px; background: var(--lms-bg); border-bottom: 1px solid var(--lms-card-border);">
+            <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0;">{{ _('Lịch sử nộp bài gần đây trong kỳ thi
+                này') }}</h3>
+        </div>
+        <table class="lms-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>{{ _('Bài tập') }}</th>
+                    <th>{{ _('Thời gian') }}</th>
+                    <th>{{ _('Ngôn ngữ') }}</th>
+                    <th>{{ _('Kết quả') }}</th>
+                    <th>{{ _('Điểm') }}</th>
+                    <th style="text-align: right;">{{ _('Chi tiết') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in recent_submissions %}
+                <tr>
+                    <td>#{{ sub.id }}</td>
+                    <td><strong>{{ sub.problem.name }}</strong> ({{ sub.problem.code }})</td>
+                    <td style="color: var(--lms-text-muted); font-size: 0.8125rem;">{{ sub.date|date("H:i - d/m/Y") }}
+                    </td>
+                    <td><code>{{ sub.language.key }}</code></td>
+                    <td>
+                        {% if sub.result == 'AC' %}
+                        <span class="lms-badge lms-badge-completed">AC</span>
+                        {% elif sub.result == 'PAC' %}
+                        <span class="lms-badge lms-badge-review">PAC</span>
+                        {% else %}
+                        <span class="lms-badge"
+                            style="background: var(--lms-danger-light); color: var(--lms-danger);">{{ sub.result
+                            }}</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ sub.points or 0 }}</strong></td>
+                    <td style="text-align: right;">
+                        <a href="{{ sub.get_absolute_url() }}" target="_blank"
+                            class="lms-btn lms-btn-secondary lms-btn-sm">
+                            <i class="fa fa-eye"></i> {{ _('Xem') }}
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<!-- LMS Exam Problem Solving Split Workspace Modal -->
+<div id="examProblemWorkspaceModal" class="lms-workspace-modal" onclick="handleExamWorkspaceOverlayClick(event)">
+    <div class="lms-workspace-container">
+        <!-- Header -->
+        <div class="lms-workspace-header">
+            <div class="lms-workspace-title-row">
+                <h3 class="lms-workspace-title" id="wsExamProblemTitle">
+                    <i class="fa fa-flag-checkered" style="color: var(--lms-warning);"></i>
+                    <span id="wsExamTitleText"></span>
+                </h3>
+                <div class="lms-workspace-meta">
+                    <span class="lms-workspace-meta-badge" id="wsExamCodeBadge"></span>
+                    <span class="lms-workspace-meta-badge" id="wsExamPointsBadge"></span>
+                    <span class="lms-workspace-meta-badge" id="wsExamTimeLimitBadge"></span>
+                    <span class="lms-workspace-meta-badge" id="wsExamMemoryLimitBadge"></span>
+                </div>
+            </div>
+
+            <button type="button" class="lms-workspace-close" onclick="closeExamProblemWorkspace()"
+                title="{{ _('Đóng cửa sổ làm bài') }}">&times;</button>
+        </div>
+
+        <!-- Split Body: Left = Problem Statement, Right = Code Editor & Submissions -->
+        <div class="lms-workspace-body">
+            <!-- Left Pane: Problem Statement -->
+            <div class="lms-workspace-pane-left" id="wsExamStatementPane">
+                <div
+                    style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--lms-warning); letter-spacing: 0.05em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa fa-book"></i> {{ _('Đề bài & Yêu cầu') }}
+                </div>
+                <div id="examWorkspaceStatementContainer"
+                    class="content-description screen lms-problem-statement-content">
+                    <!-- Loaded dynamically from template -->
+                </div>
+            </div>
+
+            <!-- Right Pane: Code Editor & Submissions -->
+            <div class="lms-workspace-pane-right">
+                <!-- Editor Toolbar -->
+                <div class="lms-workspace-editor-toolbar">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label
+                            style="font-size: 0.8125rem; font-weight: 600; color: var(--lms-text-muted); margin: 0;">{{
+                            _('Ngôn ngữ:') }}</label>
+                        <select id="drawerExamLanguage" onchange="onExamLanguageChange()"
+                            style="padding: 6px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-card-bg); color: var(--lms-text-main); font-size: 0.8125rem; font-weight: 600;">
+                            {% for lang in available_languages %}
+                            <option value="{{ lang.key }}" data-ace="{{ lang.ace }}" {% if lang.key=='CPP20' or
+                                lang.key=='CPP17' or loop.first %}selected{% endif %}>{{ lang.name }} ({{ lang.key }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm"
+                            onclick="changeExamFontSize(-1)" title="{{ _('Giảm cỡ chữ') }}">A-</button>
+                        <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm"
+                            onclick="changeExamFontSize(1)" title="{{ _('Tăng cỡ chữ') }}">A+</button>
+                        <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm"
+                            onclick="toggleExamEditorTheme()" title="{{ _('Đổi giao diện Sáng/Tối') }}">
+                            <i class="fa fa-moon-o"></i>
+                        </button>
+                        <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm"
+                            onclick="resetExamEditorCode()" title="{{ _('Xóa trắng / Làm lại') }}">
+                            <i class="fa fa-refresh"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ace Code Editor -->
+                <div class="lms-workspace-editor-wrap">
+                    <div id="drawerExamEditor" class="lms-workspace-editor"></div>
+                </div>
+
+                <!-- Live Verdict / Status Popdown -->
+                <div id="drawerExamVerdictBox" class="submit-popdown" style="display: none; margin: 12px 16px;">
+                    <div class="submit-popdown-header">
+                        <div class="submit-popdown-status-area">
+                            <span class="submit-popdown-badge is-grading" id="drawerExamVerdictBadge">
+                                <i class="fa fa-spinner fa-spin"></i>
+                                <span id="drawerExamVerdictStatusText">{{ _('Đang chấm điểm...') }}</span>
+                            </span>
+                            <span class="submit-popdown-score" id="drawerExamVerdictScore"
+                                style="display: none;"></span>
+                        </div>
+                        <div class="submit-popdown-actions">
+                            <a href="#" id="drawerExamVerdictDetailLink" class="submit-popdown-link" target="_blank"
+                                style="display: none;">
+                                {{ _('Trang chi tiết') }} <i class="fa fa-external-link"></i>
+                            </a>
+                            <button type="button" class="submit-popdown-toggle-btn" id="drawerExamVerdictToggleBtn"
+                                onclick="toggleDrawerExamVerdictAccordion(event)" title="{{ _('Thu gọn / Mở rộng') }}">
+                                <i class="fa fa-chevron-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="submit-popdown-body" id="drawerExamVerdictBody">
+                        <div class="submit-popdown-loading" id="drawerExamVerdictLoading">
+                            <div class="submit-popdown-spinner-ring"></div>
+                            <div class="submit-popdown-loading-text">{{ _('Đang chấm bài trên hệ thống máy chủ...') }}
+                            </div>
+                        </div>
+                        <div class="submit-popdown-content" id="drawerExamVerdictContent" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Footer Action Bar -->
+                <div class="lms-workspace-footer">
+                    <button type="button" id="drawerExamSubmitBtn" onclick="submitExamCode()"
+                        class="lms-btn lms-btn-primary" style="padding: 8px 24px; font-weight: 700;">
+                        <i class="fa fa-paper-plane"></i> {{ _('Nộp bài thi') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let examEditor = null;
+    let currentEpId = null;
+    let currentExamProblemCode = null;
+    let currentExamFontSize = 14;
+    let isExamDarkTheme = false;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof ace !== 'undefined' && document.getElementById('drawerExamEditor')) {
+            ace.config.set('basePath', '{{ ACE_URL }}');
+            examEditor = ace.edit("drawerExamEditor");
+            examEditor.setTheme("ace/theme/chrome");
+            examEditor.session.setMode("ace/mode/c_cpp");
+            examEditor.setFontSize(currentExamFontSize);
+            examEditor.setShowPrintMargin(false);
+        }
+    });
+
+    function onExamLanguageChange() {
+        if (!examEditor) return;
+        const select = document.getElementById('drawerExamLanguage');
+        const selectedOption = select.options[select.selectedIndex];
+        const aceMode = selectedOption.getAttribute('data-ace') || 'c_cpp';
+        examEditor.session.setMode("ace/mode/" + aceMode);
+    }
+
+    function changeExamFontSize(delta) {
+        if (!examEditor) return;
+        currentExamFontSize = Math.max(11, Math.min(22, currentExamFontSize + delta));
+        examEditor.setFontSize(currentExamFontSize);
+    }
+
+    function toggleExamEditorTheme() {
+        if (!examEditor) return;
+        isExamDarkTheme = !isExamDarkTheme;
+        examEditor.setTheme(isExamDarkTheme ? "ace/theme/twilight" : "ace/theme/chrome");
+    }
+
+    function resetExamEditorCode() {
+        if (!examEditor) return;
+        if (confirm('{{ _("Bạn có chắc muốn xóa sạch mã nguồn trong khung soạn thảo?") }}')) {
+            examEditor.setValue('', -1);
+            examEditor.focus();
+        }
+    }
+
+    function openExamProblemWorkspace(epId, problemCode, problemTitle, maxPoints, timeLimit, memLimit) {
+        currentEpId = epId;
+        currentExamProblemCode = problemCode;
+
+        // Header info
+        document.getElementById('wsExamTitleText').innerText = problemTitle;
+        document.getElementById('wsExamCodeBadge').innerText = problemCode;
+        document.getElementById('wsExamPointsBadge').innerText = maxPoints + 'đ';
+        document.getElementById('wsExamTimeLimitBadge').innerText = (timeLimit || 1) + 's';
+        document.getElementById('wsExamMemoryLimitBadge').innerText = (memLimit || 256) + 'MB';
+
+        // Populate problem statement from hidden template
+        const tmpl = document.getElementById('exam_statement_tmpl_' + epId);
+        const container = document.getElementById('examWorkspaceStatementContainer');
+        if (tmpl && container) {
+            container.innerHTML = tmpl.innerHTML;
+            if (typeof window.renderMathJax === 'function') {
+                window.renderMathJax(container);
+            } else if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+                MathJax.typesetPromise([container]).then(function () {
+                    $(container).find('.tex-image').hide();
+                    $(container).find('.tex-text').show();
+                }).catch(function () { });
+            }
+            if (window.add_code_copy_buttons) {
+                window.add_code_copy_buttons($(container));
+            }
+        }
+
+        document.getElementById('drawerExamVerdictBox').style.display = 'none';
+
+        // Show modal
+        const modal = document.getElementById('examProblemWorkspaceModal');
+        modal.classList.add('is-active');
+
+        setTimeout(() => {
+            if (examEditor) {
+                examEditor.resize();
+                examEditor.focus();
+            }
+        }, 100);
+    }
+
+    function closeExamProblemWorkspace() {
+        const modal = document.getElementById('examProblemWorkspaceModal');
+        modal.classList.remove('is-active');
+    }
+
+    function handleExamWorkspaceOverlayClick(e) {
+        if (e.target.id === 'examProblemWorkspaceModal') {
+            closeExamProblemWorkspace();
+        }
+    }
+
+    function toggleDrawerExamVerdictAccordion(e) {
+        if (e) e.preventDefault();
+        const box = document.getElementById('drawerExamVerdictBox');
+        box.classList.toggle('is-collapsed');
+        const btn = document.getElementById('drawerExamVerdictToggleBtn');
+        if (btn) {
+            const isCollapsed = box.classList.contains('is-collapsed');
+            btn.querySelector('i').className = isCollapsed ? 'fa fa-chevron-down' : 'fa fa-chevron-up';
+        }
+    }
+
+    function submitExamCode() {
+        if (!examEditor || !currentExamProblemCode) return;
+        const sourceCode = examEditor.getValue().trim();
+        if (!sourceCode) {
+            alert('{{ _("Vui lòng nhập mã nguồn trước khi nộp.") }}');
+            return;
+        }
+
+        const langKey = document.getElementById('drawerExamLanguage').value;
+        const submitBtn = document.getElementById('drawerExamSubmitBtn');
+        const verdictBox = document.getElementById('drawerExamVerdictBox');
+        const verdictBadge = document.getElementById('drawerExamVerdictBadge');
+        const verdictScore = document.getElementById('drawerExamVerdictScore');
+        const verdictLoading = document.getElementById('drawerExamVerdictLoading');
+        const verdictContent = document.getElementById('drawerExamVerdictContent');
+        const verdictDetailLink = document.getElementById('drawerExamVerdictDetailLink');
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> {{ _("Đang gửi...") }}';
+
+        verdictBox.style.display = 'block';
+        verdictBox.classList.remove('is-collapsed');
+        verdictBadge.className = 'submit-popdown-badge is-grading';
+        verdictBadge.innerHTML = '<i class="fa fa-spinner fa-spin"></i> <span id="drawerExamVerdictStatusText">{{ _("Đang chấm điểm...") }}</span>';
+        if (verdictScore) { verdictScore.style.display = 'none'; verdictScore.innerText = ''; }
+        if (verdictDetailLink) { verdictDetailLink.style.display = 'none'; verdictDetailLink.href = '#'; }
+        if (verdictLoading) verdictLoading.style.display = 'flex';
+        if (verdictContent) { verdictContent.style.display = 'none'; verdictContent.innerHTML = ''; }
+
+        const formData = new FormData();
+        formData.append('problem_code', currentExamProblemCode);
+        formData.append('language', langKey);
+        formData.append('source', sourceCode);
+
+        fetch('{{ url("course_exam_submit", course.key, exam.id) }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            body: formData,
+        })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(errData => {
+                        throw new Error(errData.error || '{{ _("Lỗi khi nộp bài.") }}');
+                    }).catch(err => {
+                        if (err instanceof Error) throw err;
+                        throw new Error('{{ _("Lỗi khi nộp bài.") }}');
+                    });
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.success && data.status_url) {
+                    if (verdictDetailLink) {
+                        verdictDetailLink.href = data.status_url;
+                        verdictDetailLink.style.display = 'inline-flex';
+                    }
+                    pollExamSubmissionStatus(data.status_url, data.submission_id, currentEpId);
+                } else {
+                    throw new Error(data.error || '{{ _("Lỗi khi nộp bài.") }}');
+                }
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ _("Gửi bài chấm") }}';
+                verdictBadge.className = 'submit-popdown-badge is-danger';
+                verdictBadge.innerHTML = '<i class="fa fa-exclamation-triangle"></i> <span>{{ _("Lỗi") }}</span>';
+                if (verdictLoading) verdictLoading.style.display = 'none';
+                if (verdictContent) {
+                    verdictContent.style.display = 'block';
+                    verdictContent.innerHTML = '<div class="alert alert-danger" style="margin:0;"><i class="fa fa-exclamation-circle"></i> ' + (err.message || '{{ _("Không thể kết nối đến máy chủ.") }}') + '</div>';
+                }
+            });
+    }
+
+    function pollExamSubmissionStatus(statusUrl, subId, epId) {
+        let attempts = 0;
+        let consecutive404 = 0;
+        let currentDelay = 1500;
+        const maxAttempts = 35;
+
+        function bindTestcaseToggles() {
+            const content = document.getElementById('drawerExamVerdictContent');
+            if (!content) return;
+            $(content).find('.case-row.toggle').off('click').on('click', function (e) {
+                e.preventDefault();
+                const $row = $(this);
+                const $next = $row.next('.case-feedback');
+                if ($next.is(':visible')) {
+                    $next.hide(200);
+                    $row.removeClass('open').addClass('closed');
+                    $row.find('.fa-chevron-down').removeClass('fa-chevron-down').addClass('fa-chevron-right');
+                } else {
+                    $next.show(200);
+                    $row.removeClass('closed').addClass('open');
+                    $row.find('.fa-chevron-right').removeClass('fa-chevron-right').addClass('fa-chevron-down');
+                }
+            });
+        }
+
+        function checkStatus() {
+            attempts++;
+            const submitBtn = document.getElementById('drawerExamSubmitBtn');
+            const verdictBadge = document.getElementById('drawerExamVerdictBadge');
+            const verdictScore = document.getElementById('drawerExamVerdictScore');
+            const verdictLoading = document.getElementById('drawerExamVerdictLoading');
+            const verdictContent = document.getElementById('drawerExamVerdictContent');
+
+            const queryUrl = statusUrl + (statusUrl.indexOf('?') !== -1 ? '&' : '?') + '_=' + Date.now();
+
+            fetch(queryUrl, {
+                headers: { 'Cache-Control': 'no-cache' }
+            })
+                .then(res => {
+                    if (res.status === 404) {
+                        consecutive404++;
+                        if (consecutive404 >= 5) {
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ _("Gửi bài chấm") }}';
+                            }
+                            if (verdictBadge) {
+                                verdictBadge.className = 'submit-popdown-badge is-danger';
+                                verdictBadge.innerHTML = '<i class="fa fa-exclamation-circle"></i> <span>404 Not Found</span>';
+                            }
+                            if (verdictLoading) verdictLoading.style.display = 'none';
+                            if (verdictContent) {
+                                verdictContent.style.display = 'block';
+                                verdictContent.innerHTML = '<div class="alert alert-warning" style="margin:0;"><i class="fa fa-exclamation-triangle"></i> {{ _("Chưa tìm thấy dữ liệu chấm (404). Vui lòng thử lại sau.") }}</div>';
+                            }
+                            return;
+                        }
+                        currentDelay = Math.min(5000, currentDelay + 1000);
+                        setTimeout(checkStatus, currentDelay);
+                        return;
+                    }
+
+                    if (!res.ok) {
+                        consecutive404++;
+                        if (consecutive404 >= 5) {
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ _("Gửi bài chấm") }}';
+                            }
+                            return;
+                        }
+                        setTimeout(checkStatus, 2500);
+                        return;
+                    }
+
+                    consecutive404 = 0;
+                    res.text().then(htmlText => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(htmlText, 'text/html');
+                        const testCasesEl = doc.getElementById('test-cases');
+
+                        if (testCasesEl) {
+                            if (verdictContent) {
+                                verdictContent.innerHTML = testCasesEl.innerHTML;
+                                verdictContent.style.display = 'block';
+                            }
+                            if (verdictLoading) verdictLoading.style.display = 'none';
+                            bindTestcaseToggles();
+
+                            const text = testCasesEl.textContent;
+                            const hasSpinner = testCasesEl.querySelector('.fa-spinner, .fa-pulse') !== null;
+                            const isWaiting = /waiting for a suitable judge|being processed|đang chờ|đang được xử lý|đang chấm/i.test(text);
+                            const hasFinishedMarker = /(?:Final\s+(?:pretest\s+)?score|Điểm\s+(?:cuối\s+cùng|pretest|số)|Tài nguyên|Resources|Kết quả|Execution Results|Compilation (?:Error|Warnings)|Lỗi biên dịch|Cảnh báo biên dịch|Submission aborted|bị hủy)/i.test(text) || doc.querySelector('.sub-result') !== null;
+                            const hasCaseRows = testCasesEl.querySelectorAll('.case-row').length > 0;
+                            const isAborted = /Submission aborted|bị hủy/i.test(text);
+
+                            const isCompleted = (!hasSpinner && !isWaiting && (hasFinishedMarker || hasCaseRows || isAborted)) || attempts >= maxAttempts;
+
+                            if (isCompleted) {
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ _("Gửi bài chấm") }}';
+                                }
+
+                                const badCases = testCasesEl.querySelectorAll('.case-bad, .case-WA, .case-TLE, .case-MLE, .case-RTE, .case-IR, .case-OLE, .case-CE');
+                                const acCases = testCasesEl.querySelectorAll('.case-AC');
+                                const pacCases = testCasesEl.querySelectorAll('.case-PAC');
+                                const subResult = doc.querySelector('.sub-result');
+
+                                let isAC = false;
+                                let isPAC = false;
+                                let badgeClass = 'is-grading';
+                                let icon = 'fa-check-circle';
+                                let verdictLabel = '{{ _("Hoàn thành") }}';
+
+                                if (subResult && subResult.classList.contains('AC')) {
+                                    isAC = true;
+                                    badgeClass = 'is-ac';
+                                    icon = 'fa-check-circle';
+                                    verdictLabel = '{{ _("Chấp nhận (AC)") }}';
+                                } else if (subResult && subResult.classList.contains('PAC')) {
+                                    isPAC = true;
+                                    badgeClass = 'is-pac';
+                                    icon = 'fa-adjust';
+                                    verdictLabel = '{{ _("Một phần (PAC)") }}';
+                                } else if (subResult && subResult.classList.contains('CE')) {
+                                    badgeClass = 'is-ce';
+                                    icon = 'fa-exclamation-circle';
+                                    verdictLabel = '{{ _("Lỗi biên dịch (CE)") }}';
+                                } else if (subResult && subResult.classList.contains('TLE')) {
+                                    badgeClass = 'is-tle';
+                                    icon = 'fa-clock-o';
+                                    verdictLabel = '{{ _("Quá thời gian (TLE)") }}';
+                                } else if (subResult && subResult.classList.contains('MLE')) {
+                                    badgeClass = 'is-mle';
+                                    icon = 'fa-database';
+                                    verdictLabel = '{{ _("Quá bộ nhớ (MLE)") }}';
+                                } else if (subResult && subResult.classList.contains('WA')) {
+                                    badgeClass = 'is-wa';
+                                    icon = 'fa-times-circle';
+                                    verdictLabel = '{{ _("Sai kết quả (WA)") }}';
+                                } else if (subResult && (subResult.classList.contains('RTE') || subResult.classList.contains('IR') || subResult.classList.contains('OLE'))) {
+                                    badgeClass = 'is-danger';
+                                    icon = 'fa-exclamation-triangle';
+                                    verdictLabel = '{{ _("Lỗi thực thi (RTE)") }}';
+                                } else if (testCasesEl.querySelectorAll('.case-CE').length > 0 || (/Compilation Error|Lỗi biên dịch/i.test(text) && !hasCaseRows)) {
+                                    badgeClass = 'is-ce';
+                                    icon = 'fa-exclamation-circle';
+                                    verdictLabel = '{{ _("Lỗi biên dịch (CE)") }}';
+                                } else if (badCases.length === 0 && acCases.length > 0) {
+                                    isAC = true;
+                                    badgeClass = 'is-ac';
+                                    icon = 'fa-check-circle';
+                                    verdictLabel = '{{ _("Chấp nhận (AC)") }}';
+                                } else if (pacCases.length > 0 || (acCases.length > 0 && badCases.length > 0)) {
+                                    isPAC = true;
+                                    badgeClass = 'is-pac';
+                                    icon = 'fa-adjust';
+                                    verdictLabel = '{{ _("Một phần (PAC)") }}';
+                                } else if (testCasesEl.querySelectorAll('.case-TLE').length > 0) {
+                                    badgeClass = 'is-tle';
+                                    icon = 'fa-clock-o';
+                                    verdictLabel = '{{ _("Quá thời gian (TLE)") }}';
+                                } else if (testCasesEl.querySelectorAll('.case-MLE').length > 0) {
+                                    badgeClass = 'is-mle';
+                                    icon = 'fa-database';
+                                    verdictLabel = '{{ _("Quá bộ nhớ (MLE)") }}';
+                                } else if (testCasesEl.querySelectorAll('.case-WA').length > 0) {
+                                    badgeClass = 'is-wa';
+                                    icon = 'fa-times-circle';
+                                    verdictLabel = '{{ _("Sai kết quả (WA)") }}';
+                                } else if (testCasesEl.querySelectorAll('.case-RTE, .case-IR, .case-OLE').length > 0) {
+                                    badgeClass = 'is-danger';
+                                    icon = 'fa-exclamation-triangle';
+                                    verdictLabel = '{{ _("Lỗi thực thi (RTE)") }}';
+                                } else if (isAborted) {
+                                    badgeClass = 'is-danger';
+                                    icon = 'fa-ban';
+                                    verdictLabel = '{{ _("Bị hủy") }}';
+                                }
+
+                                if (verdictBadge) {
+                                    verdictBadge.className = 'submit-popdown-badge ' + badgeClass;
+                                    verdictBadge.innerHTML = '<i class="fa ' + icon + '"></i> <span>' + verdictLabel + '</span>';
+                                }
+
+                                // Extract score
+                                let scoreMatch = text.match(/(?:Final\s+(?:pretest\s+)?score|Điểm\s+(?:cuối\s+cùng|pretest|số))[:\s]*([\d\.]+(?:\s*\/\s*[\d\.]+)?)/i);
+                                if (!scoreMatch) {
+                                    scoreMatch = text.match(/\(([\d\.]+\s*\/\s*[\d\.]+)\s*(?:points|điểm|đ)\)/i);
+                                }
+                                let pointsText = '';
+                                if (scoreMatch && scoreMatch[1]) {
+                                    pointsText = scoreMatch[1].trim();
+                                    if (verdictScore) {
+                                        verdictScore.innerText = pointsText + ' đ';
+                                        verdictScore.style.display = 'inline-flex';
+                                    }
+                                }
+
+                                // Update Table Row
+                                const scoreEl = document.getElementById('epScore_' + epId);
+                                const verdictEl = document.getElementById('epVerdict_' + epId);
+                                if (scoreEl && pointsText) scoreEl.innerText = pointsText.split('/')[0].trim();
+                                if (verdictEl) {
+                                    if (isAC) {
+                                        verdictEl.innerHTML = '<span class="lms-badge lms-badge-completed">AC</span>';
+                                    } else if (isPAC) {
+                                        verdictEl.innerHTML = '<span class="lms-badge lms-badge-review">PAC</span>';
+                                    } else {
+                                        verdictEl.innerHTML = '<span class="lms-badge" style="background: var(--lms-danger-light); color: var(--lms-danger);">' + (verdictLabel || 'FAIL') + '</span>';
+                                    }
+                                }
+                                return; // Done!
+                            }
+
+                            setTimeout(checkStatus, 1500);
+                        } else {
+                            if (attempts < maxAttempts) {
+                                setTimeout(checkStatus, currentDelay);
+                            } else {
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ _("Gửi bài chấm") }}';
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(err => {
+                    consecutive404++;
+                    if (consecutive404 >= 5) {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ _("Gửi bài chấm") }}';
+                        }
+                        if (verdictBadge) {
+                            verdictBadge.className = 'submit-popdown-badge is-danger';
+                            verdictBadge.innerHTML = '<i class="fa fa-exclamation-triangle"></i> <span>{{ _("Lỗi kết nối") }}</span>';
+                        }
+                        return;
+                    }
+                    setTimeout(checkStatus, 3000);
+                });
+        }
+
+        setTimeout(checkStatus, 1200);
+    }
+</script>
+{% endblock %}
+
+{% block bodyend %}
+{% if REQUIRE_JAX %}
+{% include "mathjax-load.html" %}
+{% endif %}
+{% endblock %}

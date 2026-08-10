@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block media %}
+    <link rel="stylesheet" href="{{ static('course_lms.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+{% endblock %}
+
+{% block body %}
+<div class="lms-container" style="max-width: 1440px;">
+    <div class="lms-header">
+        <div class="lms-breadcrumb">
+            <a href="{{ url('home') }}"><i class="fa fa-home"></i> {{ _('Trang chủ') }}</a>
+            <i class="fa fa-angle-right"></i>
+            <a href="{{ url('course_list') }}">{{ _('Cổng Học tập LMS HNUEOJ') }}</a>
+            <i class="fa fa-angle-right"></i>
+            <a href="{{ course.get_absolute_url() }}">{{ course.title }}</a>
+            <i class="fa fa-angle-right"></i>
+            <span>{{ _('Giám sát Khảo thí Trực tiếp (Live Proctoring)') }}</span>
+        </div>
+
+        <div class="lms-title-row">
+            <div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <h1 class="lms-page-title">{{ _('Trung tâm Giám sát Khảo thí & Tiến độ Học tập Trực tiếp') }}</h1>
+                    <span class="lms-live-indicator">
+                        <span class="lms-pulse-dot"></span> {{ _('LIVE PROCTORING') }}
+                    </span>
+                </div>
+                <p style="color: var(--lms-text-muted); margin: 4px 0 0; font-size: 0.875rem;">
+                    {{ _('Giám sát thời gian thực mọi hoạt động học tập, kết quả chấm code và tiến độ khảo thí của học viên trong học phần:') }} <strong>{{ course.title }}</strong>
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <a href="{{ url('course_manage', course.key) }}" class="lms-btn lms-btn-secondary">
+                    <i class="fa fa-cogs"></i> {{ _('Thiết kế Đề cương & Học liệu') }}
+                </a>
+                <button type="button" class="lms-btn lms-btn-primary" onclick="refreshMonitorData()">
+                    <i class="fa fa-refresh"></i> {{ _('Làm mới dữ liệu') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Row -->
+    <div class="lms-metrics-row">
+        <div class="lms-metric-card">
+            <div class="lms-metric-icon" style="background: var(--lms-primary-light); color: var(--lms-primary);">
+                <i class="fa fa-users"></i>
+            </div>
+            <div>
+                <h3 id="statTotalStudents" class="lms-metric-val">{{ total_students }}</h3>
+                <div class="lms-metric-lbl">{{ _('Tổng số học viên ghi danh') }}</div>
+            </div>
+        </div>
+
+        <div class="lms-metric-card">
+            <div class="lms-metric-icon" style="background: var(--lms-warning-light); color: var(--lms-warning);">
+                <i class="fa fa-clock-o"></i>
+            </div>
+            <div>
+                <h3 id="statReadyForReview" class="lms-metric-val">{{ ready_for_review_count }}</h3>
+                <div class="lms-metric-lbl">{{ _('Chờ thẩm định chứng chỉ') }}</div>
+            </div>
+        </div>
+
+        <div class="lms-metric-card">
+            <div class="lms-metric-icon" style="background: var(--lms-success-light); color: var(--lms-success);">
+                <i class="fa fa-trophy"></i>
+            </div>
+            <div>
+                <h3 id="statCompleted" class="lms-metric-val">{{ completed_count }}</h3>
+                <div class="lms-metric-lbl">{{ _('Đã cấp chứng chỉ điện tử') }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Student Roster & Live Feed -->
+    <div class="lms-monitor-grid">
+        <!-- Left: Student Roster -->
+        <div style="background: var(--lms-card-bg); border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-lg); overflow: hidden; box-shadow: var(--lms-shadow-sm);">
+            <div style="padding: 18px 20px; background: var(--lms-bg); border-bottom: 1px solid var(--lms-card-border); display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0;">{{ _('Danh sách Học viên & Tiến độ Học tập') }}</h2>
+                <span id="studentCountBadge" style="font-size: 0.8125rem; color: var(--lms-text-muted);">
+                    {{ enrollments.count() }} {{ _('học viên') }}
+                </span>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="lms-table">
+                    <thead>
+                        <tr>
+                            <th>{{ _('Học viên') }}</th>
+                            <th style="width: 220px;">{{ _('Tiến độ hoàn thành') }}</th>
+                            <th style="width: 140px; text-align: center;">{{ _('Trạng thái') }}</th>
+                            <th style="width: 130px; text-align: right;">{{ _('Truy cập gần nhất') }}</th>
+                            <th style="width: 150px; text-align: right;">{{ _('Hành động') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentRosterBody">
+                        {% for e in enrollments %}
+                            {% set cert = e.course.issued_certificates.filter(user=e.user).first() %}
+                            <tr id="row_user_{{ e.user.id }}">
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="lms-avatar-sm" style="width: 32px; height: 32px;">
+                                            {{ e.user.user.username[0]|upper }}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 600; color: var(--lms-text-main);">
+                                                {{ e.user.display_name or e.user.user.get_full_name() or e.user.user.username }}
+                                            </div>
+                                            <div style="font-size: 0.75rem; color: var(--lms-text-light);">
+                                                @{{ e.user.user.username }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="lms-progress-bar">
+                                        <div id="progress_bar_{{ e.user.id }}" class="lms-progress-fill" style="width: {{ e.progress_percentage }}%;"></div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; color: var(--lms-text-muted); margin-top: 4px;">
+                                        <span id="progress_pct_{{ e.user.id }}">{{ e.progress_percentage }}%</span>
+                                    </div>
+                                </td>
+                                <td style="text-align: center;">
+                                    {% if e.status == 'COMPLETED' %}
+                                        <span class="lms-badge lms-badge-completed">{{ _('Đã tốt nghiệp') }}</span>
+                                    {% elif e.status == 'READY_FOR_REVIEW' %}
+                                        <span class="lms-badge lms-badge-review">{{ _('Chờ duyệt cấp') }}</span>
+                                    {% else %}
+                                        <span class="lms-badge lms-badge-active">{{ _('Đang học') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: right; color: var(--lms-text-muted); font-size: 0.8125rem;">
+                                    {{ e.last_accessed_at.strftime('%H:%M %d/%m') }}
+                                </td>
+                                <td style="text-align: right;">
+                                    {% if e.status == 'READY_FOR_REVIEW' %}
+                                        <button type="button" class="lms-btn lms-btn-primary lms-btn-sm" onclick="issueCertificate({{ e.id }}, '{{ e.user.user.username|escapejs }}')">
+                                            <i class="fa fa-certificate"></i> {{ _('Cấp chứng chỉ') }}
+                                        </button>
+                                    {% elif cert %}
+                                        <a href="{{ cert.get_absolute_url() }}" target="_blank" class="lms-btn lms-btn-secondary lms-btn-sm" style="color: var(--lms-success);">
+                                            <i class="fa fa-trophy"></i> {{ _('Chứng chỉ') }}
+                                        </a>
+                                    {% else %}
+                                        <span style="font-size: 0.75rem; color: var(--lms-text-light);">{{ _('Đang làm bài') }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 32px; color: var(--lms-text-muted);">
+                                    {{ _('Chưa có học viên nào ghi danh khóa học này.') }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right: Live Feed Ticker -->
+        <div class="lms-feed-card">
+            <div class="lms-feed-header">
+                <h3 style="font-size: 1rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa fa-bolt" style="color: var(--lms-warning);"></i> {{ _('Live Event Stream') }}
+                </h3>
+                <span id="liveFeedStatus" style="font-size: 0.75rem; color: var(--lms-success);">
+                    <i class="fa fa-circle" style="font-size: 8px;"></i> {{ _('Connected') }}
+                </span>
+            </div>
+
+            <div id="liveFeedList" class="lms-feed-list">
+                {% for sub in recent_submissions %}
+                    <div class="lms-feed-item" onclick="openGodModeModal({{ sub.id }})">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong style="font-size: 0.875rem; color: var(--lms-text-main);">
+                                {{ sub.user.display_name or sub.user.user.username }}
+                            </strong>
+                            <span class="lms-badge {% if sub.result == 'AC' %}lms-badge-completed{% elif sub.result == 'PAC' %}lms-badge-review{% else %}lms-badge-draft{% endif %}">
+                                {{ sub.result or sub.status }}
+                            </span>
+                        </div>
+                        <div style="font-size: 0.8125rem; color: var(--lms-text-muted); margin-top: 4px;">
+                            Nộp bài: <strong>{{ sub.problem.name }}</strong> ({{ sub.points or 0 }}đ)
+                        </div>
+                        <div class="lms-feed-meta">
+                            <span>{{ sub.language.name }} | {{ "%.3f"|format(sub.time) if sub.time else '-' }}s</span>
+                            <span>{{ sub.date.strftime('%H:%M:%S') }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- God-mode Slide-over Drawer -->
+<div id="godModeOverlay" class="lms-drawer-overlay" onclick="closeGodModeModal()"></div>
+<div id="godModeDrawer" class="lms-drawer">
+    <div class="lms-drawer-header">
+        <div>
+            <span class="lms-badge lms-badge-primary" style="margin-bottom: 4px;">GOD-MODE DRILL-DOWN</span>
+            <h2 id="godModeTitle" style="font-size: 1.25rem; font-weight: 700; margin: 0;">{{ _('Chi tiết bài nộp #...') }}</h2>
+        </div>
+        <button type="button" class="lms-close-btn" onclick="closeGodModeModal()">&times;</button>
+    </div>
+
+    <div id="godModeBody" class="lms-drawer-body">
+        <div style="text-align: center; padding: 48px; color: var(--lms-text-muted);">
+            <i class="fa fa-spinner fa-spin" style="font-size: 2rem;"></i>
+            <p style="margin-top: 8px;">{{ _('Đang tải dữ liệu mã nguồn & test case...') }}</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// WebSocket / Event Dispatcher Initialization
+$(document).ready(function () {
+    if (window.event_dispatcher) {
+        event_dispatcher.register_channel('{{ monitor_channel }}');
+        event_dispatcher.on('{{ monitor_channel }}', function (data) {
+            handleRealtimeEvent(data);
+        });
+    }
+});
+
+function handleRealtimeEvent(data) {
+    if (data.type === 'lesson_completed') {
+        // Update student progress bar in table
+        const bar = document.getElementById('progress_bar_' + data.user_id);
+        const pct = document.getElementById('progress_pct_' + data.user_id);
+        if (bar) bar.style.width = data.progress + '%';
+        if (pct) pct.innerText = data.progress + '%';
+
+        // Add to Live Feed
+        prependLiveFeedItem(`
+            <div class="lms-feed-item" style="border-left: 3px solid var(--lms-success);">
+                <div style="display: flex; justify-content: space-between;">
+                    <strong>${data.full_name || data.username}</strong>
+                    <span class="lms-badge lms-badge-completed">Lesson Done</span>
+                </div>
+                <div style="font-size: 0.8125rem; color: var(--lms-text-muted); margin-top: 4px;">
+                    Hoàn thành bài: <strong>${data.lesson_title}</strong>
+                </div>
+                <div class="lms-feed-meta">
+                    <span>Tiến độ: ${data.progress}%</span>
+                    <span>Vừa xong</span>
+                </div>
+            </div>
+        `);
+    } else if (data.type === 'submission_update') {
+        const badgeClass = data.result === 'AC' ? 'lms-badge-completed' : (data.result === 'PAC' ? 'lms-badge-review' : 'lms-badge-draft');
+        prependLiveFeedItem(`
+            <div class="lms-feed-item" onclick="openGodModeModal(${data.submission_id})">
+                <div style="display: flex; justify-content: space-between;">
+                    <strong>${data.full_name || data.username}</strong>
+                    <span class="lms-badge ${badgeClass}">${data.result || data.status}</span>
+                </div>
+                <div style="font-size: 0.8125rem; color: var(--lms-text-muted); margin-top: 4px;">
+                    Nộp bài: <strong>${data.problem_name}</strong> (${data.points || 0}đ)
+                </div>
+                <div class="lms-feed-meta">
+                    <span>${data.language} | ${data.time ? data.time.toFixed(3) + 's' : '-'}</span>
+                    <span>Vừa xong</span>
+                </div>
+            </div>
+        `);
+    }
+}
+
+function prependLiveFeedItem(html) {
+    const list = document.getElementById('liveFeedList');
+    if (list) {
+        const div = document.createElement('div');
+        div.innerHTML = html.trim();
+        list.insertBefore(div.firstChild, list.firstChild);
+    }
+}
+
+function openGodModeModal(submissionId) {
+    document.getElementById('godModeOverlay').classList.add('active');
+    document.getElementById('godModeDrawer').classList.add('active');
+    document.getElementById('godModeTitle').innerText = 'Bài nộp #' + submissionId;
+
+    fetch('{{ url("course_submission_god_mode", course.key, 0) }}'.replace('0', submissionId))
+        .then(res => res.json())
+        .then(data => {
+            renderGodModeContent(data.submission);
+        })
+        .catch(err => {
+            document.getElementById('godModeBody').innerHTML = '<div style="color: var(--lms-danger);">Không tải được dữ liệu chi tiết.</div>';
+        });
+}
+
+function closeGodModeModal() {
+    document.getElementById('godModeOverlay').classList.remove('active');
+    document.getElementById('godModeDrawer').classList.remove('active');
+}
+
+function renderGodModeContent(s) {
+    let testCasesHtml = '';
+    if (s.test_cases && s.test_cases.length > 0) {
+        testCasesHtml = `
+            <h4 style="margin: 20px 0 10px; font-size: 0.9375rem; font-weight: 700;">Kết quả từng Test Case:</h4>
+            <div class="lms-testcase-grid">
+                ${s.test_cases.map(tc => `
+                    <div class="lms-testcase-box ${tc.status.toLowerCase()}">
+                        <div style="font-weight: 700; font-size: 0.8125rem;">Test #${tc.case}</div>
+                        <div style="font-weight: 800; margin: 2px 0;">${tc.status}</div>
+                        <div style="font-size: 0.75rem; color: var(--lms-text-muted);">${tc.time ? tc.time.toFixed(3) + 's' : '-'}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    document.getElementById('godModeBody').innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+            <div style="background: var(--lms-bg); padding: 12px; border-radius: var(--lms-radius-md);">
+                <div style="font-size: 0.75rem; color: var(--lms-text-muted);">Học viên</div>
+                <div style="font-weight: 700; font-size: 0.875rem;">${s.full_name || s.username}</div>
+            </div>
+            <div style="background: var(--lms-bg); padding: 12px; border-radius: var(--lms-radius-md);">
+                <div style="font-size: 0.75rem; color: var(--lms-text-muted);">Kết quả / Điểm</div>
+                <div style="font-weight: 800; font-size: 0.875rem; color: var(--lms-primary);">${s.result} (${s.points}đ)</div>
+            </div>
+            <div style="background: var(--lms-bg); padding: 12px; border-radius: var(--lms-radius-md);">
+                <div style="font-size: 0.75rem; color: var(--lms-text-muted);">Thời gian / RAM</div>
+                <div style="font-weight: 600; font-size: 0.875rem;">${s.time ? s.time.toFixed(3) + 's' : '-'} | ${s.memory ? (s.memory / 1024).toFixed(1) + 'MB' : '-'}</div>
+            </div>
+            <div style="background: var(--lms-bg); padding: 12px; border-radius: var(--lms-radius-md);">
+                <div style="font-size: 0.75rem; color: var(--lms-text-muted);">Ngôn ngữ</div>
+                <div style="font-weight: 600; font-size: 0.875rem;">${s.language}</div>
+            </div>
+        </div>
+
+        ${testCasesHtml}
+
+        <h4 style="margin: 24px 0 8px; font-size: 0.9375rem; font-weight: 700;">Mã nguồn (Source Code):</h4>
+        <pre style="border-radius: var(--lms-radius-md); max-height: 400px; overflow: auto;"><code class="language-cpp">${escapeHtml(s.source)}</code></pre>
+    `;
+
+    if (window.Prism) {
+        Prism.highlightAll();
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+function issueCertificate(enrollmentId, username) {
+    if (!confirm(`Bạn có chắc chắn muốn ký duyệt cấp chứng nhận hoàn thành khóa học cho học viên @${username}?`)) return;
+
+    fetch('{{ url("course_issue_certificate", course.key, 0) }}'.replace('0', enrollmentId), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ grade: 'Xuất sắc' })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Đã cấp chứng chỉ thành công!\nMã chứng nhận: ${data.cert_code}`);
+            location.reload();
+        } else {
+            alert(data.error || 'Có lỗi xảy ra.');
+        }
+    });
+}
+
+function refreshMonitorData() {
+    location.reload();
+}
+</script>
+{% endblock %}

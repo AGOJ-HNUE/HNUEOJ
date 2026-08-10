@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Certificate - {{ certificate.cert_code }} - LMS HNUEOJ</title>
+    <link rel="stylesheet" href="{{ static('course_lms.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        @media print {
+            body { padding: 0; background: #fff; }
+            .lms-cert-frame { box-shadow: none; margin: 0; border-width: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="lms-cert-frame">
+        <div class="lms-cert-gold-seal">
+            <i class="fa fa-graduation-cap"></i>
+        </div>
+
+        <div style="font-size: 0.8125rem; letter-spacing: 0.15em; font-weight: 800; color: #b45309; text-transform: uppercase; margin-bottom: 4px;">
+            TRƯỜNG ĐẠI HỌC SƯ PHẠM HÀ NỘI &bull; HANOI NATIONAL UNIVERSITY OF EDUCATION
+        </div>
+        <div style="font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 16px;">
+            HỆ THỐNG ĐÀO TẠO & KHẢO THÍ TRỰC TUYẾN &bull; LMS HNUE ONLINE JUDGE
+        </div>
+
+        <h1 class="lms-cert-heading">GIẤY CHỨNG NHẬN HOÀN THÀNH</h1>
+        <p style="font-style: italic; color: #64748b; font-size: 1.0625rem; margin: 0 0 16px;">
+            Chứng nhận điện tử này trân trọng trao cho học viên
+        </p>
+
+        <div class="lms-cert-recipient">
+            {{ certificate.user.display_name or certificate.user.user.get_full_name() or certificate.user.user.username }}
+        </div>
+
+        <p style="color: #475569; font-size: 1.0625rem; line-height: 1.6; max-width: 660px; margin: 16px auto;">
+            Đã hoàn thành xuất sắc toàn bộ khối lượng kiến thức lý thuyết, đạt chuẩn bài tập thực hành và vượt qua các kỳ khảo thí đánh giá năng lực trong học phần:
+        </p>
+
+        <div class="lms-cert-course">
+            {{ certificate.course.title }}
+        </div>
+
+        <div style="display: inline-block; padding: 6px 20px; background: #fef3c7; border-radius: var(--lms-radius-full); font-weight: 800; color: #92400e; font-size: 0.9375rem; margin-bottom: 24px; border: 1px solid #fde68a;">
+            Kết quả Tốt nghiệp: {{ certificate.grade }}
+        </div>
+
+        <div class="lms-cert-signatures">
+            <div class="lms-signature-box">
+                <div style="font-weight: 800; color: #0f172a; font-size: 1.0625rem;">
+                    {{ (certificate.issued_by.display_name or certificate.issued_by.user.username) if certificate.issued_by else 'Giảng viên Phụ trách' }}
+                </div>
+                <div style="color: #64748b; font-size: 0.8125rem; font-weight: 600;">Giảng viên Phụ trách Học phần</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; font-weight: 600;">Mã định danh xác thực điện tử</div>
+                <div style="font-family: monospace; font-size: 0.9375rem; font-weight: 800; background: #f1f5f9; padding: 6px 14px; border-radius: 6px; border: 1px solid #e2e8f0; color: #0f172a;">
+                    {{ certificate.cert_code }}
+                </div>
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">
+                    Ngày cấp quyết định: {{ certificate.issued_date.strftime('%d/%m/%Y') }}
+                </div>
+            </div>
+
+            <div class="lms-signature-box">
+                <div style="font-weight: 800; color: #0f172a; font-size: 1.0625rem;">LMS HNUEOJ Academic Board</div>
+                <div style="color: #64748b; font-size: 0.8125rem; font-weight: 600;">Ban Đào tạo & Khảo thí LMS HNUEOJ</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        window.onload = function() {
+            if (window.location.search.indexOf('print=1') !== -1) {
+                window.print();
+            }
+        };
+    </script>
+</body>
+</html>

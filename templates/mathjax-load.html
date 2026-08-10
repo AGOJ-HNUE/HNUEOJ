@@ -1,0 +1,23 @@
+<script type="text/javascript" src="{{ static('mathjax_config.js') }}"></script>
+<script type="text/javascript" src="{{ static('vnoj/mathjax/3.2.0/es5/tex-chtml.min.js') }}"></script>
+<script type="text/javascript">
+    (function () {
+        function triggerMathRender() {
+            if (typeof window.renderMathJax === 'function') {
+                window.renderMathJax();
+            } else if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+                window.MathJax.typesetPromise().then(function () {
+                    if (window.jQuery) {
+                        $('.tex-image').hide();
+                        $('.tex-text').show();
+                    }
+                }).catch(function () {});
+            }
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', triggerMathRender);
+        } else {
+            triggerMathRender();
+        }
+    })();
+</script>

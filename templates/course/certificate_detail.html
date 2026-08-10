@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block media %}
+    <link rel="stylesheet" href="{{ static('course_lms.css') }}">
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            .lms-cert-frame, .lms-cert-frame * { visibility: visible; }
+            .lms-cert-frame { position: absolute; left: 0; top: 0; width: 100%; border-width: 6px; box-shadow: none; }
+            .lms-no-print { display: none !important; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="lms-container">
+    <div class="lms-header lms-no-print">
+        <div class="lms-breadcrumb">
+            <a href="{{ url('home') }}"><i class="fa fa-home"></i> {{ _('Trang chủ') }}</a>
+            <i class="fa fa-angle-right"></i>
+            <a href="{{ url('course_list') }}">{{ _('Cổng Học tập LMS HNUEOJ') }}</a>
+            <i class="fa fa-angle-right"></i>
+            <a href="{{ certificate.course.get_absolute_url() }}">{{ certificate.course.title }}</a>
+            <i class="fa fa-angle-right"></i>
+            <span>{{ _('Chứng chỉ Xác thực Điện tử') }}</span>
+        </div>
+
+        <div class="lms-title-row">
+            <div>
+                <h1 class="lms-page-title">{{ _('Chứng nhận Hoàn thành Học phần') }}</h1>
+                <p style="color: var(--lms-text-muted); font-size: 0.875rem; margin: 4px 0 0;">
+                    {{ _('Chứng chỉ số định danh chính quy được cấp bởi Hệ thống Đào tạo & Khảo thí Trực tuyến LMS HNUEOJ.') }}
+                </p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" class="lms-btn lms-btn-primary" onclick="window.print()">
+                    <i class="fa fa-print"></i> {{ _('In / Tải PDF Chứng nhận') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verifiable Certificate Frame -->
+    <div class="lms-cert-frame">
+        <div class="lms-cert-gold-seal">
+            <i class="fa fa-graduation-cap"></i>
+        </div>
+
+        <div style="font-size: 0.8125rem; letter-spacing: 0.15em; font-weight: 800; color: #b45309; text-transform: uppercase; margin-bottom: 4px;">
+            TRƯỜNG ĐẠI HỌC SƯ PHẠM HÀ NỘI &bull; HANOI NATIONAL UNIVERSITY OF EDUCATION
+        </div>
+        <div style="font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 16px;">
+            HỆ THỐNG ĐÀO TẠO & KHẢO THÍ TRỰC TUYẾN &bull; LMS HNUE ONLINE JUDGE
+        </div>
+
+        <h1 class="lms-cert-heading">{{ _('GIẤY CHỨNG NHẬN HOÀN THÀNH') }}</h1>
+        <p style="font-style: italic; color: #64748b; font-size: 1.0625rem; margin: 0 0 16px;">
+            {{ _('Chứng nhận điện tử này trân trọng trao cho học viên') }}
+        </p>
+
+        <div class="lms-cert-recipient">
+            {{ certificate.user.display_name or certificate.user.user.get_full_name() or certificate.user.user.username }}
+        </div>
+
+        <p style="color: #475569; font-size: 1.0625rem; line-height: 1.6; max-width: 660px; margin: 16px auto;">
+            {{ _('Đã hoàn thành xuất sắc toàn bộ khối lượng kiến thức lý thuyết, đạt chuẩn bài tập thực hành và vượt qua các kỳ khảo thí đánh giá năng lực trong học phần:') }}
+        </p>
+
+        <div class="lms-cert-course">
+            {{ certificate.course.title }}
+        </div>
+
+        <div style="display: inline-block; padding: 6px 20px; background: #fef3c7; border-radius: var(--lms-radius-full); font-weight: 800; color: #92400e; font-size: 0.9375rem; margin-bottom: 24px; border: 1px solid #fde68a;">
+            {{ _('Kết quả Tốt nghiệp:') }} {{ certificate.grade }}
+        </div>
+
+        <!-- Signatures & Verification -->
+        <div class="lms-cert-signatures">
+            <div class="lms-signature-box">
+                <div style="font-weight: 800; color: #0f172a; font-size: 1.0625rem;">
+                    {{ (certificate.issued_by.display_name or certificate.issued_by.user.username) if certificate.issued_by else 'Giảng viên Phụ trách' }}
+                </div>
+                <div style="color: #64748b; font-size: 0.8125rem; font-weight: 600;">{{ _('Giảng viên Phụ trách Học phần') }}</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; font-weight: 600;">{{ _('Mã định danh xác thực điện tử') }}</div>
+                <div style="font-family: monospace; font-size: 0.9375rem; font-weight: 800; background: #f1f5f9; padding: 6px 14px; border-radius: 6px; border: 1px solid #e2e8f0; color: #0f172a;">
+                    {{ certificate.cert_code }}
+                </div>
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">
+                    {{ _('Ngày cấp quyết định:') }} {{ certificate.issued_date.strftime('%d/%m/%Y') }}
+                </div>
+            </div>
+
+            <div class="lms-signature-box">
+                <div style="font-weight: 800; color: #0f172a; font-size: 1.0625rem;">LMS HNUEOJ Academic Board</div>
+                <div style="color: #64748b; font-size: 0.8125rem; font-weight: 600;">{{ _('Ban Đào tạo & Khảo thí LMS HNUEOJ') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,951 @@
+{% extends "base.html" %}
+
+{% block media %}
+<link rel="stylesheet" href="{{ static('course_lms.css') }}">
+<script src="{{ ACE_URL }}/ace.js"></script>
+{% endblock %}
+
+{% block js_media %}
+<script src="{{ static('libs/clipboard/clipboard.js') }}"></script>
+<script src="{{ static('libs/clipboard/tooltip.js') }}"></script>
+<script type="text/javascript">
+    $(function () {
+        window.add_code_copy_buttons = function ($container) {
+            $container.find('pre code').each(function () {
+                if ($(this).parent().prev().hasClass('copy-clipboard')) return;
+                var copyButton;
+                $(this).parent().before($('<div>', { 'class': 'copy-clipboard' })
+                    .append(copyButton = $('<span>', {
+                        'class': 'btn-clipboard',
+                        'data-clipboard-text': $(this).text(),
+                        'title': '{{ _("Sao chép mã nguồn")|escapejs }}'
+                    }).text('{{ _("Copy")|escapejs }}')));
+
+                $(copyButton.get(0)).mouseleave(function () {
+                    $(this).attr('class', 'btn-clipboard');
+                    $(this).removeAttr('aria-label');
+                });
+
+                var curClipboard = new Clipboard(copyButton.get(0));
+                curClipboard.on('success', function (e) {
+                    e.clearSelection();
+                    showTooltip(e.trigger, '{{ _("Đã sao chép!")|escapejs }}');
+                });
+            });
+        };
+        window.add_code_copy_buttons($(document));
+    });
+</script>
+{% endblock %}
+
+{% block title_row %}{% endblock %}
+{% block title_ruler %}{% endblock %}
+
+{% block body %}
+<div class="lms-learn-layout">
+    <!-- Sidebar Navigation -->
+    <div class="lms-sidebar">
+        <div class="lms-sidebar-header">
+            <a href="{{ course.get_absolute_url() }}"
+                style="font-size: 0.8125rem; color: var(--lms-text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                <i class="fa fa-arrow-left"></i> {{ _('Quay lại khóa học') }}
+            </a>
+            <h2 class="lms-sidebar-title" title="{{ course.title }}">{{ course.title }}</h2>
+
+            <div class="lms-progress-wrap" style="margin-top: 8px;">
+                <div class="lms-progress-bar">
+                    <div id="sidebarProgressBar" class="lms-progress-fill"
+                        style="width: {{ enrollment.progress_percentage }}%;"></div>
+                </div>
+                <div class="lms-progress-label">
+                    <span>{{ _('Tiến độ') }}</span>
+                    <span id="sidebarProgressPct">{{ enrollment.progress_percentage }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lms-sidebar-content">
+            {% for chapter in chapters %}
+            <div class="lms-sidebar-chapter">
+                <div class="lms-sidebar-chapter-title">
+                    {{ _('Chương') }} {{ loop.index }}: {{ chapter.title }}
+                </div>
+
+                {% for lesson in chapter.lessons.all() %}
+                {% if lesson.is_published or is_instructor %}
+                {% set is_done = lesson.id in completed_lesson_ids %}
+                {% set is_current = lesson.id == current_lesson.id %}
+                {% set is_locked = lesson.is_locked and not is_instructor %}
+                {% if is_locked %}
+                <div class="lms-sidebar-item is-locked"
+                    style="opacity: 0.6; cursor: not-allowed; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa fa-lock lms-nav-icon" style="color: var(--lms-text-muted);"></i>
+                    <span class="lms-sidebar-item-title" style="color: var(--lms-text-muted);">{{ lesson.title }}</span>
+                    <span class="lms-sidebar-item-time">{{ lesson.estimated_minutes }}p</span>
+                </div>
+                {% else %}
+                <a href="{{ lesson.get_absolute_url() }}"
+                    class="lms-sidebar-item {% if is_current %}is-active{% endif %} {% if is_done %}is-completed{% endif %}">
+                    <i id="lessonIcon_{{ lesson.id }}"
+                        class="fa {% if is_done %}fa-check-circle-o done{% elif is_current %}fa-play-circle{% else %}fa-circle-o{% endif %} lms-nav-icon"></i>
+                    <span class="lms-sidebar-item-title">{{ lesson.title }}</span>
+                    {% if lesson.is_locked %}
+                    <span class="lms-badge"
+                        style="background: rgba(239, 68, 68, 0.15); color: #dc2626; padding: 2px 4px; font-size: 0.65rem; margin-right: 4px;"><i
+                            class="fa fa-lock"></i></span>
+                    {% endif %}
+                    <span class="lms-sidebar-item-time">{{ lesson.estimated_minutes }}p</span>
+                </a>
+                {% endif %}
+                {% endif %}
+                {% endfor %}
+
+                {% for exam in chapter.exams.all() %}
+                {% if exam.is_published or is_instructor %}
+                {% set is_locked = exam.is_locked and not is_instructor %}
+                {% if is_locked %}
+                <div class="lms-sidebar-item is-locked"
+                    style="opacity: 0.6; cursor: not-allowed; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa fa-lock lms-nav-icon" style="color: var(--lms-text-muted);"></i>
+                    <span class="lms-sidebar-item-title" style="color: var(--lms-text-muted);"><strong>{{ _('Kiểm tra:')
+                            }}</strong> {{ exam.title }}</span>
+                    <span class="lms-sidebar-item-time">{{ exam.exam_problems.count() }} bài</span>
+                </div>
+                {% else %}
+                <a href="{{ exam.get_absolute_url() }}" class="lms-sidebar-item"
+                    style="color: #b45309; background: var(--lms-warning-light);">
+                    <i class="fa fa-flag-checkered lms-nav-icon" style="color: var(--lms-warning);"></i>
+                    <span class="lms-sidebar-item-title"><strong>{{ _('Kiểm tra:') }}</strong> {{ exam.title }}</span>
+                    {% if exam.is_locked %}
+                    <span class="lms-badge"
+                        style="background: rgba(239, 68, 68, 0.15); color: #dc2626; padding: 2px 4px; font-size: 0.65rem; margin-right: 4px;"><i
+                            class="fa fa-lock"></i></span>
+                    {% endif %}
+                    <span class="lms-sidebar-item-time">{{ exam.exam_problems.count() }} bài</span>
+                </a>
+                {% endif %}
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Main Learning View Area -->
+    <div class="lms-learn-main">
+        <div class="lms-learn-header">
+            <div class="lms-learn-header-title">
+                <span class="lms-badge"
+                    style="background: var(--lms-primary-light); color: var(--lms-primary); margin-bottom: 6px; display: inline-block;">
+                    {{ current_lesson.chapter.title }}
+                </span>
+                <h1 style="margin: 0; font-size: 1.5rem; font-weight: 700;">{{ current_lesson.title }}</h1>
+            </div>
+
+            <div>
+                {% if is_completed %}
+                <span id="lessonStatusBadge" class="lms-badge lms-badge-completed">
+                    <i class="fa fa-check"></i> {{ _('Đã hoàn thành') }}
+                </span>
+                {% else %}
+                <span id="lessonStatusBadge" class="lms-badge lms-badge-draft">
+                    <i class="fa fa-hourglass-start"></i> {{ _('Chưa hoàn thành') }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Video Player Section if present -->
+        {% if current_lesson.embed_video_url %}
+        <div
+            style="background: #000; border-radius: var(--lms-radius-md); overflow: hidden; margin-bottom: 24px; box-shadow: var(--lms-shadow-md);">
+            <div style="position: relative; padding-bottom: 56.25%; height: 0;">
+                <iframe src="{{ current_lesson.embed_video_url }}"
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Lesson Body Text (Markdown & LaTeX Rendered) -->
+        <div class="lms-content content-description screen">
+            {{ current_lesson.content|markdown('default', MATH_ENGINE)|reference|str|safe }}
+
+            <!-- Attached Practice Problems Section -->
+            {% if lesson_problems %}
+            <div class="lms-practice-section">
+                <div class="lms-practice-header">
+                    <div>
+                        <h3 class="lms-practice-title">
+                            <i class="fa fa-pencil-square-o" style="color: var(--lms-primary);"></i>
+                            {{ _('Bài tập thực hành') }}
+                        </h3>
+                        <p class="lms-practice-desc">
+                            {{ _('Thực hành code trực tiếp ngay trong khóa học để củng cố kiến thức lý thuyết.') }}
+                            <br>
+                            {% if has_required_problems %}
+                            <span style="color: var(--lms-danger); font-weight: 600;">
+                                ({{ _('Cần đạt điểm AC ở các bài bắt buộc để hoàn thành bài học') }})
+                            </span>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="lms-practice-progress-pill">
+                        <span>{{ _('Tiến độ thực hành:') }}</span>
+                        <strong>{{ completed_required_count }} / {{ total_required_count }}</strong> {{ _('bài bắt
+                        buộc') }}
+                    </div>
+                </div>
+
+                <div class="lms-problem-grid">
+                    {% for lp in lesson_problems %}
+                    {% set p_info = problem_scores.get(lp.id, {}) %}
+                    {% set p_pts = p_info.get('points', 0) %}
+                    {% set p_res = p_info.get('result') %}
+                    {% set is_ac = p_info.get('is_ac', False) %}
+
+                    <!-- Pre-rendered Hidden Statement Template for Instant 0ms Loading -->
+                    <template id="problem_statement_tmpl_{{ lp.id }}">
+                        <div class="content-description screen lms-problem-statement-content">
+                            {% if lp.problem.absolute_pdf_url %}
+                            <div style="margin-bottom: 16px;">
+                                <object data="{{ lp.problem.absolute_pdf_url }}" type="application/pdf"
+                                    style="width: 100%; height: 600px; border-radius: var(--lms-radius-md);"></object>
+                            </div>
+                            {% endif %}
+                            {{ (lp.problem.i18n_description or
+                            lp.problem.description)|markdown(lp.problem.markdown_style, MATH_ENGINE)|reference|str|safe
+                            }}
+                        </div>
+                    </template>
+
+                    <div id="problemCard_{{ lp.id }}"
+                        class="lms-problem-card {% if is_ac %}is-ac{% elif p_res %}is-attempted{% endif %}">
+                        <div class="lms-problem-card-left">
+                            <div class="lms-problem-status-icon" id="problemStatusIcon_{{ lp.id }}">
+                                {% if is_ac %}
+                                <i class="fa fa-check-circle" style="color: var(--lms-success);"></i>
+                                {% elif p_res %}
+                                <span class="lms-badge"
+                                    style="background: var(--lms-danger-light); color: var(--lms-danger); font-size: 0.75rem;">{{
+                                    p_res }}</span>
+                                {% else %}
+                                <i class="fa fa-circle-o" style="color: var(--lms-text-light);"></i>
+                                {% endif %}
+                            </div>
+                            <div class="lms-problem-info" style="cursor: pointer;"
+                                onclick="openProblemWorkspace({{ lp.id }}, '{{ lp.problem.code }}', '{{ lp.display_title|escapejs }}', {{ lp.display_points }}, {{ lp.problem.time_limit }}, {{ (lp.problem.memory_limit / 1024)|int }}, {{ 'true' if lp.is_required_for_completion else 'false' }})">
+                                <div class="lms-problem-title-row">
+                                    <h4 class="lms-problem-name" title="{{ lp.display_title }}">{{ lp.display_title }}
+                                    </h4>
+                                    {% if lp.is_required_for_completion %}
+                                    <span class="lms-badge-required">{{ _('Bắt buộc') }}</span>
+                                    {% else %}
+                                    <span class="lms-badge-optional">{{ _('Tùy chọn') }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="lms-problem-meta">
+                                    <span><i class="fa fa-tag"></i> {{ lp.problem.code }}</span>
+                                    <span><i class="fa fa-clock-o"></i> {{ lp.problem.time_limit }}s</span>
+                                    <span><i class="fa fa-database"></i> {{ (lp.problem.memory_limit / 1024)|int
+                                        }}MB</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lms-problem-card-right">
+                            <div class="lms-problem-score">
+                                <strong id="problemScore_{{ lp.id }}">{{ p_pts }}</strong> / {{ lp.display_points }}đ
+                            </div>
+                            <div class="lms-problem-actions">
+                                <button type="button" class="lms-btn lms-btn-primary lms-btn-sm"
+                                    onclick="openProblemWorkspace({{ lp.id }}, '{{ lp.problem.code }}', '{{ lp.display_title|escapejs }}', {{ lp.display_points }}, {{ lp.problem.time_limit }}, {{ (lp.problem.memory_limit / 1024)|int }}, {{ 'true' if lp.is_required_for_completion else 'false' }})">
+                                    <i class="fa fa-code"></i> {{ _('Làm bài') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer Bar -->
+        <div class="lms-learn-footer">
+            <div>
+                {% if prev_lesson %}
+                <a href="{{ prev_lesson.get_absolute_url() }}" class="lms-btn lms-btn-secondary">
+                    <i class="fa fa-chevron-left"></i> {{ _('Bài trước') }}
+                </a>
+                {% endif %}
+            </div>
+
+            <div>
+                <button type="button" id="toggleCompleteBtn" onclick="toggleLessonProgress()"
+                    class="lms-btn {% if is_completed %}lms-btn-success{% elif can_complete_lesson %}lms-btn-primary{% else %}lms-btn-secondary{% endif %}"
+                    {% if not can_complete_lesson and not is_completed
+                    %}title="{{ _('Cần hoàn thành các bài tập bắt buộc bên dưới') }}" {% endif %}>
+                    <i id="toggleCompleteIcon"
+                        class="fa {% if is_completed %}fa-check-circle{% else %}fa-check{% endif %}"></i>
+                    <span id="toggleCompleteText">
+                        {% if is_completed %}{{ _('Đã hoàn thành (Bấm để hủy)') }}{% else %}{{ _('Đánh dấu đã hoàn
+                        thành') }}{% endif %}
+                    </span>
+                </button>
+            </div>
+
+            <div>
+                {% if next_lesson %}
+                <a href="{{ next_lesson.get_absolute_url() }}" class="lms-btn lms-btn-secondary">
+                    {{ _('Bài tiếp theo') }} <i class="fa fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- LMS Problem Solving Split Workspace Modal -->
+<div id="problemWorkspaceModal" class="lms-workspace-modal" onclick="handleWorkspaceOverlayClick(event)">
+    <div class="lms-workspace-container">
+        <!-- Header -->
+        <div class="lms-workspace-header">
+            <div class="lms-workspace-title-row">
+                <h3 class="lms-workspace-title" id="wsProblemTitle">
+                    <i class="fa fa-code" style="color: var(--lms-primary);"></i>
+                    <span id="wsTitleText"></span>
+                </h3>
+                <div class="lms-workspace-meta">
+                    <span class="lms-workspace-meta-badge" id="wsCodeBadge"></span>
+                    <span class="lms-workspace-meta-badge" id="wsPointsBadge"></span>
+                    <span class="lms-workspace-meta-badge" id="wsTimeLimitBadge"></span>
+                    <span class="lms-workspace-meta-badge" id="wsMemoryLimitBadge"></span>
+                    <span id="wsRequiredBadge"></span>
+                </div>
+            </div>
+
+            <button type="button" class="lms-workspace-close" onclick="closeProblemWorkspace()"
+                title="{{ _('Đóng cửa sổ làm bài') }}">&times;</button>
+        </div>
+
+        <!-- Split Body: Left = Problem Statement, Right = Code Editor & Submissions -->
+        <div class="lms-workspace-body">
+            <!-- Left Pane: Problem Statement -->
+            <div class="lms-workspace-pane-left" id="wsStatementPane">
+                <div
+                    style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--lms-primary); letter-spacing: 0.05em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa fa-book"></i> {{ _('Đề bài & Yêu cầu') }}
+                </div>
+                <div id="workspaceStatementContainer" class="content-description screen lms-problem-statement-content">
+                    <!-- Loaded dynamically from template -->
+                </div>
+            </div>
+
+            <!-- Right Pane: Code Editor & Submissions -->
+            <div class="lms-workspace-pane-right">
+                <!-- Editor Toolbar -->
+                <div class="lms-workspace-editor-toolbar">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label
+                            style="font-size: 0.8125rem; font-weight: 600; color: var(--lms-text-muted); margin: 0;">{{
+                            _('Ngôn ngữ:') }}</label>
+                        <select id="drawerLanguage" onchange="onLanguageChange()"
+                            style="padding: 6px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-card-bg); color: var(--lms-text-main); font-size: 0.8125rem; font-weight: 600;">
+                            {% for lang in available_languages %}
+                            <option value="{{ lang.key }}" data-ace="{{ lang.ace }}" {% if lang.key=='CPP20' or
+                                lang.key=='CPP17' or loop.first %}selected{% endif %}>{{ lang.name }} ({{ lang.key }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" onclick="changeFontSize(-1)"
+                            title="{{ _('Giảm cỡ chữ') }}">A-</button>
+                        <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" onclick="changeFontSize(1)"
+                            title="{{ _('Tăng cỡ chữ') }}">A+</button>
+                        <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" onclick="toggleEditorTheme()"
+                            title="{{ _('Đổi giao diện Sáng/Tối') }}">
+                            <i class="fa fa-moon-o"></i>
+                        </button>
+                        <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" onclick="resetEditorCode()"
+                            title="{{ _('Xóa trắng / Làm lại') }}">
+                            <i class="fa fa-refresh"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ace Code Editor -->
+                <div class="lms-workspace-editor-wrap">
+                    <div id="drawerEditor" class="lms-workspace-editor"></div>
+                </div>
+
+                <!-- Live Verdict / Status Popdown -->
+                <div id="drawerVerdictBox" class="submit-popdown" style="display: none; margin: 12px 16px;">
+                    <div class="submit-popdown-header">
+                        <div class="submit-popdown-status-area">
+                            <span class="submit-popdown-badge is-grading" id="drawerVerdictBadge">
+                                <i class="fa fa-spinner fa-spin"></i>
+                                <span id="drawerVerdictStatusText">{{ _('Đang chấm điểm...') }}</span>
+                            </span>
+                            <span class="submit-popdown-score" id="drawerVerdictScore" style="display: none;"></span>
+                        </div>
+                        <div class="submit-popdown-actions">
+                            <a href="#" id="drawerVerdictDetailLink" class="submit-popdown-link" target="_blank"
+                                style="display: none;">
+                                {{ _('Trang chi tiết') }} <i class="fa fa-external-link"></i>
+                            </a>
+                            <button type="button" class="submit-popdown-toggle-btn" id="drawerVerdictToggleBtn"
+                                onclick="toggleDrawerVerdictAccordion(event)" title="{{ _('Thu gọn / Mở rộng') }}">
+                                <i class="fa fa-chevron-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="submit-popdown-body" id="drawerVerdictBody">
+                        <div class="submit-popdown-loading" id="drawerVerdictLoading">
+                            <div class="submit-popdown-spinner-ring"></div>
+                            <div class="submit-popdown-loading-text">{{ _('Đang chấm bài trên hệ thống máy chủ...') }}
+                            </div>
+                        </div>
+                        <div class="submit-popdown-content" id="drawerVerdictContent" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Footer Action Bar -->
+                <div class="lms-workspace-footer">
+                    <span style="font-size: 0.8125rem; color: var(--lms-text-muted);">
+                        <i class="fa fa-shield"></i> {{ _('Môi trường thực hành & khảo thí chuẩn học thuật LMS HNUEOJ')
+                        }}
+                    </span>
+                    <button type="button" id="drawerSubmitBtn" onclick="submitPracticeCode()"
+                        class="lms-btn lms-btn-primary" style="padding: 8px 24px; font-weight: 700;">
+                        <i class="fa fa-paper-plane"></i> {{ _('Gửi bài chấm') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let editor = null;
+    let currentLpId = null;
+    let currentProblemCode = null;
+    let currentFontSize = 14;
+    let isDarkTheme = false;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof ace !== 'undefined' && document.getElementById('drawerEditor')) {
+            ace.config.set('basePath', '{{ ACE_URL }}');
+            editor = ace.edit("drawerEditor");
+            editor.setTheme("ace/theme/chrome");
+            editor.session.setMode("ace/mode/c_cpp");
+            editor.setFontSize(currentFontSize);
+            editor.setShowPrintMargin(false);
+        }
+    });
+
+    function onLanguageChange() {
+        if (!editor) return;
+        const select = document.getElementById('drawerLanguage');
+        const selectedOption = select.options[select.selectedIndex];
+        const aceMode = selectedOption.getAttribute('data-ace') || 'c_cpp';
+        editor.session.setMode("ace/mode/" + aceMode);
+    }
+
+    function changeFontSize(delta) {
+        if (!editor) return;
+        currentFontSize = Math.max(11, Math.min(22, currentFontSize + delta));
+        editor.setFontSize(currentFontSize);
+    }
+
+    function toggleEditorTheme() {
+        if (!editor) return;
+        isDarkTheme = !isDarkTheme;
+        editor.setTheme(isDarkTheme ? "ace/theme/twilight" : "ace/theme/chrome");
+    }
+
+    function resetEditorCode() {
+        if (!editor) return;
+        if (confirm('{{ _("Bạn có chắc muốn xóa sạch mã nguồn trong khung soạn thảo?") }}')) {
+            editor.setValue('', -1);
+            editor.focus();
+        }
+    }
+
+    function openProblemWorkspace(lpId, problemCode, problemTitle, maxPoints, timeLimit, memLimit, isRequired) {
+        currentLpId = lpId;
+        currentProblemCode = problemCode;
+
+        // Header info
+        document.getElementById('wsTitleText').innerText = problemTitle;
+        document.getElementById('wsCodeBadge').innerText = problemCode;
+        document.getElementById('wsPointsBadge').innerText = maxPoints + 'đ';
+        document.getElementById('wsTimeLimitBadge').innerText = timeLimit + 's';
+        document.getElementById('wsMemoryLimitBadge').innerText = memLimit + 'MB';
+
+        const reqBadge = document.getElementById('wsRequiredBadge');
+        if (reqBadge) {
+            if (isRequired) {
+                reqBadge.className = 'lms-badge-required';
+                reqBadge.innerText = '{{ _("Bắt buộc") }}';
+            } else {
+                reqBadge.className = 'lms-badge-optional';
+                reqBadge.innerText = '{{ _("Tùy chọn") }}';
+            }
+        }
+
+        // Populate problem statement from hidden template
+        const tmpl = document.getElementById('problem_statement_tmpl_' + lpId);
+        const container = document.getElementById('workspaceStatementContainer');
+        if (tmpl && container) {
+            container.innerHTML = tmpl.innerHTML;
+            if (typeof window.renderMathJax === 'function') {
+                window.renderMathJax(container);
+            } else if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+                MathJax.typesetPromise([container]).then(function () {
+                    $(container).find('.tex-image').hide();
+                    $(container).find('.tex-text').show();
+                }).catch(function () { });
+            }
+            if (window.add_code_copy_buttons) {
+                window.add_code_copy_buttons($(container));
+            }
+        }
+
+        document.getElementById('drawerVerdictBox').style.display = 'none';
+
+        // Show modal
+        const modal = document.getElementById('problemWorkspaceModal');
+        modal.classList.add('is-active');
+
+        setTimeout(() => {
+            if (editor) {
+                editor.resize();
+                editor.focus();
+            }
+        }, 100);
+    }
+
+    function closeProblemWorkspace() {
+        const modal = document.getElementById('problemWorkspaceModal');
+        modal.classList.remove('is-active');
+    }
+
+    function handleWorkspaceOverlayClick(e) {
+        if (e.target.id === 'problemWorkspaceModal') {
+            closeProblemWorkspace();
+        }
+    }
+
+    function toggleDrawerVerdictAccordion(e) {
+        if (e) e.preventDefault();
+        const box = document.getElementById('drawerVerdictBox');
+        box.classList.toggle('is-collapsed');
+        const btn = document.getElementById('drawerVerdictToggleBtn');
+        if (btn) {
+            const isCollapsed = box.classList.contains('is-collapsed');
+            btn.querySelector('i').className = isCollapsed ? 'fa fa-chevron-down' : 'fa fa-chevron-up';
+        }
+    }
+
+    function submitPracticeCode() {
+        if (!editor || !currentProblemCode) return;
+        const sourceCode = editor.getValue().trim();
+        if (!sourceCode) {
+            alert('{{ _("Vui lòng nhập mã nguồn trước khi nộp.") }}');
+            return;
+        }
+
+        const langKey = document.getElementById('drawerLanguage').value;
+        const submitBtn = document.getElementById('drawerSubmitBtn');
+        const verdictBox = document.getElementById('drawerVerdictBox');
+        const verdictBadge = document.getElementById('drawerVerdictBadge');
+        const verdictStatusText = document.getElementById('drawerVerdictStatusText');
+        const verdictScore = document.getElementById('drawerVerdictScore');
+        const verdictLoading = document.getElementById('drawerVerdictLoading');
+        const verdictContent = document.getElementById('drawerVerdictContent');
+        const verdictDetailLink = document.getElementById('drawerVerdictDetailLink');
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> {{ _("Đang gửi...") }}';
+
+        verdictBox.style.display = 'block';
+        verdictBox.classList.remove('is-collapsed');
+        verdictBadge.className = 'submit-popdown-badge is-grading';
+        verdictBadge.innerHTML = '<i class="fa fa-spinner fa-spin"></i> <span id="drawerVerdictStatusText">{{ _("Đang chấm điểm...") }}</span>';
+        if (verdictScore) { verdictScore.style.display = 'none'; verdictScore.innerText = ''; }
+        if (verdictDetailLink) { verdictDetailLink.style.display = 'none'; verdictDetailLink.href = '#'; }
+        if (verdictLoading) verdictLoading.style.display = 'flex';
+        if (verdictContent) { verdictContent.style.display = 'none'; verdictContent.innerHTML = ''; }
+
+        const formData = new FormData();
+        formData.append('problem_code', currentProblemCode);
+        formData.append('language', langKey);
+        formData.append('source', sourceCode);
+
+        fetch('{{ url("course_lesson_submit", course.key, current_lesson.id) }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            body: formData,
+        })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(errData => {
+                        throw new Error(errData.error || '{{ _("Lỗi khi nộp bài.") }}');
+                    }).catch(err => {
+                        if (err instanceof Error) throw err;
+                        throw new Error('{{ _("Lỗi khi nộp bài.") }}');
+                    });
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.success && data.status_url) {
+                    if (verdictDetailLink) {
+                        verdictDetailLink.href = data.status_url;
+                        verdictDetailLink.style.display = 'inline-flex';
+                    }
+                    pollSubmissionStatus(data.status_url, data.submission_id, currentLpId);
+                } else {
+                    throw new Error(data.error || '{{ _("Lỗi khi nộp bài.") }}');
+                }
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ _("Gửi bài chấm") }}';
+                verdictBadge.className = 'submit-popdown-badge is-danger';
+                verdictBadge.innerHTML = '<i class="fa fa-exclamation-triangle"></i> <span>{{ _("Lỗi") }}</span>';
+                if (verdictLoading) verdictLoading.style.display = 'none';
+                if (verdictContent) {
+                    verdictContent.style.display = 'block';
+                    verdictContent.innerHTML = '<div class="alert alert-danger" style="margin:0;"><i class="fa fa-exclamation-circle"></i> ' + (err.message || '{{ _("Không thể kết nối đến máy chủ.") }}') + '</div>';
+                }
+            });
+    }
+
+    function pollSubmissionStatus(statusUrl, subId, lpId) {
+        let attempts = 0;
+        let consecutive404 = 0;
+        let currentDelay = 1500;
+        const maxAttempts = 35;
+
+        function bindTestcaseToggles() {
+            const content = document.getElementById('drawerVerdictContent');
+            if (!content) return;
+            $(content).find('.case-row.toggle').off('click').on('click', function (e) {
+                e.preventDefault();
+                const $row = $(this);
+                const $next = $row.next('.case-feedback');
+                if ($next.is(':visible')) {
+                    $next.hide(200);
+                    $row.removeClass('open').addClass('closed');
+                    $row.find('.fa-chevron-down').removeClass('fa-chevron-down').addClass('fa-chevron-right');
+                } else {
+                    $next.show(200);
+                    $row.removeClass('closed').addClass('open');
+                    $row.find('.fa-chevron-right').removeClass('fa-chevron-right').addClass('fa-chevron-down');
+                }
+            });
+        }
+
+        function checkStatus() {
+            attempts++;
+            const submitBtn = document.getElementById('drawerSubmitBtn');
+            const verdictBadge = document.getElementById('drawerVerdictBadge');
+            const verdictScore = document.getElementById('drawerVerdictScore');
+            const verdictLoading = document.getElementById('drawerVerdictLoading');
+            const verdictContent = document.getElementById('drawerVerdictContent');
+
+            const queryUrl = statusUrl + (statusUrl.indexOf('?') !== -1 ? '&' : '?') + '_=' + Date.now();
+
+            fetch(queryUrl, {
+                headers: { 'Cache-Control': 'no-cache' }
+            })
+                .then(res => {
+                    if (res.status === 404) {
+                        consecutive404++;
+                        if (consecutive404 >= 5) {
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ _("Gửi bài chấm") }}';
+                            }
+                            if (verdictBadge) {
+                                verdictBadge.className = 'submit-popdown-badge is-danger';
+                                verdictBadge.innerHTML = '<i class="fa fa-exclamation-circle"></i> <span>404 Not Found</span>';
+                            }
+                            if (verdictLoading) verdictLoading.style.display = 'none';
+                            if (verdictContent) {
+                                verdictContent.style.display = 'block';
+                                verdictContent.innerHTML = '<div class="alert alert-warning" style="margin:0;"><i class="fa fa-exclamation-triangle"></i> {{ _("Chưa tìm thấy dữ liệu chấm (404). Vui lòng thử lại sau.") }}</div>';
+                            }
+                            return;
+                        }
+                        currentDelay = Math.min(5000, currentDelay + 1000);
+                        setTimeout(checkStatus, currentDelay);
+                        return;
+                    }
+
+                    if (!res.ok) {
+                        consecutive404++;
+                        if (consecutive404 >= 5) {
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ _("Gửi bài chấm") }}';
+                            }
+                            return;
+                        }
+                        setTimeout(checkStatus, 2500);
+                        return;
+                    }
+
+                    consecutive404 = 0;
+                    res.text().then(htmlText => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(htmlText, 'text/html');
+                        const testCasesEl = doc.getElementById('test-cases');
+
+                        if (testCasesEl) {
+                            if (verdictContent) {
+                                verdictContent.innerHTML = testCasesEl.innerHTML;
+                                verdictContent.style.display = 'block';
+                            }
+                            if (verdictLoading) verdictLoading.style.display = 'none';
+                            bindTestcaseToggles();
+
+                            const text = testCasesEl.textContent;
+                            const hasSpinner = testCasesEl.querySelector('.fa-spinner, .fa-pulse') !== null;
+                            const isWaiting = /waiting for a suitable judge|being processed|đang chờ|đang được xử lý|đang chấm/i.test(text);
+                            const hasFinishedMarker = /(?:Final\s+(?:pretest\s+)?score|Điểm\s+(?:cuối\s+cùng|pretest|số)|Tài nguyên|Resources|Kết quả|Execution Results|Compilation (?:Error|Warnings)|Lỗi biên dịch|Cảnh báo biên dịch|Submission aborted|bị hủy)/i.test(text) || doc.querySelector('.sub-result') !== null;
+                            const hasCaseRows = testCasesEl.querySelectorAll('.case-row').length > 0;
+                            const isAborted = /Submission aborted|bị hủy/i.test(text);
+
+                            const isCompleted = (!hasSpinner && !isWaiting && (hasFinishedMarker || hasCaseRows || isAborted)) || attempts >= maxAttempts;
+
+                            if (isCompleted) {
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ _("Gửi bài chấm") }}';
+                                }
+
+                                const badCases = testCasesEl.querySelectorAll('.case-bad, .case-WA, .case-TLE, .case-MLE, .case-RTE, .case-IR, .case-OLE, .case-CE');
+                                const acCases = testCasesEl.querySelectorAll('.case-AC');
+                                const pacCases = testCasesEl.querySelectorAll('.case-PAC');
+                                const subResult = doc.querySelector('.sub-result');
+
+                                let isAC = false;
+                                let isPAC = false;
+                                let badgeClass = 'is-grading';
+                                let icon = 'fa-check-circle';
+                                let verdictLabel = '{{ _("Hoàn thành") }}';
+
+                                if (subResult && subResult.classList.contains('AC')) {
+                                    isAC = true;
+                                    badgeClass = 'is-ac';
+                                    icon = 'fa-check-circle';
+                                    verdictLabel = '{{ _("Chấp nhận (AC)") }}';
+                                } else if (subResult && subResult.classList.contains('PAC')) {
+                                    isPAC = true;
+                                    badgeClass = 'is-pac';
+                                    icon = 'fa-adjust';
+                                    verdictLabel = '{{ _("Một phần (PAC)") }}';
+                                } else if (subResult && subResult.classList.contains('CE')) {
+                                    badgeClass = 'is-ce';
+                                    icon = 'fa-exclamation-circle';
+                                    verdictLabel = '{{ _("Lỗi biên dịch (CE)") }}';
+                                } else if (subResult && subResult.classList.contains('TLE')) {
+                                    badgeClass = 'is-tle';
+                                    icon = 'fa-clock-o';
+                                    verdictLabel = '{{ _("Quá thời gian (TLE)") }}';
+                                } else if (subResult && subResult.classList.contains('MLE')) {
+                                    badgeClass = 'is-mle';
+                                    icon = 'fa-database';
+                                    verdictLabel = '{{ _("Quá bộ nhớ (MLE)") }}';
+                                } else if (subResult && subResult.classList.contains('WA')) {
+                                    badgeClass = 'is-wa';
+                                    icon = 'fa-times-circle';
+                                    verdictLabel = '{{ _("Sai kết quả (WA)") }}';
+                                } else if (subResult && (subResult.classList.contains('RTE') || subResult.classList.contains('IR') || subResult.classList.contains('OLE'))) {
+                                    badgeClass = 'is-danger';
+                                    icon = 'fa-exclamation-triangle';
+                                    verdictLabel = '{{ _("Lỗi thực thi (RTE)") }}';
+                                } else if (testCasesEl.querySelectorAll('.case-CE').length > 0 || (/Compilation Error|Lỗi biên dịch/i.test(text) && !hasCaseRows)) {
+                                    badgeClass = 'is-ce';
+                                    icon = 'fa-exclamation-circle';
+                                    verdictLabel = '{{ _("Lỗi biên dịch (CE)") }}';
+                                } else if (badCases.length === 0 && acCases.length > 0) {
+                                    isAC = true;
+                                    badgeClass = 'is-ac';
+                                    icon = 'fa-check-circle';
+                                    verdictLabel = '{{ _("Chấp nhận (AC)") }}';
+                                } else if (pacCases.length > 0 || (acCases.length > 0 && badCases.length > 0)) {
+                                    isPAC = true;
+                                    badgeClass = 'is-pac';
+                                    icon = 'fa-adjust';
+                                    verdictLabel = '{{ _("Một phần (PAC)") }}';
+                                } else if (testCasesEl.querySelectorAll('.case-TLE').length > 0) {
+                                    badgeClass = 'is-tle';
+                                    icon = 'fa-clock-o';
+                                    verdictLabel = '{{ _("Quá thời gian (TLE)") }}';
+                                } else if (testCasesEl.querySelectorAll('.case-MLE').length > 0) {
+                                    badgeClass = 'is-mle';
+                                    icon = 'fa-database';
+                                    verdictLabel = '{{ _("Quá bộ nhớ (MLE)") }}';
+                                } else if (testCasesEl.querySelectorAll('.case-WA').length > 0) {
+                                    badgeClass = 'is-wa';
+                                    icon = 'fa-times-circle';
+                                    verdictLabel = '{{ _("Sai kết quả (WA)") }}';
+                                } else if (testCasesEl.querySelectorAll('.case-RTE, .case-IR, .case-OLE').length > 0) {
+                                    badgeClass = 'is-danger';
+                                    icon = 'fa-exclamation-triangle';
+                                    verdictLabel = '{{ _("Lỗi thực thi (RTE)") }}';
+                                } else if (isAborted) {
+                                    badgeClass = 'is-danger';
+                                    icon = 'fa-ban';
+                                    verdictLabel = '{{ _("Bị hủy") }}';
+                                }
+
+                                if (verdictBadge) {
+                                    verdictBadge.className = 'submit-popdown-badge ' + badgeClass;
+                                    verdictBadge.innerHTML = '<i class="fa ' + icon + '"></i> <span>' + verdictLabel + '</span>';
+                                }
+
+                                // Extract score
+                                let scoreMatch = text.match(/(?:Final\s+(?:pretest\s+)?score|Điểm\s+(?:cuối\s+cùng|pretest|số))[:\s]*([\d\.]+(?:\s*\/\s*[\d\.]+)?)/i);
+                                if (!scoreMatch) {
+                                    scoreMatch = text.match(/\(([\d\.]+\s*\/\s*[\d\.]+)\s*(?:points|điểm|đ)\)/i);
+                                }
+                                let pointsText = '';
+                                if (scoreMatch && scoreMatch[1]) {
+                                    pointsText = scoreMatch[1].trim();
+                                    if (verdictScore) {
+                                        verdictScore.innerText = pointsText + ' đ';
+                                        verdictScore.style.display = 'inline-flex';
+                                    }
+                                }
+
+                                // Update Card in UI
+                                const card = document.getElementById('problemCard_' + lpId);
+                                const scoreEl = document.getElementById('problemScore_' + lpId);
+                                const iconEl = document.getElementById('problemStatusIcon_' + lpId);
+
+                                if (scoreEl && pointsText) scoreEl.innerText = pointsText.split('/')[0].trim();
+                                if (card) {
+                                    if (isAC) {
+                                        card.className = 'lms-problem-card is-ac';
+                                        if (iconEl) iconEl.innerHTML = '<i class="fa fa-check-circle" style="color: var(--lms-success);"></i>';
+                                    } else {
+                                        card.className = 'lms-problem-card is-attempted';
+                                        if (iconEl) iconEl.innerHTML = '<span class="lms-badge" style="background: var(--lms-danger-light); color: var(--lms-danger); font-size: 0.75rem;">' + (verdictLabel || 'FAIL') + '</span>';
+                                    }
+                                }
+
+                                // If AC, enable complete button
+                                if (isAC) {
+                                    const completeBtn = document.getElementById('toggleCompleteBtn');
+                                    if (completeBtn) {
+                                        completeBtn.className = 'lms-btn lms-btn-primary';
+                                        completeBtn.removeAttribute('title');
+                                    }
+                                }
+                                return; // Done!
+                            }
+
+                            setTimeout(checkStatus, 1500);
+                        } else {
+                            if (attempts < maxAttempts) {
+                                setTimeout(checkStatus, currentDelay);
+                            } else {
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ _("Gửi bài chấm") }}';
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(err => {
+                    consecutive404++;
+                    if (consecutive404 >= 5) {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ _("Gửi bài chấm") }}';
+                        }
+                        if (verdictBadge) {
+                            verdictBadge.className = 'submit-popdown-badge is-danger';
+                            verdictBadge.innerHTML = '<i class="fa fa-exclamation-triangle"></i> <span>{{ _("Lỗi kết nối") }}</span>';
+                        }
+                        return;
+                    }
+                    setTimeout(checkStatus, 3000);
+                });
+        }
+
+        setTimeout(checkStatus, 1200);
+    }
+
+    function toggleLessonProgress() {
+        const btn = document.getElementById('toggleCompleteBtn');
+        const textSpan = document.getElementById('toggleCompleteText');
+        const badge = document.getElementById('lessonStatusBadge');
+        const sidebarBar = document.getElementById('sidebarProgressBar');
+        const sidebarPct = document.getElementById('sidebarProgressPct');
+        const icon = document.getElementById('lessonIcon_{{ current_lesson.id }}');
+
+        btn.disabled = true;
+
+        fetch('{{ url("course_lesson_toggle", course.key, current_lesson.id) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({})
+        })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                if (data.success) {
+                    if (data.is_completed) {
+                        btn.className = 'lms-btn lms-btn-success';
+                        textSpan.innerText = '{{ _("Đã hoàn thành (Bấm để hủy)") }}';
+                        badge.className = 'lms-badge lms-badge-completed';
+                        badge.innerHTML = '<i class="fa fa-check"></i> {{ _("Đã hoàn thành") }}';
+                        if (icon) {
+                            icon.className = 'fa fa-check-circle-o done lms-nav-icon';
+                        }
+                    } else {
+                        btn.className = 'lms-btn lms-btn-primary';
+                        textSpan.innerText = '{{ _("Đánh dấu đã hoàn thành") }}';
+                        badge.className = 'lms-badge lms-badge-draft';
+                        badge.innerHTML = '<i class="fa fa-hourglass-start"></i> {{ _("Chưa hoàn thành") }}';
+                        if (icon) {
+                            icon.className = 'fa fa-circle-o lms-nav-icon';
+                        }
+                    }
+                    if (sidebarBar) sidebarBar.style.width = data.progress_percentage + '%';
+                    if (sidebarPct) sidebarPct.innerText = data.progress_percentage + '%';
+                } else {
+                    alert(data.error || '{{ _("Không thể cập nhật trạng thái bài học.") }}');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                console.error(err);
+            });
+    }
+</script>
+{% endblock %}
+
+{% block bodyend %}
+{% if REQUIRE_JAX %}
+{% include "mathjax-load.html" %}
+{% endif %}
+{% endblock %}

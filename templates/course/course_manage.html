@@ -1,0 +1,1123 @@
+{% extends "base.html" %}
+
+{% block media %}
+    <link rel="stylesheet" href="{{ static('course_lms.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="lms-container">
+    <div class="lms-header">
+        <div class="lms-breadcrumb">
+            <a href="{{ url('home') }}"><i class="fa fa-home"></i> {{ _('Trang chủ') }}</a>
+            <i class="fa fa-angle-right"></i>
+            <a href="{{ url('course_list') }}">{{ _('Cổng Học tập LMS HNUEOJ') }}</a>
+            <i class="fa fa-angle-right"></i>
+            <a href="{{ course.get_absolute_url() }}">{{ course.title }}</a>
+            <i class="fa fa-angle-right"></i>
+            <span>{{ _('Quản trị & Thiết kế Học liệu') }}</span>
+        </div>
+
+        <div class="lms-title-row">
+            <div>
+                <h1 class="lms-page-title">{{ _('Thiết kế Học liệu & Quản trị Học phần:') }} {{ course.title }}</h1>
+                <p style="color: var(--lms-text-muted); margin: 4px 0 0; font-size: 0.875rem;">
+                    {{ _('Hệ thống quản lý thông tin học phần, cấu trúc phân mảnh chương mục, bài giảng lý thuyết và các kỳ thi khảo thí năng lực trực tuyến.') }}
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button type="button" class="lms-btn lms-btn-secondary" onclick="openEditCourseInfoModal()">
+                    <i class="fa fa-cogs"></i> {{ _('Cài đặt Thông tin & Học phí') }}
+                </button>
+                <button type="button" class="lms-btn {% if course.is_locked %}lms-btn-warning{% else %}lms-btn-secondary{% endif %}" onclick="toggleItemLock('course', {{ course.id }})">
+                    <i class="fa {% if course.is_locked %}fa-unlock{% else %}fa-lock{% endif %}"></i> 
+                    {% if course.is_locked %}{{ _('Mở khóa toàn học phần') }}{% else %}{{ _('Khóa toàn học phần') }}{% endif %}
+                </button>
+                <a href="{{ url('course_monitor', course.key) }}" class="lms-btn lms-btn-secondary" style="color: var(--lms-danger) !important;">
+                    <i class="fa fa-desktop"></i> {{ _('Giám sát Khảo thí (Live)') }}
+                </a>
+                <button type="button" class="lms-btn lms-btn-primary" onclick="openAddChapterModal()">
+                    <i class="fa fa-plus-circle"></i> {{ _('Thêm Chương mục mới') }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Course Metadata Status Bar -->
+        <div style="background: var(--lms-card-bg); border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); padding: 14px 20px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.875rem;">
+                    <span style="color: var(--lms-text-muted);">{{ _('Học phí:') }}</span>
+                    <strong style="color: var(--lms-success); font-size: 1rem;">{{ course.formatted_price }}</strong>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.875rem;">
+                    <span style="color: var(--lms-text-muted);">{{ _('Trạng thái:') }}</span>
+                    <span class="lms-badge" style="background: {% if course.status == 'PUBLISHED' %}rgba(16, 185, 129, 0.15); color: #059669;{% elif course.status == 'DRAFT' %}rgba(245, 158, 11, 0.15); color: #b45309;{% else %}rgba(100, 116, 139, 0.15); color: #64748b;{% endif %}">
+                        {{ course.get_status_display() }}
+                    </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.875rem;">
+                    <span style="color: var(--lms-text-muted);">{{ _('Hiển thị:') }}</span>
+                    <span class="lms-badge" style="background: {% if course.is_public %}rgba(16, 185, 129, 0.15); color: #059669;{% else %}rgba(239, 68, 68, 0.15); color: #dc2626;{% endif %}">
+                        {% if course.is_public %}{{ _('Công khai') }}{% else %}{{ _('Ẩn / Riêng tư') }}{% endif %}
+                    </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.875rem;">
+                    <span style="color: var(--lms-text-muted);">{{ _('Khóa học:') }}</span>
+                    <span class="lms-badge" style="background: {% if course.is_locked %}rgba(239, 68, 68, 0.15); color: #dc2626;{% else %}rgba(16, 185, 129, 0.15); color: #059669;{% endif %}">
+                        <i class="fa {% if course.is_locked %}fa-lock{% else %}fa-unlock{% endif %}"></i>
+                        {% if course.is_locked %}{{ _('Đang khóa học viên') }}{% else %}{{ _('Đang mở') }}{% endif %}
+                    </span>
+                </div>
+            </div>
+            <div>
+                <a href="{{ course.get_absolute_url() }}" target="_blank" class="lms-btn lms-btn-secondary lms-btn-sm">
+                    <i class="fa fa-external-link"></i> {{ _('Xem trang khóa học') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Course Data for modal -->
+    <script type="application/json" id="course_meta_data">
+    {
+        "id": {{ course.id }},
+        "key": {{ course.key|tojson }},
+        "title": {{ course.title|tojson }},
+        "description": {{ course.description|tojson }},
+        "price": {{ course.price }},
+        "thumbnail_url": {{ (course.thumbnail_url or '')|tojson }},
+        "status": {{ course.status|tojson }},
+        "is_public": {{ 'true' if course.is_public else 'false' }},
+        "is_locked": {{ 'true' if course.is_locked else 'false' }}
+    }
+    </script>
+
+    <!-- Chapter & Content Structure -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        {% for chapter in chapters %}
+            <div class="lms-card-bg" style="border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-lg); overflow: hidden; background: var(--lms-card-bg); box-shadow: var(--lms-shadow-sm);">
+                <div style="padding: 16px 20px; background: var(--lms-bg); border-bottom: 1px solid var(--lms-card-border); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--lms-primary);">
+                            {{ _('Chương') }} {{ loop.index }}
+                        </span>
+                        <h3 style="margin: 2px 0 0; font-size: 1.125rem; font-weight: 700;">{{ chapter.title }}</h3>
+                        {% if chapter.description %}
+                            <p style="margin: 2px 0 0; font-size: 0.8125rem; color: var(--lms-text-muted);">{{ chapter.description }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" onclick="openAddLessonModal({{ chapter.id }})">
+                            <i class="fa fa-plus"></i> {{ _('Thêm bài học') }}
+                        </button>
+                        <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" onclick="openAddExamModal({{ chapter.id }})">
+                            <i class="fa fa-flag"></i> {{ _('Thêm bài kiểm tra') }}
+                        </button>
+                        <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" onclick="openEditChapterModal({{ chapter.id }}, '{{ chapter.title|escapejs }}', '{{ chapter.description|escapejs }}', {{ chapter.order_index }})">
+                            <i class="fa fa-pencil"></i>
+                        </button>
+                        <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="color: var(--lms-danger);" onclick="deleteItem('chapter', {{ chapter.id }})">
+                            <i class="fa fa-trash-o"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div style="padding: 12px 16px;">
+                    <!-- Lessons -->
+                    {% for lesson in chapter.lessons.all() %}
+                        <script type="application/json" id="lesson_data_{{ lesson.id }}">
+                        {
+                            "id": {{ lesson.id }},
+                            "chapter_id": {{ chapter.id }},
+                            "title": {{ lesson.title|tojson }},
+                            "content": {{ lesson.content|tojson }},
+                            "video_url": {{ (lesson.video_url or '')|tojson }},
+                            "estimated_minutes": {{ lesson.estimated_minutes }},
+                            "order_index": {{ lesson.order_index }},
+                            "is_published": {{ 'true' if lesson.is_published else 'false' }},
+                            "is_locked": {{ 'true' if lesson.is_locked else 'false' }}
+                        }
+                        </script>
+                        <script type="application/json" id="lesson_problems_{{ lesson.id }}">
+                        [
+                            {% for lp in lesson.lesson_problems.all() %}
+                            {
+                                "id": {{ lp.id }},
+                                "code": {{ lp.problem.code|tojson }},
+                                "name": {{ lp.problem.name|tojson }},
+                                "points": {{ lp.problem.points or 100 }},
+                                "is_required": {{ 'true' if lp.is_required_for_completion else 'false' }},
+                                "order": {{ lp.order_index }}
+                            }{% if not loop.last %},{% endif %}
+                            {% endfor %}
+                        ]
+                        </script>
+                        <div style="border-bottom: 1px solid var(--lms-card-border); padding: 10px 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                    <i class="fa fa-file-text-o" style="color: var(--lms-primary);"></i>
+                                    <span style="font-weight: 600; font-size: 0.9375rem;">{{ lesson.title }}</span>
+                                    <span style="font-size: 0.75rem; color: var(--lms-text-muted);">
+                                        <i class="fa fa-clock-o"></i> {{ lesson.estimated_minutes }}p
+                                    </span>
+                                    {% if lesson.is_locked %}
+                                        <span class="lms-badge" style="background: rgba(239, 68, 68, 0.15); color: #dc2626;">
+                                            <i class="fa fa-lock"></i> {{ _('Đang khóa') }}
+                                        </span>
+                                    {% else %}
+                                        <span class="lms-badge" style="background: rgba(16, 185, 129, 0.15); color: #059669;">
+                                            <i class="fa fa-unlock"></i> {{ _('Đang mở') }}
+                                        </span>
+                                    {% endif %}
+                                    {% if not lesson.is_published %}
+                                        <span class="lms-badge" style="background: rgba(245, 158, 11, 0.15); color: #b45309;">
+                                            {{ _('Bản nháp') }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <div style="display: flex; gap: 6px;">
+                                    <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="color: {% if lesson.is_locked %}var(--lms-success){% else %}var(--lms-warning){% endif %};" title="{% if lesson.is_locked %}{{ _('Mở khóa bài học') }}{% else %}{{ _('Khóa bài học') }}{% endif %}" onclick="toggleItemLock('lesson', {{ lesson.id }})">
+                                        <i class="fa {% if lesson.is_locked %}fa-unlock{% else %}fa-lock{% endif %}"></i>
+                                    </button>
+                                    <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="color: var(--lms-primary);" onclick="openLessonProblemTableModal({{ lesson.id }}, '{{ lesson.title|escapejs }}')">
+                                        <i class="fa fa-list-ol"></i> {{ _('Bài tập') }} ({{ lesson.lesson_problems.count() }})
+                                    </button>
+                                    <a href="{{ lesson.get_absolute_url() }}" target="_blank" class="lms-btn lms-btn-secondary lms-btn-sm">
+                                        <i class="fa fa-eye"></i> {{ _('Xem') }}
+                                    </a>
+                                    <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" onclick="openEditLessonModal({{ lesson.id }})">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="color: var(--lms-danger);" onclick="deleteItem('lesson', {{ lesson.id }})">
+                                        <i class="fa fa-trash-o"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Attached Lesson Problems -->
+                            {% if lesson.lesson_problems.all() %}
+                                <div style="margin-top: 8px; margin-left: 24px; display: flex; flex-direction: column; gap: 6px;">
+                                    {% for lp in lesson.lesson_problems.all() %}
+                                        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--lms-bg); padding: 6px 12px; border-radius: var(--lms-radius-sm); font-size: 0.8125rem;">
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <span class="order-badge" style="width: 20px; height: 20px; font-size: 0.75rem;">{{ loop.index }}</span>
+                                                <i class="fa fa-code" style="color: var(--lms-primary);"></i>
+                                                <strong>[{{ lp.problem.code }}]</strong> {{ lp.problem.name }} ({{ lp.problem.points or 100 }}đ)
+                                                {% if lp.is_required_for_completion %}
+                                                    <span class="lms-badge-required">{{ _('Bắt buộc') }}</span>
+                                                {% else %}
+                                                    <span class="lms-badge-optional">{{ _('Tùy chọn') }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <div style="display: flex; gap: 4px;">
+                                                <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" onclick="openLessonProblemTableModal({{ lesson.id }}, '{{ lesson.title|escapejs }}')">
+                                                    <i class="fa fa-pencil"></i>
+                                                </button>
+                                                <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="padding: 2px 6px; font-size: 0.75rem; color: var(--lms-danger);" onclick="deleteItem('lesson_problem', {{ lp.id }})">
+                                                    <i class="fa fa-trash-o"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <!-- Exams -->
+                    {% for exam in chapter.exams.all() %}
+                        <script type="application/json" id="exam_data_{{ exam.id }}">
+                        {
+                            "id": {{ exam.id }},
+                            "chapter_id": {{ chapter.id }},
+                            "title": {{ exam.title|tojson }},
+                            "description": {{ exam.description|tojson }},
+                            "exam_type": {{ exam.exam_type|tojson }},
+                            "pass_percentage": {{ exam.pass_percentage }},
+                            "is_published": {{ 'true' if exam.is_published else 'false' }},
+                            "is_locked": {{ 'true' if exam.is_locked else 'false' }}
+                        }
+                        </script>
+                        <script type="application/json" id="exam_problems_{{ exam.id }}">
+                        [
+                            {% for ep in exam.exam_problems.all() %}
+                            {
+                                "id": {{ ep.id }},
+                                "code": {{ ep.problem.code|tojson }},
+                                "name": {{ ep.problem.name|tojson }},
+                                "points": {{ ep.problem.points or 100 }},
+                                "order": {{ ep.order_index }}
+                            }{% if not loop.last %},{% endif %}
+                            {% endfor %}
+                        ]
+                        </script>
+                        <div style="border-radius: var(--lms-radius-md); background: var(--lms-warning-light); margin-top: 8px; padding: 12px 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <i class="fa fa-flag-checkered" style="color: var(--lms-warning);"></i>
+                                        <span style="font-weight: 700; font-size: 0.9375rem;">{{ exam.title }}</span>
+                                        <span class="lms-badge" style="background: rgba(245, 158, 11, 0.2); color: #b45309;">
+                                            {{ exam.exam_problems.count() }} {{ _('bài tập') }}
+                                        </span>
+                                        {% if exam.is_locked %}
+                                            <span class="lms-badge" style="background: rgba(239, 68, 68, 0.15); color: #dc2626;">
+                                                <i class="fa fa-lock"></i> {{ _('Đang khóa') }}
+                                            </span>
+                                        {% else %}
+                                            <span class="lms-badge" style="background: rgba(16, 185, 129, 0.15); color: #059669;">
+                                                <i class="fa fa-unlock"></i> {{ _('Đang mở') }}
+                                            </span>
+                                        {% endif %}
+                                        {% if not exam.is_published %}
+                                            <span class="lms-badge" style="background: rgba(245, 158, 11, 0.15); color: #b45309;">
+                                                {{ _('Bản nháp') }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--lms-text-muted); margin-top: 4px;">
+                                        {{ _('Điểm đạt:') }} {{ exam.pass_percentage }}% | {{ _('Loại:') }} {{ exam.get_exam_type_display() }}
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 6px;">
+                                    <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="color: {% if exam.is_locked %}var(--lms-success){% else %}var(--lms-warning){% endif %};" title="{% if exam.is_locked %}{{ _('Mở khóa kỳ thi') }}{% else %}{{ _('Khóa kỳ thi') }}{% endif %}" onclick="toggleItemLock('exam', {{ exam.id }})">
+                                        <i class="fa {% if exam.is_locked %}fa-unlock{% else %}fa-lock{% endif %}"></i>
+                                    </button>
+                                    <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="color: var(--lms-primary);" onclick="openExamProblemTableModal({{ exam.id }}, '{{ exam.title|escapejs }}')">
+                                        <i class="fa fa-list-ol"></i> {{ _('Bài tập') }} ({{ exam.exam_problems.count() }})
+                                    </button>
+                                    <a href="{{ exam.get_absolute_url() }}" target="_blank" class="lms-btn lms-btn-secondary lms-btn-sm">
+                                        <i class="fa fa-eye"></i> {{ _('Xem') }}
+                                    </a>
+                                    <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" onclick="openEditExamModal({{ exam.id }})">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="color: var(--lms-danger);" onclick="deleteItem('exam', {{ exam.id }})">
+                                        <i class="fa fa-trash-o"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Attached Exam Problems -->
+                            {% if exam.exam_problems.all() %}
+                                <div style="margin-top: 8px; margin-left: 24px; display: flex; flex-direction: column; gap: 6px;">
+                                    {% for ep in exam.exam_problems.all() %}
+                                        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--lms-bg); padding: 6px 12px; border-radius: var(--lms-radius-sm); font-size: 0.8125rem;">
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <span class="order-badge" style="width: 20px; height: 20px; font-size: 0.75rem;">{{ loop.index }}</span>
+                                                <i class="fa fa-code" style="color: var(--lms-warning);"></i>
+                                                <strong>[{{ ep.problem.code }}]</strong> {{ ep.problem.name }} ({{ ep.problem.points or 100 }}đ)
+                                            </div>
+                                            <div style="display: flex; gap: 4px;">
+                                                <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" onclick="openExamProblemTableModal({{ exam.id }}, '{{ exam.title|escapejs }}')">
+                                                    <i class="fa fa-pencil"></i>
+                                                </button>
+                                                <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="padding: 2px 6px; font-size: 0.75rem; color: var(--lms-danger);" onclick="deleteItem('exam_problem', {{ ep.id }})">
+                                                    <i class="fa fa-trash-o"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 48px; background: var(--lms-card-bg); border: 1px dashed var(--lms-card-border); border-radius: var(--lms-radius-lg);">
+                <p style="color: var(--lms-text-muted); margin-bottom: 16px;">{{ _('Khóa học chưa có chương nào. Hãy bắt đầu bằng cách thêm chương đầu tiên!') }}</p>
+                <button type="button" class="lms-btn lms-btn-primary" onclick="openAddChapterModal()">
+                    <i class="fa fa-plus"></i> {{ _('Thêm Chương đầu tiên') }}
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Course Info Settings Modal -->
+<div id="courseInfoModal" class="lms-modal-overlay" onclick="handleOverlayClick(event, 'courseInfoModal')">
+    <div style="background: var(--lms-card-bg); max-width: 680px; width: 92%; margin: 50px auto; padding: 28px; border-radius: var(--lms-radius-lg); box-shadow: var(--lms-shadow-xl); border: 1px solid var(--lms-card-border); max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700;">{{ _('Cài đặt Thông tin & Học phí Học phần (LMS HNUEOJ)') }}</h3>
+            <button type="button" class="lms-close-btn" onclick="closeModal('courseInfoModal')">&times;</button>
+        </div>
+        <form onsubmit="saveCourseInfo(event)">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Tên học phần / Khóa học') }} *</label>
+                <input type="text" id="ci_title" required placeholder="Ví dụ: Cấu trúc dữ liệu & Giải thuật nâng cao" 
+                       style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Học phí đào tạo (VNĐ - 0 là Miễn phí)') }} *</label>
+                    <input type="number" id="ci_price" min="0" step="1000" placeholder="0" 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Trạng thái xuất bản') }}</label>
+                    <select id="ci_status" style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                        <option value="DRAFT">{{ _('Bản nháp học liệu') }}</option>
+                        <option value="PUBLISHED">{{ _('Đã xuất bản & Mở tuyển sinh') }}</option>
+                        <option value="ARCHIVED">{{ _('Lưu trữ học thuật') }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Ảnh bìa đại diện học phần (URL)') }}</label>
+                <input type="url" id="ci_thumbnail" placeholder="https://..." 
+                       style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; background: var(--lms-bg); padding: 12px 16px; border-radius: var(--lms-radius-md); border: 1px solid var(--lms-card-border);">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 600; margin: 0;">
+                    <input type="checkbox" id="ci_is_public" style="width: 18px; height: 18px; accent-color: var(--lms-primary);">
+                    {{ _('Hiển thị công khai trên danh mục đào tạo') }}
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 600; margin: 0; color: var(--lms-danger);">
+                    <input type="checkbox" id="ci_is_locked" style="width: 18px; height: 18px; accent-color: var(--lms-danger);">
+                    {{ _('Khóa toàn bộ học phần đối với học viên') }}
+                </label>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Mô tả mục tiêu & chuẩn đầu ra (Hỗ trợ Markdown / LaTeX)') }}</label>
+                <textarea id="ci_desc" rows="6" placeholder="Mục tiêu kiến thức, lộ trình học tập, đối tượng người học..." 
+                          style="width: 100%; padding: 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="lms-btn lms-btn-secondary" onclick="closeModal('courseInfoModal')">{{ _('Hủy bỏ') }}</button>
+                <button type="submit" class="lms-btn lms-btn-primary">{{ _('Lưu thay đổi') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add/Edit Chapter Modal -->
+<div id="chapterModal" class="lms-modal-overlay" onclick="handleOverlayClick(event, 'chapterModal')">
+    <div style="background: var(--lms-card-bg); max-width: 500px; width: 90%; margin: 80px auto; padding: 24px; border-radius: var(--lms-radius-lg); box-shadow: var(--lms-shadow-xl); border: 1px solid var(--lms-card-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="chapterModalTitle" style="margin: 0; font-size: 1.25rem; font-weight: 700;">{{ _('Khởi tạo Chương mục mới') }}</h3>
+            <button type="button" class="lms-close-btn" onclick="closeModal('chapterModal')">&times;</button>
+        </div>
+        <form onsubmit="saveChapter(event)">
+            <input type="hidden" id="chapter_id" value="">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Tiêu đề chương mục') }} *</label>
+                <input type="text" id="chapter_title" required placeholder="Ví dụ: Chương 1: Cấu trúc Dữ liệu & Giải thuật Cơ bản" 
+                       style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Tóm tắt nội dung chương') }}</label>
+                <textarea id="chapter_desc" rows="3" placeholder="Tóm tắt mục tiêu và các nội dung chuyên đề trong chương..." 
+                          style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="lms-btn lms-btn-secondary" onclick="closeModal('chapterModal')">{{ _('Hủy bỏ') }}</button>
+                <button type="submit" class="lms-btn lms-btn-primary">{{ _('Lưu chương mục') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add/Edit Lesson Modal -->
+<div id="lessonModal" class="lms-modal-overlay" onclick="handleOverlayClick(event, 'lessonModal')">
+    <div style="background: var(--lms-card-bg); max-width: 800px; width: 95%; margin: 40px auto; padding: 28px; border-radius: var(--lms-radius-lg); box-shadow: var(--lms-shadow-xl); border: 1px solid var(--lms-card-border); max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="lessonModalTitle" style="margin: 0; font-size: 1.25rem; font-weight: 700;">{{ _('Soạn thảo Bài giảng Lý thuyết') }}</h3>
+            <button type="button" class="lms-close-btn" onclick="closeModal('lessonModal')">&times;</button>
+        </div>
+        <form onsubmit="saveLesson(event)">
+            <input type="hidden" id="lesson_id" value="">
+            <input type="hidden" id="lesson_chapter_id" value="">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Tiêu đề bài giảng') }} *</label>
+                <input type="text" id="lesson_title" required placeholder="Ví dụ: Chuyên đề 1: Con trỏ & Quản lý bộ nhớ động" 
+                       style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 160px; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Liên kết Video bài giảng minh họa (Tùy chọn)') }}</label>
+                    <input type="url" id="lesson_video" placeholder="https://www.youtube.com/watch?v=..." 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Thời lượng (phút)') }}</label>
+                    <input type="number" id="lesson_minutes" value="15" min="1" 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; background: var(--lms-bg); padding: 12px 16px; border-radius: var(--lms-radius-md); border: 1px solid var(--lms-card-border);">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 600; margin: 0;">
+                    <input type="checkbox" id="lesson_published" checked style="width: 18px; height: 18px; accent-color: var(--lms-primary);">
+                    {{ _('Đã xuất bản (Publish)') }}
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 600; margin: 0; color: var(--lms-danger);">
+                    <input type="checkbox" id="lesson_locked" style="width: 18px; height: 18px; accent-color: var(--lms-danger);">
+                    {{ _('Khóa bài giảng (Chỉ Ban chuyên môn xem được)') }}
+                </label>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Nội dung bài giảng học thuật (Hỗ trợ Markdown & MathJax LaTeX)') }} *</label>
+                <textarea id="lesson_content" rows="12" placeholder="# Tiêu đề bài giảng&#10;&#10;Nội dung lý thuyết, định lý, công thức toán học $O(N \log N)$ và khối mã nguồn..." 
+                          style="width: 100%; padding: 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-family: monospace; font-size: 0.875rem;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="lms-btn lms-btn-secondary" onclick="closeModal('lessonModal')">{{ _('Hủy bỏ') }}</button>
+                <button type="submit" class="lms-btn lms-btn-primary">{{ _('Lưu bài giảng') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add/Edit Exam Modal -->
+<div id="examModal" class="lms-modal-overlay" onclick="handleOverlayClick(event, 'examModal')">
+    <div style="background: var(--lms-card-bg); max-width: 550px; width: 90%; margin: 60px auto; padding: 24px; border-radius: var(--lms-radius-lg); box-shadow: var(--lms-shadow-xl); border: 1px solid var(--lms-card-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="examModalTitle" style="margin: 0; font-size: 1.25rem; font-weight: 700;">{{ _('Thiết lập Kỳ thi & Khảo thí Đánh giá Năng lực') }}</h3>
+            <button type="button" class="lms-close-btn" onclick="closeModal('examModal')">&times;</button>
+        </div>
+        <form onsubmit="saveExam(event)">
+            <input type="hidden" id="exam_id" value="">
+            <input type="hidden" id="exam_chapter_id" value="">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Tên kỳ khảo thí') }} *</label>
+                <input type="text" id="exam_title" required placeholder="Ví dụ: Bài khảo thí năng lực Chương 1" 
+                       style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Hình thức khảo thí') }}</label>
+                    <select id="exam_type" style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                        <option value="PRACTICE">{{ _('Luyện tập (Không tính Rating)') }}</option>
+                        <option value="RATED">{{ _('Khảo thí Xếp hạng (Rating Elo/Glicko)') }}</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Chuẩn điểm đạt yêu cầu (phần trăm)') }}</label>
+                    <input type="number" id="exam_pass" value="60" min="0" max="100" 
+                       style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; background: var(--lms-bg); padding: 12px 16px; border-radius: var(--lms-radius-md); border: 1px solid var(--lms-card-border);">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 600; margin: 0;">
+                    <input type="checkbox" id="exam_published" checked style="width: 18px; height: 18px; accent-color: var(--lms-primary);">
+                    {{ _('Đã xuất bản (Publish)') }}
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 600; margin: 0; color: var(--lms-danger);">
+                    <input type="checkbox" id="exam_locked" style="width: 18px; height: 18px; accent-color: var(--lms-danger);">
+                    {{ _('Khóa kỳ thi (Chỉ Ban chuyên môn xem được)') }}
+                </label>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Quy chế & Hướng dẫn làm bài') }}</label>
+                <textarea id="exam_desc" rows="3" placeholder="Quy định làm bài khảo thí, thời gian và tiêu chuẩn nộp bài..." 
+                          style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="lms-btn lms-btn-secondary" onclick="closeModal('examModal')">{{ _('Hủy bỏ') }}</button>
+                <button type="submit" class="lms-btn lms-btn-primary">{{ _('Lưu kỳ khảo thí') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Dynamic Drag & Drop Problem Table Modal (#problem-table) -->
+<div id="problemTableModal" class="lms-modal-overlay" onclick="handleOverlayClick(event, 'problemTableModal')">
+    <div style="background: var(--lms-card-bg); max-width: 860px; width: 95%; margin: 40px auto; padding: 28px; border-radius: var(--lms-radius-lg); box-shadow: var(--lms-shadow-xl); border: 1px solid var(--lms-card-border); max-height: 90vh; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+                <h3 id="problemTableModalTitle" style="margin: 0; font-size: 1.25rem; font-weight: 700;">{{ _('Quản lý Danh mục Bài tập Thực hành') }}</h3>
+                <p style="margin: 4px 0 0; font-size: 0.8125rem; color: var(--lms-text-muted);">
+                    {{ _('Kéo thả biểu tượng ở cột đầu tiên để sắp xếp thứ tự. Tên bài và điểm số tự động đồng bộ theo hệ thống HNUEOJ.') }}
+                </p>
+            </div>
+            <button type="button" class="lms-close-btn" onclick="closeModal('problemTableModal')">&times;</button>
+        </div>
+
+        <div style="flex: 1; overflow-y: auto; margin: 16px 0; padding-right: 4px;">
+            <table class="table" id="problem-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;"></th>
+                        <th style="width: 60px; text-align: center;">{{ _('Thứ tự') }}</th>
+                        <th>{{ _('Bài tập (Nhập mã hoặc tên bài)') }}</th>
+                        <th style="width: 100px; text-align: center;">{{ _('Điểm gốc') }}</th>
+                        <th id="th_required_col" style="width: 120px; text-align: center;">{{ _('Bắt buộc') }}</th>
+                        <th style="width: 50px; text-align: center;">{{ _('Xóa') }}</th>
+                    </tr>
+                </thead>
+                <tbody id="problem_table_tbody">
+                    <!-- Dynamic Problem Rows -->
+                </tbody>
+            </table>
+
+            <div>
+                <button type="button" class="lms-btn lms-btn-secondary" onclick="addProblemTableRow()">
+                    <i class="fa fa-plus"></i> {{ _('Thêm bài tập') }}
+                </button>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid var(--lms-card-border);">
+            <span style="font-size: 0.8125rem; color: var(--lms-text-muted);" id="problemTableCountInfo">
+                0 bài tập được chọn
+            </span>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" class="lms-btn lms-btn-secondary" onclick="closeModal('problemTableModal')">{{ _('Hủy') }}</button>
+                <button type="button" class="lms-btn lms-btn-primary" id="saveProblemTableBtn" onclick="saveProblemTable()">
+                    <i class="fa fa-save"></i> {{ _('Lưu danh sách bài tập') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTableContext = {
+    type: null, // 'lesson' or 'exam'
+    id: null,
+    title: ''
+};
+
+function openModal(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.add('active');
+        el.classList.add('is-active');
+    }
+}
+
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.remove('active');
+        el.classList.remove('is-active');
+    }
+}
+
+function handleOverlayClick(event, modalId) {
+    if (event.target.id === modalId) {
+        closeModal(modalId);
+    }
+}
+
+function openAddChapterModal() {
+    document.getElementById('chapter_id').value = '';
+    document.getElementById('chapter_title').value = '';
+    document.getElementById('chapter_desc').value = '';
+    document.getElementById('chapterModalTitle').innerText = '{{ _("Thêm Chương mới") }}';
+    openModal('chapterModal');
+}
+
+function openEditChapterModal(id, title, desc, order) {
+    document.getElementById('chapter_id').value = id;
+    document.getElementById('chapter_title').value = title;
+    document.getElementById('chapter_desc').value = desc;
+    document.getElementById('chapterModalTitle').innerText = '{{ _("Sửa Chương") }}';
+    openModal('chapterModal');
+}
+
+function openAddLessonModal(chapterId) {
+    document.getElementById('lesson_id').value = '';
+    document.getElementById('lesson_chapter_id').value = chapterId;
+    document.getElementById('lesson_title').value = '';
+    document.getElementById('lesson_content').value = '';
+    document.getElementById('lesson_video').value = '';
+    document.getElementById('lesson_minutes').value = '15';
+    document.getElementById('lessonModalTitle').innerText = '{{ _("Thêm Bài học mới") }}';
+    openModal('lessonModal');
+}
+
+function openEditLessonModal(lessonId) {
+    const dataEl = document.getElementById('lesson_data_' + lessonId);
+    if (!dataEl) return;
+    const data = JSON.parse(dataEl.textContent);
+    document.getElementById('lesson_id').value = data.id;
+    document.getElementById('lesson_chapter_id').value = data.chapter_id;
+    document.getElementById('lesson_title').value = data.title;
+    document.getElementById('lesson_content').value = data.content;
+    document.getElementById('lesson_video').value = data.video_url || '';
+    document.getElementById('lesson_minutes').value = data.estimated_minutes;
+    document.getElementById('lesson_published').checked = data.is_published !== false;
+    document.getElementById('lesson_locked').checked = !!data.is_locked;
+    document.getElementById('lessonModalTitle').innerText = '{{ _("Sửa Bài học") }}';
+    openModal('lessonModal');
+}
+
+function openAddExamModal(chapterId) {
+    document.getElementById('exam_id').value = '';
+    document.getElementById('exam_chapter_id').value = chapterId;
+    document.getElementById('exam_title').value = '';
+    document.getElementById('exam_desc').value = '';
+    document.getElementById('exam_type').value = 'PRACTICE';
+    document.getElementById('exam_pass').value = '60';
+    document.getElementById('exam_published').checked = true;
+    document.getElementById('exam_locked').checked = false;
+    document.getElementById('examModalTitle').innerText = '{{ _("Thêm Kỳ thi mới") }}';
+    openModal('examModal');
+}
+
+function openEditExamModal(examId) {
+    const dataEl = document.getElementById('exam_data_' + examId);
+    if (!dataEl) return;
+    const data = JSON.parse(dataEl.textContent);
+    document.getElementById('exam_id').value = data.id;
+    document.getElementById('exam_chapter_id').value = data.chapter_id || '';
+    document.getElementById('exam_title').value = data.title;
+    document.getElementById('exam_desc').value = data.description || '';
+    document.getElementById('exam_type').value = data.exam_type;
+    document.getElementById('exam_pass').value = data.pass_percentage;
+    document.getElementById('exam_published').checked = data.is_published !== false;
+    document.getElementById('exam_locked').checked = !!data.is_locked;
+    document.getElementById('examModalTitle').innerText = '{{ _("Sửa Kỳ thi") }}';
+    openModal('examModal');
+}
+
+function openEditCourseInfoModal() {
+    const metaEl = document.getElementById('course_meta_data');
+    if (!metaEl) return;
+    const data = JSON.parse(metaEl.textContent);
+    document.getElementById('ci_title').value = data.title;
+    document.getElementById('ci_price').value = data.price;
+    document.getElementById('ci_status').value = data.status;
+    document.getElementById('ci_thumbnail').value = data.thumbnail_url || '';
+    document.getElementById('ci_is_public').checked = !!data.is_public;
+    document.getElementById('ci_is_locked').checked = !!data.is_locked;
+    document.getElementById('ci_desc').value = data.description;
+    openModal('courseInfoModal');
+}
+
+function saveCourseInfo(e) {
+    e.preventDefault();
+    const title = document.getElementById('ci_title').value.trim();
+    const price = parseInt(document.getElementById('ci_price').value) || 0;
+    const status = document.getElementById('ci_status').value;
+    const thumbnail = document.getElementById('ci_thumbnail').value.trim();
+    const isPublic = document.getElementById('ci_is_public').checked;
+    const isLocked = document.getElementById('ci_is_locked').checked;
+    const desc = document.getElementById('ci_desc').value;
+
+    fetch('{{ url("course_info_save", course.key) }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({
+            title: title,
+            price: price,
+            status: status,
+            thumbnail_url: thumbnail,
+            is_public: isPublic,
+            is_locked: isLocked,
+            description: desc
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Có lỗi xảy ra khi lưu thông tin khóa học.');
+        }
+    })
+    .catch(err => {
+        alert('Lỗi kết nối máy chủ.');
+    });
+}
+
+function toggleItemLock(type, id) {
+    const confirmMsg = type === 'course' 
+        ? '{{ _("Bạn có chắc chắn muốn thay đổi trạng thái khóa của toàn bộ khóa học?") }}'
+        : (type === 'lesson' 
+            ? '{{ _("Bạn có chắc chắn muốn thay đổi trạng thái khóa của bài học này?") }}'
+            : '{{ _("Bạn có chắc chắn muốn thay đổi trạng thái khóa của kỳ thi này?") }}');
+    if (!confirm(confirmMsg)) return;
+
+    fetch('{{ url("course_item_toggle_lock", course.key) }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ item_type: type, item_id: id })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Có lỗi xảy ra.');
+        }
+    })
+    .catch(err => {
+        alert('Lỗi kết nối máy chủ.');
+    });
+}
+
+/* =========================================================
+   Unified Problem Table & Drag & Drop Management (#problem-table)
+========================================================= */
+
+function openLessonProblemTableModal(lessonId, lessonTitle) {
+    currentTableContext = { type: 'lesson', id: lessonId, title: lessonTitle };
+    document.getElementById('problemTableModalTitle').innerText = '{{ _("Quản lý bài tập bài học") }}: ' + lessonTitle;
+    document.getElementById('th_required_col').style.display = '';
+
+    const scriptEl = document.getElementById('lesson_problems_' + lessonId);
+    const problems = scriptEl ? JSON.parse(scriptEl.textContent) : [];
+    populateProblemTable(problems, true);
+    openModal('problemTableModal');
+}
+
+function openExamProblemTableModal(examId, examTitle) {
+    currentTableContext = { type: 'exam', id: examId, title: examTitle };
+    document.getElementById('problemTableModalTitle').innerText = '{{ _("Quản lý bài tập kỳ thi") }}: ' + examTitle;
+    document.getElementById('th_required_col').style.display = 'none';
+
+    const scriptEl = document.getElementById('exam_problems_' + examId);
+    const problems = scriptEl ? JSON.parse(scriptEl.textContent) : [];
+    populateProblemTable(problems, false);
+    openModal('problemTableModal');
+}
+
+function populateProblemTable(problems, showRequired) {
+    const tbody = document.getElementById('problem_table_tbody');
+    tbody.innerHTML = '';
+
+    if (!problems || problems.length === 0) {
+        addProblemTableRow();
+    } else {
+        problems.forEach((p, idx) => {
+            addProblemTableRow(p.code, p.name, p.points, p.is_required);
+        });
+    }
+    renumberTableOrders();
+}
+
+function addProblemTableRow(code = '', name = '', points = '', isRequired = true) {
+    const tbody = document.getElementById('problem_table_tbody');
+    const row = document.createElement('tr');
+    row.className = 'problem-table-row';
+    row.setAttribute('draggable', 'true');
+
+    const showRequired = currentTableContext.type === 'lesson';
+
+    row.innerHTML = `
+        <td class="drag-handle-cell">
+            <i class="fa fa-ellipsis-v"></i><i class="fa fa-ellipsis-v" style="margin-left: 2px;"></i>
+        </td>
+        <td style="text-align: center;">
+            <span class="order-badge">1</span>
+        </td>
+        <td>
+            <div class="problem-search-container">
+                <input type="text" class="problem-code-input" placeholder="{{ _('Nhập mã bài (apb, lcs...)') }}" value="${code}" 
+                       oninput="handleProblemSearchInput(this)" onblur="handleProblemInputBlur(this)">
+                <div class="problem-suggestions-box"></div>
+                <div class="problem-title-preview" style="font-size: 0.8125rem; font-weight: 600; color: var(--lms-primary); margin-top: 4px; ${name ? '' : 'display: none;'}">
+                    ${name ? `[${code}] ${name}` : ''}
+                </div>
+            </div>
+        </td>
+        <td style="text-align: center;">
+            <span class="problem-points-display" style="font-weight: 700;">${points !== '' ? points : '--'}</span> đ
+        </td>
+        <td class="td-required-cell" style="text-align: center; ${showRequired ? '' : 'display: none;'}">
+            <input type="checkbox" class="problem-required-checkbox" ${isRequired ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--lms-primary); cursor: pointer;">
+        </td>
+        <td style="text-align: center;">
+            <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="color: var(--lms-danger); padding: 4px 8px;" onclick="removeProblemTableRow(this)">
+                <i class="fa fa-trash"></i>
+            </button>
+        </td>
+    `;
+
+    tbody.appendChild(row);
+    initDragAndDropEvents(row);
+    renumberTableOrders();
+}
+
+function removeProblemTableRow(btn) {
+    const row = btn.closest('tr');
+    if (row) {
+        row.remove();
+        renumberTableOrders();
+    }
+}
+
+function renumberTableOrders() {
+    const tbody = document.getElementById('problem_table_tbody');
+    const rows = tbody.querySelectorAll('tr.problem-table-row');
+    rows.forEach((row, idx) => {
+        const badge = row.querySelector('.order-badge');
+        if (badge) badge.innerText = idx + 1;
+    });
+    const info = document.getElementById('problemTableCountInfo');
+    if (info) info.innerText = `${rows.length} {{ _('bài tập trong danh sách') }}`;
+}
+
+/* Problem Search Autocomplete */
+let searchDebounceTimer = null;
+
+function handleProblemSearchInput(input) {
+    const query = input.value.trim();
+    const container = input.closest('.problem-search-container');
+    const suggestBox = container.querySelector('.problem-suggestions-box');
+    const preview = container.querySelector('.problem-title-preview');
+
+    clearTimeout(searchDebounceTimer);
+    if (!query) {
+        suggestBox.style.display = 'none';
+        suggestBox.innerHTML = '';
+        return;
+    }
+
+    searchDebounceTimer = setTimeout(() => {
+        fetch(`{{ url('course_problem_search', course.key) }}?q=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.results && data.results.length > 0) {
+                    suggestBox.innerHTML = data.results.map(p => `
+                        <div class="problem-suggest-item" onmousedown="selectProblemSuggestion(this, '${p.code}', '${p.name.replace(/'/g, "\\'")}', ${p.points})">
+                            <span><strong>[${p.code}]</strong> ${p.name}</span>
+                            <span style="color: var(--lms-text-muted);">${p.points}đ</span>
+                        </div>
+                    `).join('');
+                    suggestBox.style.display = 'block';
+                } else {
+                    suggestBox.innerHTML = `<div style="padding: 10px; color: var(--lms-text-muted); font-size: 0.8125rem;">{{ _('Không tìm thấy bài tập') }}</div>`;
+                    suggestBox.style.display = 'block';
+                }
+            });
+    }, 250);
+}
+
+function selectProblemSuggestion(itemEl, code, name, points) {
+    const container = itemEl.closest('.problem-search-container');
+    const row = itemEl.closest('tr');
+    const input = container.querySelector('.problem-code-input');
+    const suggestBox = container.querySelector('.problem-suggestions-box');
+    const preview = container.querySelector('.problem-title-preview');
+    const pointsDisplay = row.querySelector('.problem-points-display');
+
+    input.value = code;
+    suggestBox.style.display = 'none';
+    preview.innerText = `[${code}] ${name}`;
+    preview.style.display = 'block';
+    if (pointsDisplay) pointsDisplay.innerText = points;
+}
+
+function handleProblemInputBlur(input) {
+    const container = input.closest('.problem-search-container');
+    const suggestBox = container.querySelector('.problem-suggestions-box');
+    setTimeout(() => {
+        suggestBox.style.display = 'none';
+    }, 200);
+}
+
+/* Drag and Drop implementation */
+let draggedRow = null;
+
+function initDragAndDropEvents(row) {
+    row.addEventListener('dragstart', function(e) {
+        draggedRow = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', '');
+    });
+
+    row.addEventListener('dragend', function() {
+        draggedRow = null;
+        this.classList.remove('dragging');
+        document.querySelectorAll('#problem-table tr').forEach(r => r.classList.remove('drag-over'));
+        renumberTableOrders();
+    });
+
+    row.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (draggedRow && draggedRow !== this) {
+            this.classList.add('drag-over');
+        }
+    });
+
+    row.addEventListener('dragleave', function() {
+        this.classList.remove('drag-over');
+    });
+
+    row.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('drag-over');
+        if (draggedRow && draggedRow !== this) {
+            const tbody = document.getElementById('problem_table_tbody');
+            const allRows = Array.from(tbody.querySelectorAll('tr.problem-table-row'));
+            const fromIdx = allRows.indexOf(draggedRow);
+            const toIdx = allRows.indexOf(this);
+            if (fromIdx < toIdx) {
+                this.after(draggedRow);
+            } else {
+                this.before(draggedRow);
+            }
+            renumberTableOrders();
+        }
+    });
+}
+
+function saveProblemTable() {
+    const tbody = document.getElementById('problem_table_tbody');
+    const rows = tbody.querySelectorAll('tr.problem-table-row');
+    const problems = [];
+
+    rows.forEach((row, idx) => {
+        const input = row.querySelector('.problem-code-input');
+        const code = input ? input.value.trim() : '';
+        if (code) {
+            const reqCheckbox = row.querySelector('.problem-required-checkbox');
+            const isReq = reqCheckbox ? reqCheckbox.checked : false;
+            problems.push({
+                problem_code: code,
+                order: idx + 1,
+                is_required: isReq
+            });
+        }
+    });
+
+    const btn = document.getElementById('saveProblemTableBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> {{ _("Đang lưu...") }}';
+
+    let endpoint = '';
+    if (currentTableContext.type === 'lesson') {
+        endpoint = `/course/{{ course.key }}/api/lesson/${currentTableContext.id}/problems/batch-save/`;
+    } else {
+        endpoint = `/course/{{ course.key }}/api/exam/${currentTableContext.id}/problems/batch-save/`;
+    }
+
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ problems: problems })
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-save"></i> {{ _("Lưu danh sách bài tập") }}';
+        if (data.success) {
+            alert('{{ _("Đã lưu danh sách bài tập và cập nhật thứ tự thành công!") }}');
+            location.reload();
+        } else {
+            alert(data.error || '{{ _("Có lỗi xảy ra khi lưu bài tập.") }}');
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-save"></i> {{ _("Lưu danh sách bài tập") }}';
+        alert('Lỗi kết nối máy chủ.');
+    });
+}
+
+function saveChapter(e) {
+    e.preventDefault();
+    const id = document.getElementById('chapter_id').value;
+    const title = document.getElementById('chapter_title').value;
+    const desc = document.getElementById('chapter_desc').value;
+
+    fetch('{{ url("course_chapter_save", course.key) }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ id: id || null, title: title, description: desc })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) location.reload();
+        else alert(data.error || 'Có lỗi xảy ra.');
+    });
+}
+
+function saveLesson(e) {
+    e.preventDefault();
+    const id = document.getElementById('lesson_id').value;
+    const chapterId = document.getElementById('lesson_chapter_id').value;
+    const title = document.getElementById('lesson_title').value;
+    const content = document.getElementById('lesson_content').value;
+    const video = document.getElementById('lesson_video').value;
+    const minutes = document.getElementById('lesson_minutes').value;
+    const published = document.getElementById('lesson_published').checked;
+    const locked = document.getElementById('lesson_locked').checked;
+
+    fetch('{{ url("course_lesson_save", course.key) }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({
+            id: id || null,
+            chapter_id: chapterId,
+            title: title,
+            content: content,
+            video_url: video,
+            estimated_minutes: minutes,
+            is_published: published,
+            is_locked: locked
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) location.reload();
+        else alert(data.error || 'Có lỗi xảy ra.');
+    });
+}
+
+function saveExam(e) {
+    e.preventDefault();
+    const id = document.getElementById('exam_id').value;
+    const chapterId = document.getElementById('exam_chapter_id').value;
+    const title = document.getElementById('exam_title').value;
+    const type = document.getElementById('exam_type').value;
+    const pass = document.getElementById('exam_pass').value;
+    const desc = document.getElementById('exam_desc').value;
+    const published = document.getElementById('exam_published').checked;
+    const locked = document.getElementById('exam_locked').checked;
+
+    fetch('{{ url("course_exam_save", course.key) }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({
+            id: id || null,
+            chapter_id: chapterId,
+            title: title,
+            exam_type: type,
+            pass_percentage: pass,
+            description: desc,
+            is_published: published,
+            is_locked: locked
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) location.reload();
+        else alert(data.error || 'Có lỗi xảy ra.');
+    });
+}
+
+function deleteItem(type, id) {
+    if (!confirm('Bạn có chắc chắn muốn xóa mục này?')) return;
+    fetch('{{ url("course_item_delete", course.key) }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ item_type: type, item_id: id })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) location.reload();
+    });
+}
+</script>
+{% endblock %}

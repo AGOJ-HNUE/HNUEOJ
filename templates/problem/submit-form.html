@@ -1,0 +1,343 @@
+{% if not no_judges %}
+    {% if default_lang not in form.fields.language.queryset %}
+        <div class="alert alert-warning alert-dismissable">
+            <a class="close">x</a>
+            <b>{{ _('Warning!') }}</b>
+            {{ _('Your default language, %(language)s, is unavailable for this problem and has been deselected.', language=bold(default_lang.name)) }}
+        </div>
+    {% endif %}
+
+    {% if request.in_contest and submission_limit %}
+        {% if submissions_left > 0 %}
+            <div class="alert alert-warning alert-dismissable">
+                <a class="close">x</a>
+                {% trans left=submissions_left -%}
+                    You have {{ left }} submission left
+                    {%- pluralize -%}
+                    You have {{ left }} submissions left
+                {%- endtrans %}
+            </div>
+        {% else %}
+            <div class="alert alert-warning alert-dismissable">
+                <a class="close">x</a>
+                {{ _('You have 0 submissions left') }}
+            </div>
+        {% endif %}
+    {% endif %}
+{% endif %}
+
+<form id="problem_submit" action="" method="post" class="form-area" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors() }}
+    <div id="submit-wrapper">
+        <div id="editor" class="hidden">
+            <div>
+                <label for="file_select"><i>{{ _('Paste your source code here or load it from a file:') }}</i></label>
+                <input id="file_select" type="file" onchange="handleFileSelect()">
+            </div>
+            {{ form.source.errors }}
+            {{ form.source }}
+        </div>
+        <div id="file-submit" class="hidden">
+            <div class="alert alert-warning alert-dismissable">
+                <a class="close">x</a>
+                {{ _('You can only submit file for this language.')}}
+            </div>
+            {{ form.submission_file.errors }}
+            <input id="file_upload" type="file" name="submission_file" style="display: none;" onchange="handleFileChange()">
+            <label for="file_upload" id="file_drag"></label>
+        </div>
+        <hr>
+        {% if not no_judges %}
+            <div id="language">
+                {{ form.language.errors }}
+                <div id="language-select">
+                    <select id="id_language" name="language">
+                        {% for lang in form.fields.language.queryset %}
+                            <option value="{{ lang.id }}" data-id="{{ lang.id }}" data-name="{{ lang.name }}"
+                                    data-info="{{ lang.info }}" data-ace="{{ lang.ace }}" data-fileonly="{{ lang.file_only }}"
+                                    data-ext="{{ lang.extension }}" data-file-size="{{ lang.file_size_limit }}"
+                                    data-judge-info="{{ runtime_versions(lang.runtime_versions()) }}"
+                                    {% if lang.id == default_lang.id %}selected{% endif %}>{{ lang.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <hr>
+
+    {% if no_judges %}
+        <span style="color: red">{{ _('No judge is available for this problem.') }}</span>
+    {% else %}
+        <div class="submit-bar">
+            {{ form.judge }}
+            <input type="submit" value="{{ _('Submit!') }}" class="button"
+                   {% if request.in_contest and submission_limit and not submissions_left %}disabled{% endif %}>
+        </div>
+    {% endif %}
+
+    <!-- Modern Submission Popdown (Accordion) -->
+    <div id="submit-popdown" class="submit-popdown" style="display: none;">
+        <div class="submit-popdown-header">
+            <div class="submit-popdown-status-area">
+                <span class="submit-popdown-badge is-grading" id="submitPopdownBadge">
+                    <i class="fa fa-spinner fa-spin"></i>
+                    <span id="submitPopdownStatusText">{{ _('Đang chấm điểm...') }}</span>
+                </span>
+                <span class="submit-popdown-score" id="submitPopdownScore" style="display: none;"></span>
+            </div>
+            <div class="submit-popdown-actions">
+                <a href="#" id="submitPopdownDetailLink" class="submit-popdown-link" target="_blank" style="display: none;">
+                    {{ _('Trang chi tiết') }} <i class="fa fa-external-link"></i>
+                </a>
+                <button type="button" class="submit-popdown-toggle-btn" id="submitPopdownToggleBtn" title="{{ _('Thu gọn / Mở rộng') }}">
+                    <i class="fa fa-chevron-up"></i>
+                </button>
+            </div>
+        </div>
+        <div class="submit-popdown-body" id="submitPopdownBody">
+            <div class="submit-popdown-loading" id="submitPopdownLoading">
+                <div class="submit-popdown-spinner-ring"></div>
+                <div class="submit-popdown-loading-text">{{ _('Đang gửi bài và chờ chấm điểm trên máy chủ...') }}</div>
+            </div>
+            <div class="submit-popdown-content" id="submitPopdownContent" style="display: none;"></div>
+        </div>
+    </div>
+</form>
+
+<style>
+/* Modern Submission Popdown Styles */
+.submit-popdown {
+    margin-top: 1.25rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: popdownSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes popdownSlideDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.submit-popdown.is-collapsed .submit-popdown-body {
+    max-height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.submit-popdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: #f8fafc;
+    border-bottom: 1px solid #edf2f7;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.submit-popdown-status-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.submit-popdown-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: all 0.2s ease;
+}
+
+.submit-popdown-badge.is-grading {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.submit-popdown-badge.is-ac {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.submit-popdown-badge.is-pac {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fde68a;
+}
+
+.submit-popdown-badge.is-wa,
+.submit-popdown-badge.is-tle,
+.submit-popdown-badge.is-mle,
+.submit-popdown-badge.is-ce,
+.submit-popdown-badge.is-danger {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.submit-popdown-score {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1e293b;
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.submit-popdown-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.submit-popdown-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #2563eb;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    transition: all 0.15s ease;
+}
+
+.submit-popdown-link:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+    text-decoration: none;
+}
+
+.submit-popdown-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.15s ease;
+}
+
+.submit-popdown-toggle-btn:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+.submit-popdown-body {
+    padding: 18px 20px;
+    max-height: 550px;
+    overflow-y: auto;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+}
+
+.submit-popdown-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 16px;
+    gap: 12px;
+}
+
+.submit-popdown-spinner-ring {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: popdownSpin 0.8s linear infinite;
+}
+
+@keyframes popdownSpin {
+    to { transform: rotate(360deg); }
+}
+
+.submit-popdown-loading-text {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.submit-popdown-content {
+    color: #1e293b;
+    font-size: 0.875rem;
+}
+
+.submit-popdown-content pre {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.8125rem;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.submit-popdown-content .submissions-status-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 4px;
+}
+
+.submit-popdown-content .case-row {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.submit-popdown-content .case-row:hover {
+    background: #f1f5f9;
+}
+
+.submit-popdown-content .case-row td {
+    padding: 8px 12px;
+    vertical-align: middle;
+}
+
+.submit-popdown-content .case-feedback {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px;
+}
+</style>

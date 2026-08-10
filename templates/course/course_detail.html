@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block media %}
+<link rel="stylesheet" href="{{ static('course_lms.css') }}">
+{% endblock %}
+
+{% block title_row %}{% endblock %}
+{% block title_ruler %}{% endblock %}
+
+{% block body %}
+<div class="lms-container">
+    <!-- Breadcrumb -->
+    <div class="lms-header">
+        <div class="lms-breadcrumb">
+            <a href="{{ url('home') }}"><i class="fa fa-home"></i> {{ _('Trang chủ') }}</a>
+            <i class="fa fa-angle-right"></i>
+            <a href="{{ url('course_list') }}">{{ _('Cổng Học tập LMS HNUEOJ') }}</a>
+            <i class="fa fa-angle-right"></i>
+            <span>{{ course.title }}</span>
+        </div>
+    </div>
+
+    <!-- 2-Column Detail Layout -->
+    <div class="lms-detail-layout">
+        <!-- Left Column: Hero Banner + Curriculum -->
+        <div>
+            <!-- Course Hero Card -->
+            <div class="lms-hero-card">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                    {% if course.status == 'DRAFT' %}
+                    <span class="lms-badge lms-badge-draft">{{ _('Bản nháp học liệu') }}</span>
+                    {% elif course.status == 'PUBLISHED' %}
+                    <span class="lms-badge lms-badge-published">{{ _('Đang mở tuyển sinh') }}</span>
+                    {% endif %}
+                    {% if enrollment %}
+                    <span class="lms-badge lms-badge-active">
+                        <i class="fa fa-check-circle"></i> {{ _('Đã ghi danh theo học') }}
+                    </span>
+                    {% endif %}
+                    {% if certificate %}
+                    <span class="lms-badge lms-badge-completed">
+                        <i class="fa fa-trophy"></i> {{ _('Đã cấp chứng chỉ tốt nghiệp') }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <h1 class="lms-hero-title">{{ course.title }}</h1>
+
+                {% if course.description %}
+                <div class="lms-hero-desc lms-markdown-body"
+                    style="font-size: 0.9375rem; line-height: 1.6; color: var(--lms-text-muted); margin: 12px 0 20px;">
+                    {{ course.description|markdown('default', MATH_ENGINE)|reference|str|safe }}
+                </div>
+                {% endif %}
+
+                <!-- Meta Row -->
+                <div class="lms-hero-meta-row">
+                    <div class="lms-hero-meta-item">
+                        <div class="lms-avatar-sm" style="width: 38px; height: 38px; font-size: 0.9375rem;">
+                            {{ course.instructor_initial }}
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--lms-text-light);">{{ _('Giảng viên phụ trách')
+                                }}</div>
+                            <span style="font-weight: 700; color: var(--lms-text-main);">
+                                {{ course.instructor_name }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="lms-hero-meta-item">
+                        <div style="font-size: 1.25rem; color: var(--lms-primary);"><i class="fa fa-users"></i></div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--lms-text-light);">{{ _('Số lượng học viên') }}
+                            </div>
+                            <span style="font-weight: 700; color: var(--lms-text-main);">{{ course.student_count }} {{
+                                _('học viên') }}</span>
+                        </div>
+                    </div>
+
+                    <div class="lms-hero-meta-item">
+                        <div style="font-size: 1.25rem; color: var(--lms-success);"><i class="fa fa-graduation-cap"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--lms-text-light);">{{ _('Cấu trúc chương trình')
+                                }}</div>
+                            <span style="font-weight: 700; color: var(--lms-text-main);">
+                                {{ course.total_lessons_count }} {{ _('bài giảng') }} &bull; {{ course.total_exams_count
+                                }} {{ _('bài tập & kỳ thi') }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Curriculum Section -->
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 1.375rem; font-weight: 800; margin: 0; color: var(--lms-text-main);">
+                        <i class="fa fa-list-ul" style="color: var(--lms-primary);"></i> {{ _('Nội dung khóa học') }}
+                    </h2>
+                    <span style="font-size: 0.875rem; color: var(--lms-text-muted); font-weight: 600;">
+                        {{ chapters.count() }} {{ _('chương') }} &bull; {{ course.total_lessons_count }} {{ _('bài học')
+                        }}
+                    </span>
+                </div>
+
+                {% if chapters %}
+                <div>
+                    {% for chapter in chapters %}
+                    <div class="lms-chapter-card">
+                        <div class="lms-chapter-header">
+                            <div>
+                                <span class="lms-chapter-tag">
+                                    {{ _('Chương') }} {{ loop.index }}
+                                </span>
+                                <h3 class="lms-chapter-title">{{ chapter.title }}</h3>
+                            </div>
+                            <span style="font-size: 0.8125rem; color: var(--lms-text-muted); font-weight: 600;">
+                                {{ chapter.lessons.count() }} {{ _('bài học') }}
+                            </span>
+                        </div>
+
+                        <div class="lms-curriculum-list">
+                            {% for lesson in chapter.lessons.all() %}
+                            {% if lesson.is_published or is_instructor %}
+                            {% set is_done = lesson.id in completed_lesson_ids %}
+                            {% set can_view = is_instructor or (enrollment and not lesson.is_locked and not
+                            course.is_locked) %}
+                            {% if can_view %}
+                            <a href="{{ lesson.get_absolute_url() }}" class="lms-curriculum-item">
+                                <i class="fa {% if is_done %}fa-check-circle-o done{% else %}fa-circle-o{% endif %} lms-nav-icon"
+                                    style="font-size: 1.125rem;"></i>
+                                <span style="flex: 1; font-weight: 500;">{{ lesson.title }}</span>
+                                {% if lesson.is_locked %}
+                                <span class="lms-badge"
+                                    style="background: rgba(239, 68, 68, 0.15); color: #dc2626; margin-right: 6px;">
+                                    <i class="fa fa-lock"></i> {{ _('Đang khóa') }}
+                                </span>
+                                {% endif %}
+                                <span style="font-size: 0.75rem; color: var(--lms-text-light);">
+                                    <i class="fa fa-clock-o"></i> {{ lesson.estimated_minutes }} {{ _('phút') }}
+                                </span>
+                            </a>
+                            {% else %}
+                            <div class="lms-curriculum-item is-locked"
+                                style="opacity: 0.7; cursor: not-allowed; background: rgba(0,0,0,0.02); display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--lms-radius-sm);">
+                                <i class="fa fa-lock lms-nav-icon"
+                                    style="font-size: 1.125rem; color: var(--lms-text-muted);"></i>
+                                <span style="flex: 1; font-weight: 500; color: var(--lms-text-muted);">{{ lesson.title
+                                    }}</span>
+                                {% if not enrollment %}
+                                <span class="lms-badge"
+                                    style="background: rgba(100, 116, 139, 0.15); color: #64748b; margin-right: 6px;">
+                                    <i class="fa fa-lock"></i> {{ _('Cần ghi danh') }}
+                                </span>
+                                {% elif lesson.is_locked %}
+                                <span class="lms-badge"
+                                    style="background: rgba(239, 68, 68, 0.15); color: #dc2626; margin-right: 6px;">
+                                    <i class="fa fa-lock"></i> {{ _('Tạm khóa') }}
+                                </span>
+                                {% endif %}
+                                <span style="font-size: 0.75rem; color: var(--lms-text-light);">
+                                    <i class="fa fa-clock-o"></i> {{ lesson.estimated_minutes }} {{ _('phút') }}
+                                </span>
+                            </div>
+                            {% endif %}
+                            {% endif %}
+                            {% endfor %}
+
+                            {% for exam in chapter.exams.all() %}
+                            {% if exam.is_published or is_instructor %}
+                            {% set can_view_exam = is_instructor or (enrollment and not exam.is_locked and not
+                            course.is_locked) %}
+                            {% if can_view_exam %}
+                            <a href="{{ exam.get_absolute_url() }}" class="lms-curriculum-item is-exam">
+                                <i class="fa fa-flag-checkered"
+                                    style="color: var(--lms-warning); font-size: 1.125rem;"></i>
+                                <span style="flex: 1; font-weight: 600; color: var(--lms-text-main);">
+                                    {{ _('Kỳ thi:') }} {{ exam.title }}
+                                </span>
+                                {% if exam.is_locked %}
+                                <span class="lms-badge"
+                                    style="background: rgba(239, 68, 68, 0.15); color: #dc2626; margin-right: 6px;">
+                                    <i class="fa fa-lock"></i> {{ _('Đang khóa') }}
+                                </span>
+                                {% endif %}
+                                <span class="lms-badge" style="background: rgba(245, 158, 11, 0.2); color: #b45309;">
+                                    {{ exam.exam_problems.count() }} {{ _('bài tập') }}
+                                </span>
+                            </a>
+                            {% else %}
+                            <div class="lms-curriculum-item is-exam is-locked"
+                                style="opacity: 0.7; cursor: not-allowed; background: rgba(0,0,0,0.02); display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--lms-radius-sm);">
+                                <i class="fa fa-lock" style="color: var(--lms-text-muted); font-size: 1.125rem;"></i>
+                                <span style="flex: 1; font-weight: 600; color: var(--lms-text-muted);">
+                                    {{ _('Kỳ thi:') }} {{ exam.title }}
+                                </span>
+                                {% if not enrollment %}
+                                <span class="lms-badge"
+                                    style="background: rgba(100, 116, 139, 0.15); color: #64748b; margin-right: 6px;">
+                                    <i class="fa fa-lock"></i> {{ _('Cần ghi danh') }}
+                                </span>
+                                {% elif exam.is_locked %}
+                                <span class="lms-badge"
+                                    style="background: rgba(239, 68, 68, 0.15); color: #dc2626; margin-right: 6px;">
+                                    <i class="fa fa-lock"></i> {{ _('Tạm khóa') }}
+                                </span>
+                                {% endif %}
+                                <span class="lms-badge" style="background: rgba(245, 158, 11, 0.2); color: #b45309;">
+                                    {{ exam.exam_problems.count() }} {{ _('bài tập') }}
+                                </span>
+                            </div>
+                            {% endif %}
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div
+                    style="padding: 36px; text-align: center; background: var(--lms-card-bg); border: 1px dashed var(--lms-card-border); border-radius: var(--lms-radius-md);">
+                    <p style="color: var(--lms-text-muted); margin: 0;">{{ _('Nội dung đề cương chi tiết đang được Giảng
+                        viên cập nhật.') }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column: Sticky Action Card -->
+        <div>
+            <div class="lms-cta-card">
+                {% if enrollment %}
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <div
+                        style="font-size: 0.8125rem; font-weight: 600; color: var(--lms-text-muted); margin-bottom: 8px;">
+                        {{ _('Tiến độ học tập cá nhân') }}
+                    </div>
+                    <div class="lms-progress-bar" style="height: 10px; margin-bottom: 8px;">
+                        <div class="lms-progress-fill" style="width: {{ enrollment.progress_percentage }}%;"></div>
+                    </div>
+                    <div style="font-size: 1.75rem; font-weight: 800; color: var(--lms-primary);">
+                        {{ enrollment.progress_percentage }}%
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                    {% if certificate %}
+                    <a href="{{ certificate.get_absolute_url() }}" class="lms-btn lms-btn-success"
+                        style="width: 100%; box-sizing: border-box; padding: 11px; display: inline-flex; justify-content: center; text-align: center;">
+                        <i class="fa fa-trophy"></i> {{ _('Xem Chứng chỉ Tốt nghiệp Điện tử') }}
+                    </a>
+                    {% endif %}
+
+                    {% if first_lesson %}
+                    <a href="{{ first_lesson.get_absolute_url() }}" class="lms-btn lms-btn-primary"
+                        style="width: 100%; box-sizing: border-box; padding: 11px; font-weight: 700; display: inline-flex; justify-content: center; text-align: center;">
+                        <i class="fa fa-play-circle"></i> {{ _('Tiếp tục không gian học tập') }}
+                    </a>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--lms-success); margin-bottom: 4px;">
+                        {{ course.formatted_price }}
+                    </div>
+                    <div style="font-size: 0.8125rem; color: var(--lms-text-muted);">
+                        {{ _('Tham gia học lý thuyết, thực hành code & thi đánh giá trực tuyến') }}
+                    </div>
+                </div>
+
+                <form method="post" action="{{ url('course_enroll', course.key) }}" style="width: 100%; margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="lms-btn lms-btn-primary"
+                        style="width: 100%; box-sizing: border-box; padding: 12px; font-size: 0.9375rem; font-weight: 700; display: inline-flex; justify-content: center; text-align: center;">
+                        <i class="fa fa-pencil-square-o"></i> {{ _('Ghi danh Tham gia Học phần') }}
+                    </button>
+                </form>
+
+                <div
+                    style="margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--lms-card-border); font-size: 0.8125rem; color: var(--lms-text-muted); display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fa fa-check-circle" style="color: var(--lms-success);"></i> {{ _('Bài giảng lý thuyết
+                        & video minh họa chuyên sâu') }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fa fa-check-circle" style="color: var(--lms-success);"></i> {{ _('Chấm code tự động
+                        thời gian thực (HNUE Judge)') }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fa fa-check-circle" style="color: var(--lms-success);"></i> {{ _('Cấp chứng chỉ điện
+                        tử có mã định danh tra cứu') }}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if is_instructor %}
+                <div
+                    style="border-top: 1px solid var(--lms-card-border); margin-top: 20px; padding-top: 18px; display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                    <div
+                        style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--lms-text-muted); letter-spacing: 0.05em; margin-bottom: 2px;">
+                        {{ _('Bảng điều khiển Giảng viên') }}
+                    </div>
+                    <a href="{{ url('course_manage', course.key) }}" class="lms-btn lms-btn-secondary lms-btn-sm"
+                        style="width: 100%; box-sizing: border-box; display: inline-flex; justify-content: center; text-align: center;">
+                        <i class="fa fa-cogs"></i> {{ _('Thiết kế Đề cương & Soạn thảo Học liệu') }}
+                    </a>
+                    <a href="{{ url('course_monitor', course.key) }}" class="lms-btn lms-btn-secondary lms-btn-sm"
+                        style="width: 100%; box-sizing: border-box; display: inline-flex; justify-content: center; text-align: center; color: var(--lms-danger) !important;">
+                        <i class="fa fa-desktop"></i> {{ _('Giám sát Khảo thí Trực tiếp (Live Proctoring)') }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
