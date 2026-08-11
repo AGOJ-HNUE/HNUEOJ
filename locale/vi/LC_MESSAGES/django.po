@@ -7714,10 +7714,10 @@ msgstr "Nộp bài!"
 msgid "Your source code must contain at most 65536 characters."
 msgstr "Độ dài code không được vượt quá 65536 ký tự."
 
-#: templates/problem/submit-js.html:150
+#: templates/problem/submit-js.html:158
 #, python-brace-format
-msgid "`Maximum file size is ${file_size_limit}MB.`"
-msgstr "`Dung lượng tối đa của file là ${file_size_limit}MB.`"
+msgid "Maximum file size is {size}MB."
+msgstr "Dung lượng tối đa của file là {size}MB."
 
 #: templates/problem/submit-js.html:174
 msgid "Click to select a file or drag a file into this box"

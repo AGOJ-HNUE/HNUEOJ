@@ -995,13 +995,22 @@ class ProblemCreate(PermissionRequiredMixin, TitleMixin, CreateView):
         initial['memory_limit'] = 262144  # 256 MB
         initial['partial'] = True
         try:
-            initial['group'] = ProblemGroup.objects.get(name='Uncategorized').pk
-        except ProblemGroup.DoesNotExist:
-            initial['group'] = ProblemGroup.objects.order_by('id').first().pk
+            initial['group'] = ProblemGroup.objects.get_or_create(
+                name='Uncategorized', defaults={'full_name': 'Uncategorized'}
+            )[0].pk
+        except Exception:
+            group = ProblemGroup.objects.order_by('id').first()
+            if group:
+                initial['group'] = group.pk
+
         try:
-            initial['types'] = ProblemType.objects.get(name='uncategorized').pk
-        except ProblemType.DoesNotExist:
-            initial['types'] = ProblemType.objects.order_by('id').first().pk
+            initial['types'] = ProblemType.objects.get_or_create(
+                name='uncategorized', defaults={'full_name': 'Uncategorized'}
+            )[0].pk
+        except Exception:
+            ptype = ProblemType.objects.order_by('id').first()
+            if ptype:
+                initial['types'] = ptype.pk
         return initial
 
 

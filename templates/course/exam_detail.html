@@ -772,7 +772,15 @@
                                 // Update Table Row
                                 const scoreEl = document.getElementById('epScore_' + epId);
                                 const verdictEl = document.getElementById('epVerdict_' + epId);
-                                if (scoreEl && pointsText) scoreEl.innerText = pointsText.split('/')[0].trim();
+                                if (scoreEl && pointsText) {
+                                    let rawScore = parseFloat(pointsText.split('/')[0].trim());
+                                    if (!isNaN(rawScore)) {
+                                        let rounded = Math.round(rawScore * 100) / 100;
+                                        scoreEl.innerText = Number.isInteger(rounded) ? rounded.toString() : rounded.toString();
+                                    } else {
+                                        scoreEl.innerText = pointsText.split('/')[0].trim();
+                                    }
+                                }
                                 if (verdictEl) {
                                     if (isAC) {
                                         verdictEl.innerHTML = '<span class="lms-badge lms-badge-completed">AC</span>';

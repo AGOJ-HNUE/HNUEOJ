@@ -1980,6 +1980,7 @@
   cursor: pointer;
   user-select: none;
   transition: all 0.15s;
+  width: 50.735px;
 }
 
 .lms-problem-statement-content .btn-clipboard:hover {

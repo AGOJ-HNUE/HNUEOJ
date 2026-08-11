@@ -155,7 +155,7 @@
                     var file = fileInput.files[0];
                     var limitBytes = parseInt(file_size_limit) * 1024 * 1024;
                     if (file.size > limitBytes) {
-                        alert(({{ _('Maximum file size is %(size)sMB.')|htmltojs }}).replace('%(size)s', file_size_limit));
+                        alert(({{ _('Maximum file size is {size}MB.')|htmltojs }}).replace('{size}', file_size_limit));
                         return false;
                     }
                 } else {

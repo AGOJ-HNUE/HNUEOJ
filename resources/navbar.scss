@@ -19,36 +19,36 @@
         text-transform: none;
     }
 
-    & > ul {
+    &>ul {
         display: block;
         margin: 0;
 
-        & > li {
-            & > a {
+        &>li {
+            &>a {
                 display: block;
                 padding: 0;
                 height: 100%;
 
-                & > span {
+                &>span {
                     font-size: 13px;
                     padding: 10px 10px;
                     display: block;
                     white-space: nowrap;
 
-                    & > img {
+                    &>img {
                         vertical-align: middle;
                         border-radius: $widget_border_radius;
                         margin-right: 6px;
                     }
 
-                    & > span {
+                    &>span {
                         vertical-align: middle;
                         color: #eee;
                     }
                 }
             }
 
-            & > ul {
+            &>ul {
                 left: 0;
             }
         }
@@ -96,6 +96,7 @@ nav {
             text-transform: uppercase;
             position: relative;
             font-family: 'Source Sans Pro', sans-serif;
+
             &.home-nav-element a {
                 padding: 0;
                 height: 44px;
@@ -107,7 +108,8 @@ nav {
                 }
             }
 
-            a, button {
+            a,
+            button {
                 text-decoration: none;
                 vertical-align: middle;
                 color: #FFF;
@@ -158,7 +160,8 @@ nav {
                 li {
                     display: block;
 
-                    a, button {
+                    a,
+                    button {
                         padding: 8px 20px 8px 8px !important;
                         font-size: 0.8em;
                         line-height: 18px;
@@ -178,7 +181,9 @@ nav {
                 height: auto;
             }
 
-            &:hover > ul, &:active > ul, &:focus > ul {
+            &:hover>ul,
+            &:active>ul,
+            &:focus>ul {
                 display: block !important;
             }
 
@@ -274,7 +279,7 @@ nav {
         }
     }
 
-    #user-links > ul > li > a > span {
+    #user-links>ul>li>a>span {
         padding: 6px 8px;
     }
 }
@@ -286,7 +291,7 @@ nav {
                 display: none;
             }
 
-            &:not(:hover) > ul {
+            &:not(:hover)>ul {
                 display: none !important;
             }
 
@@ -346,4 +351,8 @@ nav .settings-popup {
         background: $color_primary0;
         color: $color_primary90;
     }
+}
+
+.home-nav-element:first-child {
+    margin-left: 10%;
 }

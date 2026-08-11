@@ -459,13 +459,13 @@ class OrganizationForm(ModelForm):
         credit = self.cleaned_data.get('paid_credit')
         if credit is not None:
             return credit * 3600
-        return None
+        return 0
 
     def clean_monthly_free_credit_limit(self):
         credit = self.cleaned_data.get('monthly_free_credit_limit')
         if credit is not None:
             return credit * 3600
-        return None
+        return settings.VNOJ_MONTHLY_FREE_CREDIT
 
     class Meta:
         model = Organization
@@ -496,10 +496,19 @@ class OrganizationForm(ModelForm):
 
         super().__init__(*args, **kwargs)
 
+        if 'paid_credit' in self.fields:
+            self.fields['paid_credit'].required = False
+            self.fields['paid_credit'].initial = initial.get('paid_credit', 0)
+        if 'monthly_free_credit_limit' in self.fields:
+            self.fields['monthly_free_credit_limit'].required = False
+            self.fields['monthly_free_credit_limit'].initial = initial.get('monthly_free_credit_limit', settings.VNOJ_MONTHLY_FREE_CREDIT / 3600)
+        if 'admins' in self.fields:
+            self.fields['admins'].required = False
+
         if request and not request.user.has_perm('judge.organization_admin'):
-            self.fields.pop('admins')
-            self.fields.pop('paid_credit')
-            self.fields.pop('monthly_free_credit_limit')
+            self.fields.pop('admins', None)
+            self.fields.pop('paid_credit', None)
+            self.fields.pop('monthly_free_credit_limit', None)
 
 
 class QuotaGrantForm(Form):

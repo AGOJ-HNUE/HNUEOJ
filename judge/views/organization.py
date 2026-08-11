@@ -460,8 +460,10 @@ class CreateOrganization(PermissionRequiredMixin, TitleMixin, CreateView):
             # short_name is show in ranking
             org.short_name = org.slug[:20]
             org.free_credit = org.monthly_free_credit_limit
+            org.save()
+            if self.request.user.is_authenticated and hasattr(self.request.user, 'profile'):
+                org.admins.add(self.request.user.profile)
             add_admin_to_group(form)
-            # don't need to org.save, the form.save() in `add_admin_to_group` will do it
             return HttpResponseRedirect(self.get_success_url())
 
     def dispatch(self, request, *args, **kwargs):

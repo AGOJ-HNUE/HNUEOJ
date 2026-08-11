@@ -71,6 +71,18 @@ class Course(models.Model):
         verbose_name=_('Khóa khóa học'),
         help_text=_('Khi khóa, học viên không thể truy cập học hay làm bài.'),
     )
+    allow_self_enrollment = models.BooleanField(
+        default=True,
+        verbose_name=_('Cho phép tự đăng ký'),
+        help_text=_('Cho phép học viên tự bấm Đăng ký. Nếu tắt, chỉ giảng viên mới có thể thêm học viên.'),
+        db_index=True,
+    )
+    validity_duration_days = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_('Thời hạn học (ngày)'),
+        help_text=_('Thời gian học tính bằng ngày kể từ mốc ghi danh. Để trống nếu không giới hạn.'),
+    )
     thumbnail_url = models.CharField(
         max_length=255,
         verbose_name=_('Ảnh bìa khóa học'),
@@ -121,7 +133,10 @@ class Course(models.Model):
         profile = getattr(user, 'profile', None)
         if not profile:
             return False
-        return self.enrollments.filter(user_id=profile.id).exists()
+        enrollment = self.enrollments.filter(user_id=profile.id).first()
+        if not enrollment:
+            return False
+        return not enrollment.is_expired
 
     def get_enrollment(self, user):
         if not user.is_authenticated:
@@ -449,12 +464,15 @@ class Exam(models.Model):
             return False
         if not profile:
             return False
-        return self.course.enrollments.filter(user_id=profile.id).exists()
+        enrollment = self.course.enrollments.filter(user_id=profile.id).first()
+        if not enrollment or enrollment.is_expired:
+            return False
+        return True
 
     def get_user_score(self, user):
         """Tính điểm tổng của học viên trên kỳ thi này"""
         if not user.is_authenticated:
-            return 0.0, 0.0
+            return 0, 0
         from judge.models.submission import Submission
         total_max_score = 0.0
         user_total_score = 0.0
@@ -474,7 +492,12 @@ class Exam(models.Model):
                     user_total_score += min(ep.custom_score, best_sub.points * scale)
                 else:
                     user_total_score += best_sub.points
-        return user_total_score, total_max_score
+
+        def clean_val(v):
+            r = round(float(v), 2)
+            return int(r) if r.is_integer() else r
+
+        return clean_val(user_total_score), clean_val(total_max_score)
 
     def is_passed_by(self, user):
         user_score, total_score = self.get_user_score(user)
@@ -563,11 +586,13 @@ class Enrollment(models.Model):
     STATUS_READY_FOR_REVIEW = 'READY_FOR_REVIEW'
     STATUS_COMPLETED = 'COMPLETED'
     STATUS_DROPPED = 'DROPPED'
+    STATUS_EXPIRED = 'EXPIRED'
     STATUS_CHOICES = (
         (STATUS_ACTIVE, _('Đang học')),
         (STATUS_READY_FOR_REVIEW, _('Chờ duyệt cấp chứng chỉ')),
         (STATUS_COMPLETED, _('Đã hoàn thành / Nhận chứng chỉ')),
         (STATUS_DROPPED, _('Đã hủy')),
+        (STATUS_EXPIRED, _('Đã hết hạn')),
     )
 
     user = models.ForeignKey(
@@ -591,8 +616,15 @@ class Enrollment(models.Model):
         db_index=True,
     )
     enrolled_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Ngày ghi danh'))
+    expiry_date = models.DateTimeField(null=True, blank=True, verbose_name=_('Ngày hết hạn truy cập'), db_index=True)
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Ngày hoàn thành'))
     last_accessed_at = models.DateTimeField(auto_now=True, verbose_name=_('Truy cập gần nhất'))
+
+    @property
+    def is_expired(self):
+        if self.expiry_date is None:
+            return False
+        return timezone.now() > self.expiry_date
 
     class Meta:
         verbose_name = _('Ghi danh khóa học')

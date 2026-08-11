@@ -1,5 +1,8 @@
 import json
+import re
+from datetime import datetime, timedelta
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
@@ -135,13 +138,29 @@ class CourseEnrollView(LoginRequiredMixin, View):
         if not course.is_accessible_by(request.user):
             raise PermissionDenied()
 
+        # Check self-enrollment permission
+        if not course.allow_self_enrollment and not course.is_editable_by(request.user):
+            messages.error(request, _('Khóa học này không cho phép tự đăng ký. Vui lòng liên hệ Giảng viên để được thêm thủ công.'))
+            return redirect('course_detail', slug=course.key)
+
+        defaults = {'status': Enrollment.STATUS_ACTIVE, 'progress_percentage': 0.0}
+        if course.validity_duration_days:
+            defaults['expiry_date'] = timezone.now() + timedelta(days=course.validity_duration_days)
+
         enrollment, created = Enrollment.objects.get_or_create(
             user=request.profile,
             course=course,
-            defaults={'status': Enrollment.STATUS_ACTIVE, 'progress_percentage': 0.0},
+            defaults=defaults,
         )
         if created:
             enrollment.recalculate_progress()
+        elif enrollment.is_expired:
+            if course.validity_duration_days:
+                enrollment.expiry_date = timezone.now() + timedelta(days=course.validity_duration_days)
+            else:
+                enrollment.expiry_date = None
+            enrollment.status = Enrollment.STATUS_ACTIVE
+            enrollment.save(update_fields=['expiry_date', 'status'])
 
         # Find first lesson or go to detail
         first_chapter = course.chapters.first()
@@ -364,6 +383,12 @@ class ExamDetailView(LoginRequiredMixin, TitleMixin, DetailView):
         context['exam_problems'] = exam_problems
 
         # User's score on each problem
+        def clean_val(v):
+            if v is None:
+                return 0
+            r = round(float(v), 2)
+            return int(r) if r.is_integer() else r
+
         problem_scores = {}
         for ep in exam_problems:
             best_sub = Submission.objects.filter(
@@ -372,9 +397,17 @@ class ExamDetailView(LoginRequiredMixin, TitleMixin, DetailView):
                 exam=exam,
                 points__isnull=False,
             ).order_by('-points').first()
+            pts = 0
+            if best_sub and best_sub.points is not None:
+                scaled = best_sub.points
+                if ep.custom_score is not None and ep.problem.points:
+                    scale = ep.custom_score / ep.problem.points
+                    scaled = min(ep.custom_score, best_sub.points * scale)
+                pts = clean_val(scaled)
+
             problem_scores[ep.id] = {
                 'best_submission': best_sub,
-                'points': best_sub.points if best_sub else 0,
+                'points': pts,
                 'result': best_sub.result if best_sub else None,
             }
 
@@ -532,6 +565,16 @@ class SaveCourseInfoAjax(LoginRequiredMixin, View):
         status = data.get('status', course.status)
         is_public = bool(data.get('is_public', course.is_public))
         is_locked = bool(data.get('is_locked', course.is_locked))
+        allow_self_enrollment = bool(data.get('allow_self_enrollment', course.allow_self_enrollment))
+
+        validity_duration_days = data.get('validity_duration_days')
+        if validity_duration_days is not None and str(validity_duration_days).strip() != '':
+            try:
+                validity_duration_days = max(1, int(validity_duration_days))
+            except (ValueError, TypeError):
+                validity_duration_days = None
+        else:
+            validity_duration_days = None
 
         if not title:
             return JsonResponse({'error': _('Tên khóa học không được để trống.')}, status=400)
@@ -544,6 +587,8 @@ class SaveCourseInfoAjax(LoginRequiredMixin, View):
             course.status = status
         course.is_public = is_public
         course.is_locked = is_locked
+        course.allow_self_enrollment = allow_self_enrollment
+        course.validity_duration_days = validity_duration_days
         course.save()
 
         return JsonResponse({
@@ -557,6 +602,8 @@ class SaveCourseInfoAjax(LoginRequiredMixin, View):
                 'status': course.status,
                 'is_locked': course.is_locked,
                 'is_public': course.is_public,
+                'allow_self_enrollment': course.allow_self_enrollment,
+                'validity_duration_days': course.validity_duration_days,
                 'thumbnail_url': course.thumbnail_url,
             }
         })
@@ -1037,14 +1084,17 @@ class CourseMonitorDataAjax(LoginRequiredMixin, View):
         students_data = []
         for e in enrollments:
             cert = Certificate.objects.filter(user=e.user, course=course).first()
+            status_display = Enrollment.STATUS_EXPIRED if e.is_expired else e.status
             students_data.append({
                 'enrollment_id': e.id,
                 'user_id': e.user.id,
                 'username': e.user.user.username,
                 'full_name': getattr(e.user, 'display_name', '') or e.user.user.get_full_name() or e.user.user.username,
                 'progress': e.progress_percentage,
-                'status': e.status,
+                'status': status_display,
+                'is_expired': e.is_expired,
                 'enrolled_at': e.enrolled_at.strftime('%d/%m/%Y %H:%M'),
+                'expiry_date': e.expiry_date.strftime('%d/%m/%Y %H:%M') if e.expiry_date else _('Vô thời hạn'),
                 'last_active': e.last_accessed_at.strftime('%d/%m/%Y %H:%M'),
                 'has_certificate': bool(cert),
                 'cert_code': cert.cert_code if cert else None,
@@ -1186,3 +1236,329 @@ class CertificatePdfView(DetailView):
     slug_url_kwarg = 'cert_code'
     template_name = 'course/certificate_pdf.html'
     context_object_name = 'certificate'
+
+
+class CourseAddStudentsAjax(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        course = get_object_or_404(Course, key=slug)
+        if not course.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
+        raw_input = data.get('users', '').strip()
+        custom_days = data.get('days')
+
+        if not raw_input:
+            return JsonResponse({'error': _('Vui lòng nhập tên đăng nhập hoặc email học viên.')}, status=400)
+
+        tokens = [t.strip() for t in re.split(r'[\s,\n;]+', raw_input) if t.strip()]
+        if not tokens:
+            return JsonResponse({'error': _('Danh sách học viên không hợp lệ.')}, status=400)
+
+        days_to_add = None
+        if custom_days is not None and str(custom_days).isdigit() and int(custom_days) > 0:
+            days_to_add = int(custom_days)
+        elif course.validity_duration_days:
+            days_to_add = course.validity_duration_days
+
+        profiles = Profile.objects.filter(
+            Q(user__username__in=tokens) | Q(user__email__in=tokens)
+        ).select_related('user')
+
+        found_identifiers = set()
+        added_count = 0
+        renewed_count = 0
+
+        for profile in profiles:
+            found_identifiers.add(profile.user.username)
+            if profile.user.email:
+                found_identifiers.add(profile.user.email)
+            
+            expiry_dt = timezone.now() + timedelta(days=days_to_add) if days_to_add else None
+            enrollment, created = Enrollment.objects.get_or_create(
+                user=profile,
+                course=course,
+                defaults={'status': Enrollment.STATUS_ACTIVE, 'progress_percentage': 0.0, 'expiry_date': expiry_dt},
+            )
+            if created:
+                enrollment.recalculate_progress()
+                added_count += 1
+            else:
+                enrollment.expiry_date = expiry_dt
+                if enrollment.status == Enrollment.STATUS_EXPIRED:
+                    enrollment.status = Enrollment.STATUS_ACTIVE
+                enrollment.save(update_fields=['expiry_date', 'status'])
+                renewed_count += 1
+
+        unfound = [t for t in tokens if t not in found_identifiers]
+
+        return JsonResponse({
+            'success': True,
+            'added_count': added_count,
+            'renewed_count': renewed_count,
+            'unfound_users': unfound,
+            'message': _(f'Đã thêm {added_count} học viên mới và gia hạn/cập nhật cho {renewed_count} học viên.')
+        })
+
+
+class CourseRenewEnrollmentAjax(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        course = get_object_or_404(Course, key=slug)
+        if not course.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
+        enrollment_id = data.get('enrollment_id')
+        enrollment_ids = data.get('enrollment_ids', [])
+        if enrollment_id:
+            enrollment_ids.append(enrollment_id)
+
+        days = data.get('days')
+        target_date_str = data.get('target_date')
+
+        if not enrollment_ids:
+            return JsonResponse({'error': _('Vui lòng chọn học viên cần gia hạn.')}, status=400)
+
+        enrollments = Enrollment.objects.filter(id__in=enrollment_ids, course=course)
+        now = timezone.now()
+        updated_list = []
+
+        for e in enrollments:
+            if days and str(days).isdigit():
+                add_days = int(days)
+                base_time = e.expiry_date if (e.expiry_date and e.expiry_date > now) else now
+                e.expiry_date = base_time + timedelta(days=add_days)
+            elif target_date_str:
+                try:
+                    target_dt = datetime.strptime(target_date_str, '%Y-%m-%d')
+                    e.expiry_date = timezone.make_aware(target_dt)
+                except ValueError:
+                    pass
+            elif course.validity_duration_days:
+                e.expiry_date = now + timedelta(days=course.validity_duration_days)
+
+            if e.status == Enrollment.STATUS_EXPIRED:
+                e.status = Enrollment.STATUS_ACTIVE
+
+            e.save(update_fields=['expiry_date', 'status'])
+            updated_list.append({
+                'enrollment_id': e.id,
+                'username': e.user.user.username,
+                'expiry_date': e.expiry_date.strftime('%d/%m/%Y %H:%M') if e.expiry_date else _('Vô thời hạn'),
+                'is_expired': e.is_expired,
+            })
+
+        return JsonResponse({
+            'success': True,
+            'updated_count': len(updated_list),
+            'enrollments': updated_list,
+        })
+
+
+class CourseExamRankingView(LoginRequiredMixin, TitleMixin, TemplateView):
+    template_name = 'course/exam_ranking.html'
+
+    def get_title(self):
+        return f'Bảng xếp hạng: {self.exam.title} - LMS HNUEOJ'
+
+    def dispatch(self, request, slug, exam_id, *args, **kwargs):
+        self.course = get_object_or_404(Course, key=slug)
+        self.exam = get_object_or_404(Exam, id=exam_id, course=self.course)
+        if not self.exam.can_access(request.user) and not self.course.is_editable_by(request.user):
+            raise PermissionDenied()
+        return super().dispatch(request, slug, exam_id, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['course'] = self.course
+        context['exam'] = self.exam
+        context['exam_problems'] = self.exam.exam_problems.select_related('problem').all()
+        return context
+
+
+class CourseExamRankingDataAjax(LoginRequiredMixin, View):
+    def get(self, request, slug, exam_id):
+        course = get_object_or_404(Course, key=slug)
+        exam = get_object_or_404(Exam, id=exam_id, course=course)
+
+        if not exam.can_access(request.user) and not course.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        exam_problems = exam.exam_problems.select_related('problem').all()
+        exam_prob_map = {ep.problem_id: ep for ep in exam_problems}
+
+        submissions = Submission.objects.filter(
+            exam=exam,
+            points__isnull=False,
+        ).select_related('user__user', 'problem')
+
+        user_scores = {}
+        for sub in submissions:
+            uid = sub.user_id
+            if uid not in user_scores:
+                user_scores[uid] = {
+                    'profile': sub.user,
+                    'username': sub.user.user.username,
+                    'full_name': getattr(sub.user, 'display_name', '') or sub.user.user.get_full_name() or sub.user.user.username,
+                    'problem_scores': {},
+                    'total_score': 0.0,
+                    'ac_count': 0,
+                    'last_sub_time': sub.date,
+                }
+            
+            p_id = sub.problem_id
+            ep = exam_prob_map.get(p_id)
+            if not ep:
+                continue
+
+            scaled_points = sub.points
+            if ep.custom_score is not None and ep.problem.points:
+                scale = ep.custom_score / ep.problem.points
+                scaled_points = min(ep.custom_score, sub.points * scale)
+
+            r_p = round(float(scaled_points), 2)
+            clean_pts = int(r_p) if r_p.is_integer() else r_p
+
+            current_p_data = user_scores[uid]['problem_scores'].get(p_id, {'points': 0, 'result': sub.result})
+            if clean_pts > current_p_data['points']:
+                user_scores[uid]['problem_scores'][p_id] = {
+                    'points': clean_pts,
+                    'result': sub.result,
+                }
+            if sub.date > user_scores[uid]['last_sub_time']:
+                user_scores[uid]['last_sub_time'] = sub.date
+
+        ranking_list = []
+        for uid, udata in user_scores.items():
+            tot = sum(p['points'] for p in udata['problem_scores'].values())
+            r_tot = round(float(tot), 2)
+            clean_tot = int(r_tot) if r_tot.is_integer() else r_tot
+            ac_count = sum(1 for p in udata['problem_scores'].values() if p.get('result') == 'AC')
+            udata['total_score'] = clean_tot
+            udata['ac_count'] = ac_count
+            udata['last_sub_time_fmt'] = udata['last_sub_time'].strftime('%H:%M:%S %d/%m')
+            ranking_list.append(udata)
+
+        ranking_list.sort(key=lambda x: (-x['total_score'], -x['ac_count'], x['last_sub_time']))
+
+        for idx, item in enumerate(ranking_list, start=1):
+            item['rank'] = idx
+            del item['profile']
+            del item['last_sub_time']
+
+        return JsonResponse({
+            'exam': {'id': exam.id, 'title': exam.title, 'pass_percentage': exam.pass_percentage},
+            'problems': [{'id': ep.problem_id, 'code': ep.problem.code, 'title': ep.display_title, 'points': ep.display_points} for ep in exam_problems],
+            'rankings': ranking_list,
+        })
+
+
+class CourseChapterRankingView(LoginRequiredMixin, TitleMixin, TemplateView):
+    template_name = 'course/chapter_ranking.html'
+
+    def get_title(self):
+        return f'Bảng xếp hạng Chương: {self.chapter.title} - LMS HNUEOJ'
+
+    def dispatch(self, request, slug, chapter_id, *args, **kwargs):
+        self.course = get_object_or_404(Course, key=slug)
+        self.chapter = get_object_or_404(Chapter, id=chapter_id, course=self.course)
+        if not self.course.is_accessible_by(request.user):
+            raise PermissionDenied()
+        return super().dispatch(request, slug, chapter_id, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['course'] = self.course
+        context['chapter'] = self.chapter
+        context['lessons'] = self.chapter.lessons.filter(is_published=True)
+        context['exams'] = self.chapter.exams.filter(is_published=True)
+        return context
+
+
+class CourseChapterRankingDataAjax(LoginRequiredMixin, View):
+    def get(self, request, slug, chapter_id):
+        course = get_object_or_404(Course, key=slug)
+        chapter = get_object_or_404(Chapter, id=chapter_id, course=course)
+
+        if not course.is_accessible_by(request.user):
+            raise PermissionDenied()
+
+        lesson_problems = LessonProblem.objects.filter(
+            lesson__chapter=chapter,
+            lesson__is_published=True,
+        ).select_related('problem')
+        problem_ids = [lp.problem_id for lp in lesson_problems]
+
+        chapter_exams = Exam.objects.filter(chapter=chapter, is_published=True)
+        exam_ids = [e.id for e in chapter_exams]
+
+        enrollments = Enrollment.objects.filter(course=course).select_related('user__user')
+        
+        lesson_progresses = LessonProgress.objects.filter(
+            lesson__chapter=chapter,
+            lesson__is_published=True,
+            is_completed=True,
+        ).values('user_id').annotate(completed_cnt=Count('id'))
+        completed_map = {lp['user_id']: lp['completed_cnt'] for lp in lesson_progresses}
+
+        total_lessons_in_chapter = chapter.lessons.filter(is_published=True).count()
+
+        practice_subs = Submission.objects.filter(
+            problem_id__in=problem_ids,
+            lesson__chapter=chapter,
+            points__isnull=False,
+        ).values('user_id', 'problem_id').annotate(best_points=Max('points'))
+        
+        practice_scores = {}
+        for ps in practice_subs:
+            uid = ps['user_id']
+            practice_scores[uid] = practice_scores.get(uid, 0.0) + (ps['best_points'] or 0.0)
+
+        exam_subs = Submission.objects.filter(
+            exam_id__in=exam_ids,
+            points__isnull=False,
+        ).values('user_id', 'exam_id', 'problem_id').annotate(best_points=Max('points'))
+        
+        exam_scores = {}
+        for es in exam_subs:
+            uid = es['user_id']
+            exam_scores[uid] = exam_scores.get(uid, 0.0) + (es['best_points'] or 0.0)
+
+        def clean_val(v):
+            if v is None:
+                return 0
+            r = round(float(v), 2)
+            return int(r) if r.is_integer() else r
+
+        ranking_list = []
+        for e in enrollments:
+            uid = e.user_id
+            p_score = clean_val(practice_scores.get(uid, 0.0))
+            ex_score = clean_val(exam_scores.get(uid, 0.0))
+            total_score = clean_val(p_score + ex_score)
+            completed_cnt = completed_map.get(uid, 0)
+            progress_pct = clean_val((completed_cnt / total_lessons_in_chapter * 100.0) if total_lessons_in_chapter > 0 else 100.0)
+
+            ranking_list.append({
+                'user_id': uid,
+                'username': e.user.user.username,
+                'full_name': getattr(e.user, 'display_name', '') or e.user.user.get_full_name() or e.user.user.username,
+                'practice_score': p_score,
+                'exam_score': ex_score,
+                'total_score': total_score,
+                'completed_lessons': completed_cnt,
+                'total_lessons': total_lessons_in_chapter,
+                'progress_percentage': progress_pct,
+                'is_expired': e.is_expired,
+            })
+
+        ranking_list.sort(key=lambda x: (-x['total_score'], -x['completed_lessons'], x['username']))
+
+        for idx, item in enumerate(ranking_list, start=1):
+            item['rank'] = idx
+
+        return JsonResponse({
+            'chapter': {'id': chapter.id, 'title': chapter.title},
+            'total_lessons': total_lessons_in_chapter,
+            'rankings': ranking_list,
+        })

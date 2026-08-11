@@ -88,7 +88,9 @@
         "thumbnail_url": {{ (course.thumbnail_url or '')|tojson }},
         "status": {{ course.status|tojson }},
         "is_public": {{ 'true' if course.is_public else 'false' }},
-        "is_locked": {{ 'true' if course.is_locked else 'false' }}
+        "is_locked": {{ 'true' if course.is_locked else 'false' }},
+        "allow_self_enrollment": {{ 'true' if course.allow_self_enrollment else 'false' }},
+        "validity_duration_days": {{ course.validity_duration_days or 'null' }}
     }
     </script>
 
@@ -383,6 +385,19 @@
                     <input type="checkbox" id="ci_is_locked" style="width: 18px; height: 18px; accent-color: var(--lms-danger);">
                     {{ _('Khóa toàn bộ học phần đối với học viên') }}
                 </label>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div style="background: var(--lms-bg); padding: 12px 16px; border-radius: var(--lms-radius-md); border: 1px solid var(--lms-card-border);">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 600; margin: 0;">
+                        <input type="checkbox" id="ci_allow_self" style="width: 18px; height: 18px; accent-color: var(--lms-primary);">
+                        {{ _('Cho phép học viên tự do ghi danh') }}
+                    </label>
+                </div>
+                <div>
+                    <input type="number" id="ci_validity_days" min="1" placeholder="{{ _('Thời hạn học (ngày) - Để trống nếu vô thời hạn') }}" 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                </div>
             </div>
 
             <div style="margin-bottom: 20px;">
@@ -694,6 +709,8 @@ function openEditCourseInfoModal() {
     document.getElementById('ci_thumbnail').value = data.thumbnail_url || '';
     document.getElementById('ci_is_public').checked = !!data.is_public;
     document.getElementById('ci_is_locked').checked = !!data.is_locked;
+    document.getElementById('ci_allow_self').checked = data.allow_self_enrollment !== false;
+    document.getElementById('ci_validity_days').value = data.validity_duration_days || '';
     document.getElementById('ci_desc').value = data.description;
     openModal('courseInfoModal');
 }
@@ -706,6 +723,8 @@ function saveCourseInfo(e) {
     const thumbnail = document.getElementById('ci_thumbnail').value.trim();
     const isPublic = document.getElementById('ci_is_public').checked;
     const isLocked = document.getElementById('ci_is_locked').checked;
+    const allowSelf = document.getElementById('ci_allow_self').checked;
+    const validityDays = document.getElementById('ci_validity_days').value.trim();
     const desc = document.getElementById('ci_desc').value;
 
     fetch('{{ url("course_info_save", course.key) }}', {
@@ -718,6 +737,8 @@ function saveCourseInfo(e) {
             thumbnail_url: thumbnail,
             is_public: isPublic,
             is_locked: isLocked,
+            allow_self_enrollment: allowSelf,
+            validity_duration_days: validityDays,
             description: desc
         })
     })

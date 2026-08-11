@@ -116,9 +116,14 @@
                                 </span>
                                 <h3 class="lms-chapter-title">{{ chapter.title }}</h3>
                             </div>
-                            <span style="font-size: 0.8125rem; color: var(--lms-text-muted); font-weight: 600;">
-                                {{ chapter.lessons.count() }} {{ _('bài học') }}
-                            </span>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 0.8125rem; color: var(--lms-text-muted); font-weight: 600;">
+                                    {{ chapter.lessons.count() }} {{ _('bài học') }}
+                                </span>
+                                <a href="{{ url('course_chapter_ranking', course.key, chapter.id) }}" class="lms-btn lms-btn-secondary lms-btn-sm" style="font-size: 0.75rem;">
+                                    <i class="fa fa-trophy" style="color: var(--lms-warning);"></i> {{ _('BXH Chương') }}
+                                </a>
+                            </div>
                         </div>
 
                         <div class="lms-curriculum-list">
@@ -210,6 +215,9 @@
                                 <span class="lms-badge" style="background: rgba(245, 158, 11, 0.2); color: #b45309;">
                                     {{ exam.exam_problems.count() }} {{ _('bài tập') }}
                                 </span>
+                                <a href="{{ url('course_exam_ranking', course.key, exam.id) }}" class="lms-btn lms-btn-secondary lms-btn-sm" style="font-size: 0.75rem; margin-left: 6px;" title="{{ _('Xem Bảng xếp hạng Kỳ thi') }}">
+                                    <i class="fa fa-trophy" style="color: var(--lms-warning);"></i> {{ _('BXH') }}
+                                </a>
                             </div>
                             {% endif %}
                             {% endif %}
@@ -232,6 +240,17 @@
         <div>
             <div class="lms-cta-card">
                 {% if enrollment %}
+                {% if enrollment.is_expired %}
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--lms-radius-md); padding: 14px; margin-bottom: 16px; text-align: center;">
+                    <div style="color: #dc2626; font-weight: 700; font-size: 0.875rem; margin-bottom: 4px;">
+                        <i class="fa fa-exclamation-triangle"></i> {{ _('Tài khoản đã hết thời hạn học tập') }}
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--lms-text-muted);">
+                        {{ _('Ngày hết hạn:') }} {{ enrollment.expiry_date.strftime('%d/%m/%Y %H:%M') if enrollment.expiry_date else '' }}
+                        <br>{{ _('Vui lòng liên hệ Giảng viên để được gia hạn khóa học.') }}
+                    </div>
+                </div>
+                {% endif %}
                 <div style="margin-bottom: 20px; text-align: center;">
                     <div
                         style="font-size: 0.8125rem; font-weight: 600; color: var(--lms-text-muted); margin-bottom: 8px;">
@@ -253,7 +272,7 @@
                     </a>
                     {% endif %}
 
-                    {% if first_lesson %}
+                    {% if first_lesson and not enrollment.is_expired %}
                     <a href="{{ first_lesson.get_absolute_url() }}" class="lms-btn lms-btn-primary"
                         style="width: 100%; box-sizing: border-box; padding: 11px; font-weight: 700; display: inline-flex; justify-content: center; text-align: center;">
                         <i class="fa fa-play-circle"></i> {{ _('Tiếp tục không gian học tập') }}
@@ -270,6 +289,7 @@
                     </div>
                 </div>
 
+                {% if course.allow_self_enrollment %}
                 <form method="post" action="{{ url('course_enroll', course.key) }}" style="width: 100%; margin: 0;">
                     {% csrf_token %}
                     <button type="submit" class="lms-btn lms-btn-primary"
@@ -277,6 +297,12 @@
                         <i class="fa fa-pencil-square-o"></i> {{ _('Ghi danh Tham gia Học phần') }}
                     </button>
                 </form>
+                {% else %}
+                <button type="button" class="lms-btn lms-btn-secondary"
+                    style="width: 100%; box-sizing: border-box; padding: 12px; font-size: 0.875rem; opacity: 0.8; cursor: not-allowed; display: inline-flex; justify-content: center; text-align: center;" disabled>
+                    <i class="fa fa-lock"></i> {{ _('Đóng đăng ký tự do (Giảng viên thêm thủ công)') }}
+                </button>
+                {% endif %}
 
                 <div
                     style="margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--lms-card-border); font-size: 0.8125rem; color: var(--lms-text-muted); display: flex; flex-direction: column; gap: 8px;">

@@ -46,3 +46,8 @@ resources/blog-modern.css
 resources/blog-post.css
 resources/theme-toggle.css
 .review/
+problems/
+static-upload/
+backup_problems_media.tar.gz
+backup_problems.json
+backup_users.json
