@@ -1,0 +1,216 @@
+{% extends "contest/list.html" %}
+
+{% block title %}
+{% if selected_province_name %}
+Kỳ thi {{ selected_province_name }} - {{ _('Cổng Khảo thí các Tỉnh/Thành phố') }}
+{% else %}
+{{ _('Cổng Kỳ thi Các Tỉnh / Thành phố Việt Nam (34 Tỉnh Sáp Nhập)') }}
+{% endif %}
+{% endblock %}
+
+{% block title_row %}
+<style>
+    .prov-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+        border-radius: 16px;
+        padding: 28px 32px;
+        color: #ffffff;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.4);
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .prov-hero::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, rgba(0, 0, 0, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .prov-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #38bdf8;
+        letter-spacing: 0.3px;
+        margin-bottom: 12px;
+    }
+
+    .prov-title {
+        margin: 0 0 10px 0;
+        font-size: 1.75rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: #f8fafc;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .prov-subtitle {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #94a3b8;
+        max-width: 780px;
+        line-height: 1.5;
+    }
+
+    /* Filter Card */
+    .prov-filter-box {
+        background: var(--lms-card-bg, #ffffff);
+        border: 1px solid var(--lms-card-border, #e2e8f0);
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    .prov-filter-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+        padding-bottom: 14px;
+        border-bottom: 1px dashed var(--lms-card-border, #e2e8f0);
+        margin-bottom: 16px;
+    }
+
+    .prov-search-input {
+        padding: 8px 14px 8px 36px;
+        border-radius: 8px;
+        border: 1px solid var(--lms-card-border, #cbd5e1);
+        background: var(--lms-bg, #f8fafc);
+        color: var(--lms-text-main, #0f172a);
+        font-size: 0.875rem;
+        width: 260px;
+        transition: all 0.2s ease;
+    }
+
+    .prov-search-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    /* Grid of Province Chips */
+    .prov-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 8px;
+        max-height: 180px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    .prov-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.83rem;
+        font-weight: 600;
+        text-decoration: none !important;
+        color: var(--lms-text-main, #334155);
+        background: var(--lms-bg, #f1f5f9);
+        border: 1px solid var(--lms-card-border, #e2e8f0);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .prov-chip:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+        transform: translateY(-1px);
+    }
+
+    .prov-chip.active {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: #ffffff !important;
+        border-color: #2563eb;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    }
+
+    .prov-chip.all-chip {
+        background: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+    }
+
+    .prov-chip.all-chip.active {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    }
+
+    /* Mobile selector */
+    @media (max-width: 640px) {
+        .prov-search-input {
+            width: 100%;
+        }
+
+        .prov-grid {
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        }
+    }
+</style>
+
+<!-- Province Filter Card -->
+<div class="prov-filter-box">
+    <div class="prov-filter-header">
+        <div
+            style="font-weight: 700; color: var(--lms-text-main, #0f172a); font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa fa-filter" style="color: #2563eb;"></i> Chọn Tỉnh / Thành phố (34 Tỉnh Sáp Nhập):
+        </div>
+        <div style="position: relative; display: flex; align-items: center;">
+            <!-- <i class="fa fa-search" style="position: absolute; left: 12px; color: #94a3b8; font-size: 0.85rem;"></i> -->
+            <input type="text" id="provSearch" class="prov-search-input" placeholder="Tìm tên tỉnh thành..."
+                onkeyup="filterProvChips()">
+        </div>
+    </div>
+
+    <!-- Quick Chips Grid -->
+    <div class="prov-grid" id="provChipsGrid">
+        <a href="{{ url('province_contest_list') }}"
+            class="prov-chip all-chip {% if not selected_province %}active{% endif %}" data-name="tat ca all">
+            Tất cả (34 Tỉnh)
+        </a>
+        {% for code, name in provinces %}
+        <a href="{{ url('province_contest_list') }}?province={{ code }}"
+            class="prov-chip {% if selected_province == code %}active{% endif %}" data-name="{{ name|lower }}">
+            {{ name }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function filterProvChips() {
+        const query = document.getElementById('provSearch').value.toLowerCase().trim();
+        const chips = document.querySelectorAll('#provChipsGrid .prov-chip');
+        chips.forEach(chip => {
+            const name = chip.getAttribute('data-name') || '';
+            if (name.includes(query) || query === '') {
+                chip.style.display = 'inline-flex';
+            } else {
+                chip.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

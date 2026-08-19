@@ -156,7 +156,7 @@
                                 <td style="text-align: right; color: var(--lms-text-muted); font-size: 0.8125rem;">
                                     {{ e.last_accessed_at.strftime('%H:%M %d/%m') }}
                                 </td>
-                                <td style="text-align: right;">
+                                <td style="text-align: right; white-space: nowrap;">
                                     <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" onclick="openRenewModal({{ e.id }}, '{{ e.user.user.username|escapejs }}')" title="{{ _('Gia hạn thời gian học') }}">
                                         <i class="fa fa-calendar-plus-o"></i> {{ _('Gia hạn') }}
                                     </button>
@@ -165,16 +165,13 @@
                                             <i class="fa fa-certificate"></i> {{ _('Cấp') }}
                                         </button>
                                     {% elif cert %}
-                                        <a href="{{ cert.get_absolute_url() }}" target="_blank" class="lms-btn lms-btn-secondary lms-btn-sm" style="color: var(--lms-success);">
-                                            <i class="fa fa-eye"></i>
+                                        <a href="{{ cert.get_absolute_url() }}" target="_blank" class="lms-btn lms-btn-secondary lms-btn-sm" style="color: var(--lms-success);" title="{{ _('Xem chứng chỉ tốt nghiệp') }}">
+                                            <i class="fa fa-trophy"></i>
                                         </a>
                                     {% endif %}
-                                </td>
-                                            <i class="fa fa-trophy"></i> {{ _('Chứng chỉ') }}
-                                        </a>
-                                    {% else %}
-                                        <span style="font-size: 0.75rem; color: var(--lms-text-light);">{{ _('Đang làm bài') }}</span>
-                                    {% endif %}
+                                    <button type="button" class="lms-btn lms-btn-secondary lms-btn-sm" style="color: var(--lms-danger);" onclick="removeStudent({{ e.id }}, '{{ e.user.user.username|escapejs }}')" title="{{ _('Xóa / Đuổi học viên khỏi khóa học') }}">
+                                        <i class="fa fa-user-times"></i>
+                                    </button>
                                 </td>
                             </tr>
                         {% else %}
@@ -404,22 +401,44 @@ function refreshMonitorData() {
     location.reload();
 }
 
+function openModal(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.add('active');
+        el.classList.add('is-active');
+    }
+}
+
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.remove('active');
+        el.classList.remove('is-active');
+    }
+}
+
 function openAddStudentsModal() {
     document.getElementById('addUsersInput').value = '';
     document.getElementById('addDaysInput').value = '{{ course.validity_duration_days or "" }}';
-    document.getElementById('addStudentsModal').style.display = 'flex';
+    openModal('addStudentsModal');
 }
 
 function closeAddStudentsModal() {
-    document.getElementById('addStudentsModal').style.display = 'none';
+    closeModal('addStudentsModal');
 }
 
 function submitAddStudents() {
     const rawUsers = document.getElementById('addUsersInput').value.trim();
     const days = document.getElementById('addDaysInput').value.trim();
     if (!rawUsers) {
-        alert('{{ _("Vui lòng nhập danh sách username hoặc email.") }}');
+        alert('{{ _("Vui lòng nhập tên đăng nhập, email hoặc họ tên học viên.") }}');
         return;
+    }
+
+    const btn = document.querySelector('#addStudentsModal .lms-btn-primary');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = '{{ _("Đang xử lý...") }}';
     }
 
     fetch('{{ url("course_add_students", course.key) }}', {
@@ -432,15 +451,25 @@ function submitAddStudents() {
         if (data.success) {
             let msg = data.message;
             if (data.unfound_users && data.unfound_users.length > 0) {
-                msg += '\n\nKhông tìm thấy học viên: ' + data.unfound_users.join(', ');
+                msg += '\n\n' + '{{ _("Không tìm thấy các học viên sau:") }} ' + data.unfound_users.join(', ');
             }
             alert(msg);
             location.reload();
         } else {
             alert(data.error || 'Có lỗi xảy ra.');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = '{{ _("Xác nhận Thêm") }}';
+            }
         }
     })
-    .catch(err => alert('Lỗi kết nối máy chủ.'));
+    .catch(err => {
+        alert('Lỗi kết nối máy chủ.');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = '{{ _("Xác nhận Thêm") }}';
+        }
+    });
 }
 
 let activeRenewEnrollmentId = null;
@@ -449,11 +478,11 @@ function openRenewModal(enrollmentId, username) {
     activeRenewEnrollmentId = enrollmentId;
     document.getElementById('renewUsernameLbl').innerText = '@' + username;
     document.getElementById('renewDaysInput').value = '30';
-    document.getElementById('renewModal').style.display = 'flex';
+    openModal('renewModal');
 }
 
 function closeRenewModal() {
-    document.getElementById('renewModal').style.display = 'none';
+    closeModal('renewModal');
     activeRenewEnrollmentId = null;
 }
 
@@ -474,6 +503,28 @@ function submitRenew() {
     .then(data => {
         if (data.success) {
             alert('{{ _("Đã gia hạn thành công cho học viên!") }}');
+            location.reload();
+        } else {
+            alert(data.error || 'Có lỗi xảy ra.');
+        }
+    })
+    .catch(err => alert('Lỗi kết nối máy chủ.'));
+}
+
+function removeStudent(enrollmentId, username) {
+    if (!confirm('{{ _("Bạn có chắc chắn muốn xóa/hủy ghi danh học viên @") }}' + username + ' {{ _(" khỏi khóa học?") }}')) {
+        return;
+    }
+
+    fetch('{{ url("course_remove_student", course.key) }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ enrollment_id: enrollmentId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message || '{{ _("Đã xóa học viên khỏi khóa học.") }}');
             location.reload();
         } else {
             alert(data.error || 'Có lỗi xảy ra.');

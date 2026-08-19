@@ -178,9 +178,12 @@ def on_new_contest(contest_key):
         ('Title', contest.name),
         ('Statement', contest.description[:100] + '...\n'),
         ('Start time', contest.start_time.astimezone(tz).strftime('%Y-%m-%d %H:%M')),
-        ('End time', contest.end_time.astimezone(tz).strftime('%Y-%m-%d %H:%M')),
-        ('Duration', contest.end_time - contest.start_time),
     ]
+    if contest.end_time:
+        description.append(('End time', contest.end_time.astimezone(tz).strftime('%Y-%m-%d %H:%M')))
+        description.append(('Duration', contest.end_time - contest.start_time))
+    else:
+        description.append(('Duration', 'Không giới hạn thời gian'))
     if contest.is_organization_private and contest.organization:
         org_link = f'[{contest.organization.name}]({settings.SITE_FULL_URL + contest.organization.get_absolute_url()})'
         description.append(('Organization', org_link))

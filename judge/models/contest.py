@@ -27,6 +27,46 @@ __all__ = ['Contest', 'ContestTag', 'ContestAnnouncement', 'ContestParticipation
            'ContestSubmission', 'Rating']
 
 
+PROVINCE_CHOICES = (
+    ('AG', _('An Giang')),
+    ('BN', _('Bắc Ninh')),
+    ('CM', _('Cà Mau')),
+    ('CB', _('Cao Bằng')),
+    ('DL', _('Đắk Lắk')),
+    ('DB', _('Điện Biên')),
+    ('DT', _('Đồng Tháp')),
+    ('GL', _('Gia Lai')),
+    ('HT', _('Hà Tĩnh')),
+    ('HY', _('Hưng Yên')),
+    ('KH', _('Khánh Hoà')),
+    ('LC', _('Lai Châu')),
+    ('LS', _('Lạng Sơn')),
+    ('LCA', _('Lào Cai')),
+    ('LD', _('Lâm Đồng')),
+    ('NA', _('Nghệ An')),
+    ('NB', _('Ninh Bình')),
+    ('PT', _('Phú Thọ')),
+    ('QNG', _('Quảng Ngãi')),
+    ('QNI', _('Quảng Ninh')),
+    ('QT', _('Quảng Trị')),
+    ('SL', _('Sơn La')),
+    ('TN', _('Tây Ninh')),
+    ('TNG', _('Thái Nguyên')),
+    ('TH', _('Thanh Hóa')),
+    ('CT', _('TP. Cần Thơ')),
+    ('DN', _('TP. Đà Nẵng')),
+    ('DNA', _('TP. Đồng Nai')),
+    ('HN', _('TP. Hà Nội')),
+    ('HP', _('TP. Hải Phòng')),
+    ('HCM', _('TP. Hồ Chí Minh')),
+    ('HUE', _('TP. Huế')),
+    ('TQ', _('Tuyên Quang')),
+    ('VL', _('Vĩnh Long')),
+)
+
+PROVINCE_DICT = dict(PROVINCE_CHOICES)
+
+
 class MinValueOrNoneValidator(MinValueValidator):
     def compare(self, a, b):
         return a is not None and b is not None and super().compare(a, b)
@@ -90,7 +130,10 @@ class Contest(models.Model):
     terms = models.TextField(verbose_name=_('terms'), blank=True)
     problems = models.ManyToManyField(Problem, verbose_name=_('problems'), through='ContestProblem')
     start_time = models.DateTimeField(verbose_name=_('start time'), db_index=True)
-    end_time = models.DateTimeField(verbose_name=_('end time'), db_index=True)
+    end_time = models.DateTimeField(verbose_name=_('end time'), db_index=True, blank=True, null=True, default=None)
+    province = models.CharField(verbose_name=_('Province/City'), max_length=10, choices=PROVINCE_CHOICES,
+                                blank=True, default='', db_index=True)
+    is_province_contest = models.BooleanField(verbose_name=_('Provincial contest'), default=False, db_index=True)
     registration_start = models.DateTimeField(verbose_name=_('registration start time'),
                                               blank=True, null=True, default=None)
     registration_end = models.DateTimeField(verbose_name=_('registration end time'),
@@ -245,6 +288,9 @@ class Contest(models.Model):
         return lua.eval(self.problem_label_script)
 
     def clean(self):
+        if self.end_time is None and self.is_rated:
+            raise ValidationError(_('Kỳ thi tự do (không có thời gian kết thúc) không được phép tính rating.'))
+
         # Django will complain if you didn't fill in start_time or end_time, so we don't have to.
         if self.start_time and self.end_time and self.start_time >= self.end_time:
             raise ValidationError('What is this? A contest that ended before it starts?')
@@ -348,6 +394,8 @@ class Contest(models.Model):
 
     @property
     def contest_window_length(self):
+        if self.end_time is None:
+            return None
         return self.end_time - self.start_time
 
     @cached_property
@@ -375,7 +423,8 @@ class Contest(models.Model):
 
     @cached_property
     def frozen_time(self):
-        # Don't need to check self.frozen_last_minutes != 0
+        if self.end_time is None:
+            return None
         return self.end_time - timedelta(minutes=self.frozen_last_minutes)
 
     @property
@@ -394,14 +443,21 @@ class Contest(models.Model):
 
     @property
     def time_before_end(self):
-        if self.end_time >= self._now:
+        if self.end_time and self.end_time >= self._now:
             return self.end_time - self._now
         else:
             return None
 
     @cached_property
     def ended(self):
+        if self.end_time is None:
+            return False
         return self.end_time < self._now
+
+    def save(self, *args, **kwargs):
+        if self.province:
+            self.is_province_contest = True
+        super().save(*args, **kwargs)
 
     @cached_property
     def author_ids(self):

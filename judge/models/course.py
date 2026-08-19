@@ -122,7 +122,7 @@ class Course(models.Model):
     def is_editable_by(self, user):
         if not user.is_authenticated:
             return False
-        if user.is_superuser or user.has_perm('judge.edit_all_course'):
+        if user.is_superuser or user.is_staff or user.has_perm('judge.edit_all_course'):
             return True
         profile = getattr(user, 'profile', None)
         return bool(profile and self.instructor_id == profile.id)

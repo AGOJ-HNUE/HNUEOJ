@@ -234,6 +234,7 @@ urlpatterns = [
     ])),
 
     path('contests/', paged_list_view(contests.ContestList, 'contest_list')),
+    path('provinces/', paged_list_view(contests.ProvincialContestList, 'province_contest_list')),
     path('contests.ics', contests.ContestICal.as_view(), name='contest_ical'),
     path('contests/<int:year>/<int:month>/', contests.ContestCalendar.as_view(), name='contest_calendar'),
     path('contests/new', contests.CreateContest.as_view(), name='contest_new'),
@@ -308,6 +309,7 @@ urlpatterns = [
         path('/chapter/<int:chapter_id>/ranking/', course.CourseChapterRankingView.as_view(), name='course_chapter_ranking'),
         path('/chapter/<int:chapter_id>/ranking/data/', course.CourseChapterRankingDataAjax.as_view(), name='course_chapter_ranking_data'),
         path('/api/add-students/', course.CourseAddStudentsAjax.as_view(), name='course_add_students'),
+        path('/api/remove-student/', course.CourseRemoveStudentAjax.as_view(), name='course_remove_student'),
         path('/api/renew-enrollment/', course.CourseRenewEnrollmentAjax.as_view(), name='course_renew_enrollment'),
         path('/api/submission/<int:submission_id>/god-mode/', course.SubmissionGodModeAjax.as_view(), name='course_submission_god_mode'),
         path('/api/enrollment/<int:enrollment_id>/certify/', course.IssueCertificateAjax.as_view(), name='course_issue_certificate'),

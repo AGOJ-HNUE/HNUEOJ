@@ -1151,6 +1151,8 @@
   pointer-events: none;
 }
 
+.lms-modal-overlay[style*="display: flex"],
+.lms-modal-overlay[style*="display: block"],
 .lms-modal-overlay.active,
 .lms-modal-overlay.is-active {
   display: flex !important;

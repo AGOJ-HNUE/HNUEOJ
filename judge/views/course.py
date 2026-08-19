@@ -11,6 +11,7 @@ from django.http import Http404, HttpResponse, HttpResponseForbidden, JsonRespon
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import _json_script_escapes
 from django.utils.translation import gettext as _
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
@@ -18,7 +19,7 @@ from django.views.generic import DetailView, ListView, TemplateView
 from judge import event_poster as event
 from judge.judgeapi import judge_submission
 from judge.models import Certificate, Chapter, Course, Enrollment, Exam, ExamProblem, \
-    Language, Lesson, LessonProblem, LessonProgress, Problem, Profile, Submission, SubmissionSource
+    Language, Lesson, LessonProblem, LessonProgress, Organization, Problem, Profile, Submission, SubmissionSource
 from judge.utils.views import TitleMixin
 from judge.views.problem import ProblemSubmitForm, ProblemSubmitMixin
 
@@ -1249,10 +1250,10 @@ class CourseAddStudentsAjax(LoginRequiredMixin, View):
         custom_days = data.get('days')
 
         if not raw_input:
-            return JsonResponse({'error': _('Vui lòng nhập tên đăng nhập hoặc email học viên.')}, status=400)
+            return JsonResponse({'error': _('Vui lòng nhập tên đăng nhập, email hoặc họ tên học viên.')}, status=400)
 
-        tokens = [t.strip() for t in re.split(r'[\s,\n;]+', raw_input) if t.strip()]
-        if not tokens:
+        raw_tokens = [t.strip() for t in re.split(r'[\s,\n;]+', raw_input) if t.strip()]
+        if not raw_tokens:
             return JsonResponse({'error': _('Danh sách học viên không hợp lệ.')}, status=400)
 
         days_to_add = None
@@ -1261,20 +1262,33 @@ class CourseAddStudentsAjax(LoginRequiredMixin, View):
         elif course.validity_duration_days:
             days_to_add = course.validity_duration_days
 
-        profiles = Profile.objects.filter(
-            Q(user__username__in=tokens) | Q(user__email__in=tokens)
-        ).select_related('user')
+        q_filter = Q()
+        for token in raw_tokens:
+            q_filter |= Q(user__username__iexact=token)
+            q_filter |= Q(user__email__iexact=token)
+            q_filter |= Q(username_display_override__iexact=token)
+            q_filter |= Q(user__first_name__iexact=token)
+            q_filter |= Q(user__last_name__iexact=token)
+
+        matched_profiles = list(Profile.objects.filter(q_filter).select_related('user'))
 
         found_identifiers = set()
         added_count = 0
         renewed_count = 0
 
-        for profile in profiles:
-            found_identifiers.add(profile.user.username)
+        now = timezone.now()
+        for profile in matched_profiles:
+            found_identifiers.add(profile.user.username.lower())
             if profile.user.email:
-                found_identifiers.add(profile.user.email)
+                found_identifiers.add(profile.user.email.lower())
+            if profile.username_display_override:
+                found_identifiers.add(profile.username_display_override.lower())
+            if profile.user.first_name:
+                found_identifiers.add(profile.user.first_name.lower())
+            if profile.user.last_name:
+                found_identifiers.add(profile.user.last_name.lower())
             
-            expiry_dt = timezone.now() + timedelta(days=days_to_add) if days_to_add else None
+            expiry_dt = now + timedelta(days=days_to_add) if days_to_add else None
             enrollment, created = Enrollment.objects.get_or_create(
                 user=profile,
                 course=course,
@@ -1290,15 +1304,45 @@ class CourseAddStudentsAjax(LoginRequiredMixin, View):
                 enrollment.save(update_fields=['expiry_date', 'status'])
                 renewed_count += 1
 
-        unfound = [t for t in tokens if t not in found_identifiers]
+        unfound = [t for t in raw_tokens if t.lower() not in found_identifiers]
 
+        msg = f'Đã thêm {added_count} học viên mới và gia hạn/cập nhật cho {renewed_count} học viên.'
         return JsonResponse({
             'success': True,
             'added_count': added_count,
             'renewed_count': renewed_count,
             'unfound_users': unfound,
-            'message': _(f'Đã thêm {added_count} học viên mới và gia hạn/cập nhật cho {renewed_count} học viên.')
+            'message': msg
         })
+
+
+class CourseRemoveStudentAjax(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        course = get_object_or_404(Course, key=slug)
+        if not course.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
+        enrollment_id = data.get('enrollment_id')
+        user_identifier = data.get('user', '').strip()
+
+        if enrollment_id:
+            enrollment = get_object_or_404(Enrollment, id=enrollment_id, course=course)
+            username = enrollment.user.user.username
+            enrollment.delete()
+            return JsonResponse({'success': True, 'message': _(f'Đã xóa học viên @{username} khỏi khóa học.')})
+        elif user_identifier:
+            profile = Profile.objects.filter(
+                Q(user__username__iexact=user_identifier) | Q(user__email__iexact=user_identifier)
+            ).first()
+            if not profile:
+                return JsonResponse({'error': _('Không tìm thấy học viên.')}, status=404)
+            deleted_count, _details = Enrollment.objects.filter(user=profile, course=course).delete()
+            if deleted_count == 0:
+                return JsonResponse({'error': _('Học viên này chưa ghi danh khóa học.')}, status=400)
+            return JsonResponse({'success': True, 'message': _(f'Đã xóa học viên @{profile.user.username} khỏi khóa học.')})
+
+        return JsonResponse({'error': _('Vui lòng chỉ định học viên cần xóa.')}, status=400)
 
 
 class CourseRenewEnrollmentAjax(LoginRequiredMixin, View):
@@ -1355,6 +1399,420 @@ class CourseRenewEnrollmentAjax(LoginRequiredMixin, View):
         })
 
 
+def build_exam_ranking_data(course, exam, request):
+    _user_url_tpl = reverse('user_page', args=['__USERNAME__'])
+    _org_url_tpl = reverse('organization_home', args=['__SLUG__'])
+
+    exam_problems = list(exam.exam_problems.select_related('problem').order_by('order_index', 'id'))
+    exam_prob_map = {ep.problem_id: ep for ep in exam_problems}
+
+    problems_data = []
+    for i, ep in enumerate(exam_problems):
+        prob_pts = ep.display_points
+        r_pts = round(float(prob_pts), 2)
+        clean_pts = int(r_pts) if r_pts.is_integer() else r_pts
+        problems_data.append({
+            'id': ep.problem_id,
+            'code': ep.problem.code,
+            'label': chr(65 + i) if i < 26 else f'P{i+1}',
+            'name': ep.display_title,
+            'points': clean_pts,
+            'url': reverse('problem_detail', args=[ep.problem.code]),
+        })
+
+    contest_data = {
+        'key': f'exam_{exam.id}',
+        'name': exam.title,
+        'format': 'default',
+        'format_config': {},
+        'can_edit': course.is_editable_by(request.user),
+        'points_precision': 2,
+        'ended': not exam.is_active if (exam.start_time or exam.end_time) else False,
+        'url_templates': {
+            'all_submissions': reverse('course_exam', args=[course.key, exam.id]),
+            'problem_submissions': reverse('course_exam', args=[course.key, exam.id]),
+        },
+        'rank_header': _('Hạng'),
+    }
+
+    enrollments = Enrollment.objects.filter(course=course).select_related('user__user').prefetch_related('user__organizations')
+    profile_map = {e.user_id: e.user for e in enrollments}
+
+    sub_user_ids = set(Submission.objects.filter(exam=exam).values_list('user_id', flat=True))
+    missing_uids = sub_user_ids - set(profile_map.keys())
+    if missing_uids:
+        extra_profiles = Profile.objects.filter(id__in=missing_uids).select_related('user').prefetch_related('organizations')
+        for p in extra_profiles:
+            profile_map[p.id] = p
+
+    submissions = Submission.objects.filter(
+        exam=exam,
+    ).select_related('user__user', 'problem').order_by('date')
+
+    user_sub_data = {}
+    for sub in submissions:
+        uid = sub.user_id
+        pid = sub.problem_id
+        if pid not in exam_prob_map:
+            continue
+
+        if uid not in user_sub_data:
+            user_sub_data[uid] = {}
+        if pid not in user_sub_data[uid]:
+            user_sub_data[uid][pid] = {'tries': 0, 'best_sub': None}
+
+        user_sub_data[uid][pid]['tries'] += 1
+
+        if sub.points is not None:
+            cur_best = user_sub_data[uid][pid]['best_sub']
+            if cur_best is None or sub.points > cur_best.points:
+                user_sub_data[uid][pid]['best_sub'] = sub
+
+    start_ref = exam.start_time or course.created_at
+
+    participations_data = []
+    for uid, profile in profile_map.items():
+        user = profile.user
+        org = profile.organization
+        u_subs = user_sub_data.get(uid, {})
+
+        format_data = {}
+        total_score = 0.0
+        total_cumtime = 0
+        ac_count = 0
+
+        for ep in exam_problems:
+            pid = ep.problem_id
+            p_str = str(pid)
+            p_data = u_subs.get(pid)
+
+            if not p_data or p_data['tries'] == 0:
+                continue
+
+            tries = p_data['tries']
+            best_sub = p_data['best_sub']
+
+            if best_sub and best_sub.points is not None:
+                scaled_points = best_sub.points
+                if ep.custom_score is not None and ep.problem.points:
+                    scale = ep.custom_score / ep.problem.points
+                    scaled_points = min(ep.custom_score, best_sub.points * scale)
+
+                r_p = round(float(scaled_points), 2)
+                clean_pts = int(r_p) if r_p.is_integer() else r_p
+
+                time_sec = max(0, int((best_sub.date - start_ref).total_seconds()))
+
+                format_data[p_str] = {
+                    'points': clean_pts,
+                    'time': time_sec,
+                    'tries': tries,
+                }
+                total_score += clean_pts
+                total_cumtime += time_sec
+                if best_sub.result == 'AC' or clean_pts >= (ep.display_points or 100):
+                    ac_count += 1
+            else:
+                format_data[p_str] = {
+                    'points': 0,
+                    'time': 0,
+                    'tries': tries,
+                }
+
+        r_tot = round(float(total_score), 2)
+        clean_tot = int(r_tot) if r_tot.is_integer() else r_tot
+
+        user_dict = {
+            'username': user.username,
+            'display_name': getattr(profile, 'display_name', '') or user.get_full_name() or user.username,
+            'name': user.get_full_name() or user.username,
+            'css_class': Profile.get_user_css_class(profile.display_rank, profile.rating),
+            'url': _user_url_tpl.replace('__USERNAME__', user.username),
+            'organization': {
+                'short_name': org.short_name or org.name,
+                'url': _org_url_tpl.replace('__SLUG__', org.slug),
+            } if org else None,
+        }
+
+        participations_data.append({
+            'id': profile.id,
+            'score': clean_tot,
+            'cumtime': total_cumtime,
+            'tiebreaker': 0,
+            'is_disqualified': False,
+            'virtual': 0,
+            'user': user_dict,
+            'format_data': format_data,
+            'ac_count': ac_count,
+        })
+
+    participations_data.sort(key=lambda x: (-x['score'], -x['ac_count'], x['cumtime'], x['user']['username']))
+
+    rank = 0
+    delta = 1
+    last_key = None
+    for p in participations_data:
+        key = (p['score'], p['cumtime'])
+        if key != last_key:
+            rank += delta
+            delta = 0
+        delta += 1
+        p['rank'] = rank
+        last_key = key
+        del p['ac_count']
+
+    return {
+        'contest': contest_data,
+        'problems': problems_data,
+        'participations': participations_data,
+    }
+
+
+def build_chapter_ranking_data(course, chapter, request):
+    _user_url_tpl = reverse('user_page', args=['__USERNAME__'])
+    _org_url_tpl = reverse('organization_home', args=['__SLUG__'])
+
+    lesson_problems = list(
+        LessonProblem.objects.filter(
+            lesson__chapter=chapter,
+            lesson__is_published=True,
+        ).select_related('lesson', 'problem').order_by('lesson__order_index', 'order_index', 'id')
+    )
+
+    exam_problems = list(
+        ExamProblem.objects.filter(
+            exam__chapter=chapter,
+            exam__is_published=True,
+        ).select_related('exam', 'problem').order_by('exam__order_index', 'order_index', 'id')
+    )
+
+    problems_data = []
+    for lp in lesson_problems:
+        prob_pts = lp.display_points
+        r_pts = round(float(prob_pts), 2)
+        clean_pts = int(r_pts) if r_pts.is_integer() else r_pts
+        problems_data.append({
+            'id': f'lp_{lp.id}',
+            'code': lp.problem.code,
+            'label': f'L{lp.lesson.order_index}.{lp.order_index}',
+            'name': f'[{lp.lesson.title}] {lp.display_title}',
+            'points': clean_pts,
+            'url': reverse('problem_detail', args=[lp.problem.code]),
+        })
+
+    for ep in exam_problems:
+        prob_pts = ep.display_points
+        r_pts = round(float(prob_pts), 2)
+        clean_pts = int(r_pts) if r_pts.is_integer() else r_pts
+        problems_data.append({
+            'id': f'ep_{ep.id}',
+            'code': ep.problem.code,
+            'label': f'E{ep.exam.order_index}.{ep.order_index}',
+            'name': f'[{ep.exam.title}] {ep.display_title}',
+            'points': clean_pts,
+            'url': reverse('problem_detail', args=[ep.problem.code]),
+        })
+
+    contest_data = {
+        'key': f'chapter_{chapter.id}',
+        'name': f'{chapter.title} - {course.title}',
+        'format': 'default',
+        'format_config': {},
+        'can_edit': course.is_editable_by(request.user),
+        'points_precision': 2,
+        'ended': False,
+        'url_templates': {
+            'all_submissions': reverse('course_detail', args=[course.key]),
+            'problem_submissions': reverse('course_detail', args=[course.key]),
+        },
+        'rank_header': _('Hạng'),
+    }
+
+    enrollments = Enrollment.objects.filter(course=course).select_related('user__user').prefetch_related('user__organizations')
+    profile_map = {e.user_id: e.user for e in enrollments}
+
+    lp_problem_ids = [lp.problem_id for lp in lesson_problems]
+    ep_exam_ids = [ep.exam_id for ep in exam_problems]
+
+    sub_user_ids = set()
+    if lp_problem_ids:
+        sub_user_ids.update(Submission.objects.filter(problem_id__in=lp_problem_ids, lesson__chapter=chapter).values_list('user_id', flat=True))
+    if ep_exam_ids:
+        sub_user_ids.update(Submission.objects.filter(exam_id__in=ep_exam_ids).values_list('user_id', flat=True))
+
+    missing_uids = sub_user_ids - set(profile_map.keys())
+    if missing_uids:
+        extra_profiles = Profile.objects.filter(id__in=missing_uids).select_related('user').prefetch_related('organizations')
+        for p in extra_profiles:
+            profile_map[p.id] = p
+
+    lp_subs_map = {}
+    if lesson_problems:
+        for lp in lesson_problems:
+            subs = Submission.objects.filter(
+                problem=lp.problem,
+                lesson__chapter=chapter,
+            ).order_by('date')
+            for sub in subs:
+                key = (sub.user_id, f'lp_{lp.id}')
+                if key not in lp_subs_map:
+                    lp_subs_map[key] = {'tries': 0, 'best_sub': None}
+                lp_subs_map[key]['tries'] += 1
+                if sub.points is not None:
+                    cur_best = lp_subs_map[key]['best_sub']
+                    if cur_best is None or sub.points > cur_best.points:
+                        lp_subs_map[key]['best_sub'] = sub
+
+    ep_subs_map = {}
+    if exam_problems:
+        for ep in exam_problems:
+            subs = Submission.objects.filter(
+                problem=ep.problem,
+                exam=ep.exam,
+            ).order_by('date')
+            for sub in subs:
+                key = (sub.user_id, f'ep_{ep.id}')
+                if key not in ep_subs_map:
+                    ep_subs_map[key] = {'tries': 0, 'best_sub': None}
+                ep_subs_map[key]['tries'] += 1
+                if sub.points is not None:
+                    cur_best = ep_subs_map[key]['best_sub']
+                    if cur_best is None or sub.points > cur_best.points:
+                        ep_subs_map[key]['best_sub'] = sub
+
+    start_ref = course.created_at
+
+    participations_data = []
+    for uid, profile in profile_map.items():
+        user = profile.user
+        org = profile.organization
+
+        format_data = {}
+        total_score = 0.0
+        total_cumtime = 0
+        ac_count = 0
+
+        for lp in lesson_problems:
+            p_key = f'lp_{lp.id}'
+            p_data = lp_subs_map.get((uid, p_key))
+            if not p_data or p_data['tries'] == 0:
+                continue
+
+            tries = p_data['tries']
+            best_sub = p_data['best_sub']
+
+            if best_sub and best_sub.points is not None:
+                scaled_points = best_sub.points
+                if lp.custom_score is not None and lp.problem.points:
+                    scale = lp.custom_score / lp.problem.points
+                    scaled_points = min(lp.custom_score, best_sub.points * scale)
+
+                r_p = round(float(scaled_points), 2)
+                clean_pts = int(r_p) if r_p.is_integer() else r_p
+
+                time_sec = max(0, int((best_sub.date - start_ref).total_seconds()))
+
+                format_data[p_key] = {
+                    'points': clean_pts,
+                    'time': time_sec,
+                    'tries': tries,
+                }
+                total_score += clean_pts
+                total_cumtime += time_sec
+                if best_sub.result == 'AC' or clean_pts >= (lp.display_points or 100):
+                    ac_count += 1
+            else:
+                format_data[p_key] = {
+                    'points': 0,
+                    'time': 0,
+                    'tries': tries,
+                }
+
+        for ep in exam_problems:
+            p_key = f'ep_{ep.id}'
+            p_data = ep_subs_map.get((uid, p_key))
+            if not p_data or p_data['tries'] == 0:
+                continue
+
+            tries = p_data['tries']
+            best_sub = p_data['best_sub']
+
+            if best_sub and best_sub.points is not None:
+                scaled_points = best_sub.points
+                if ep.custom_score is not None and ep.problem.points:
+                    scale = ep.custom_score / ep.problem.points
+                    scaled_points = min(ep.custom_score, best_sub.points * scale)
+
+                r_p = round(float(scaled_points), 2)
+                clean_pts = int(r_p) if r_p.is_integer() else r_p
+
+                time_sec = max(0, int((best_sub.date - start_ref).total_seconds()))
+
+                format_data[p_key] = {
+                    'points': clean_pts,
+                    'time': time_sec,
+                    'tries': tries,
+                }
+                total_score += clean_pts
+                total_cumtime += time_sec
+                if best_sub.result == 'AC' or clean_pts >= (ep.display_points or 100):
+                    ac_count += 1
+            else:
+                format_data[p_key] = {
+                    'points': 0,
+                    'time': 0,
+                    'tries': tries,
+                }
+
+        r_tot = round(float(total_score), 2)
+        clean_tot = int(r_tot) if r_tot.is_integer() else r_tot
+
+        user_dict = {
+            'username': user.username,
+            'display_name': getattr(profile, 'display_name', '') or user.get_full_name() or user.username,
+            'name': user.get_full_name() or user.username,
+            'css_class': Profile.get_user_css_class(profile.display_rank, profile.rating),
+            'url': _user_url_tpl.replace('__USERNAME__', user.username),
+            'organization': {
+                'short_name': org.short_name or org.name,
+                'url': _org_url_tpl.replace('__SLUG__', org.slug),
+            } if org else None,
+        }
+
+        participations_data.append({
+            'id': profile.id,
+            'score': clean_tot,
+            'cumtime': total_cumtime,
+            'tiebreaker': 0,
+            'is_disqualified': False,
+            'virtual': 0,
+            'user': user_dict,
+            'format_data': format_data,
+            'ac_count': ac_count,
+        })
+
+    participations_data.sort(key=lambda x: (-x['score'], -x['ac_count'], x['cumtime'], x['user']['username']))
+
+    rank = 0
+    delta = 1
+    last_key = None
+    for p in participations_data:
+        key = (p['score'], p['cumtime'])
+        if key != last_key:
+            rank += delta
+            delta = 0
+        delta += 1
+        p['rank'] = rank
+        last_key = key
+        del p['ac_count']
+
+    return {
+        'contest': contest_data,
+        'problems': problems_data,
+        'participations': participations_data,
+    }
+
+
 class CourseExamRankingView(LoginRequiredMixin, TitleMixin, TemplateView):
     template_name = 'course/exam_ranking.html'
 
@@ -1368,11 +1826,21 @@ class CourseExamRankingView(LoginRequiredMixin, TitleMixin, TemplateView):
             raise PermissionDenied()
         return super().dispatch(request, slug, exam_id, *args, **kwargs)
 
+    def get(self, request, *args, **kwargs):
+        if request.GET.get('data') is not None or request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            data = build_exam_ranking_data(self.course, self.exam, request)
+            return JsonResponse(data)
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        data = build_exam_ranking_data(self.course, self.exam, self.request)
         context['course'] = self.course
         context['exam'] = self.exam
-        context['exam_problems'] = self.exam.exam_problems.select_related('problem').all()
+        context['ranking_data'] = data
+        context['ranking_json'] = json.dumps(data).translate(_json_script_escapes)
+        context['contest_key'] = f'exam_{self.exam.id}'
+        context['data_url'] = reverse('course_exam_ranking_data', args=[self.course.key, self.exam.id])
         return context
 
 
@@ -1384,73 +1852,8 @@ class CourseExamRankingDataAjax(LoginRequiredMixin, View):
         if not exam.can_access(request.user) and not course.is_editable_by(request.user):
             raise PermissionDenied()
 
-        exam_problems = exam.exam_problems.select_related('problem').all()
-        exam_prob_map = {ep.problem_id: ep for ep in exam_problems}
-
-        submissions = Submission.objects.filter(
-            exam=exam,
-            points__isnull=False,
-        ).select_related('user__user', 'problem')
-
-        user_scores = {}
-        for sub in submissions:
-            uid = sub.user_id
-            if uid not in user_scores:
-                user_scores[uid] = {
-                    'profile': sub.user,
-                    'username': sub.user.user.username,
-                    'full_name': getattr(sub.user, 'display_name', '') or sub.user.user.get_full_name() or sub.user.user.username,
-                    'problem_scores': {},
-                    'total_score': 0.0,
-                    'ac_count': 0,
-                    'last_sub_time': sub.date,
-                }
-            
-            p_id = sub.problem_id
-            ep = exam_prob_map.get(p_id)
-            if not ep:
-                continue
-
-            scaled_points = sub.points
-            if ep.custom_score is not None and ep.problem.points:
-                scale = ep.custom_score / ep.problem.points
-                scaled_points = min(ep.custom_score, sub.points * scale)
-
-            r_p = round(float(scaled_points), 2)
-            clean_pts = int(r_p) if r_p.is_integer() else r_p
-
-            current_p_data = user_scores[uid]['problem_scores'].get(p_id, {'points': 0, 'result': sub.result})
-            if clean_pts > current_p_data['points']:
-                user_scores[uid]['problem_scores'][p_id] = {
-                    'points': clean_pts,
-                    'result': sub.result,
-                }
-            if sub.date > user_scores[uid]['last_sub_time']:
-                user_scores[uid]['last_sub_time'] = sub.date
-
-        ranking_list = []
-        for uid, udata in user_scores.items():
-            tot = sum(p['points'] for p in udata['problem_scores'].values())
-            r_tot = round(float(tot), 2)
-            clean_tot = int(r_tot) if r_tot.is_integer() else r_tot
-            ac_count = sum(1 for p in udata['problem_scores'].values() if p.get('result') == 'AC')
-            udata['total_score'] = clean_tot
-            udata['ac_count'] = ac_count
-            udata['last_sub_time_fmt'] = udata['last_sub_time'].strftime('%H:%M:%S %d/%m')
-            ranking_list.append(udata)
-
-        ranking_list.sort(key=lambda x: (-x['total_score'], -x['ac_count'], x['last_sub_time']))
-
-        for idx, item in enumerate(ranking_list, start=1):
-            item['rank'] = idx
-            del item['profile']
-            del item['last_sub_time']
-
-        return JsonResponse({
-            'exam': {'id': exam.id, 'title': exam.title, 'pass_percentage': exam.pass_percentage},
-            'problems': [{'id': ep.problem_id, 'code': ep.problem.code, 'title': ep.display_title, 'points': ep.display_points} for ep in exam_problems],
-            'rankings': ranking_list,
-        })
+        data = build_exam_ranking_data(course, exam, request)
+        return JsonResponse(data)
 
 
 class CourseChapterRankingView(LoginRequiredMixin, TitleMixin, TemplateView):
@@ -1466,12 +1869,21 @@ class CourseChapterRankingView(LoginRequiredMixin, TitleMixin, TemplateView):
             raise PermissionDenied()
         return super().dispatch(request, slug, chapter_id, *args, **kwargs)
 
+    def get(self, request, *args, **kwargs):
+        if request.GET.get('data') is not None or request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            data = build_chapter_ranking_data(self.course, self.chapter, request)
+            return JsonResponse(data)
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        data = build_chapter_ranking_data(self.course, self.chapter, self.request)
         context['course'] = self.course
         context['chapter'] = self.chapter
-        context['lessons'] = self.chapter.lessons.filter(is_published=True)
-        context['exams'] = self.chapter.exams.filter(is_published=True)
+        context['ranking_data'] = data
+        context['ranking_json'] = json.dumps(data).translate(_json_script_escapes)
+        context['contest_key'] = f'chapter_{self.chapter.id}'
+        context['data_url'] = reverse('course_chapter_ranking_data', args=[self.course.key, self.chapter.id])
         return context
 
 
@@ -1483,82 +1895,6 @@ class CourseChapterRankingDataAjax(LoginRequiredMixin, View):
         if not course.is_accessible_by(request.user):
             raise PermissionDenied()
 
-        lesson_problems = LessonProblem.objects.filter(
-            lesson__chapter=chapter,
-            lesson__is_published=True,
-        ).select_related('problem')
-        problem_ids = [lp.problem_id for lp in lesson_problems]
+        data = build_chapter_ranking_data(course, chapter, request)
+        return JsonResponse(data)
 
-        chapter_exams = Exam.objects.filter(chapter=chapter, is_published=True)
-        exam_ids = [e.id for e in chapter_exams]
-
-        enrollments = Enrollment.objects.filter(course=course).select_related('user__user')
-        
-        lesson_progresses = LessonProgress.objects.filter(
-            lesson__chapter=chapter,
-            lesson__is_published=True,
-            is_completed=True,
-        ).values('user_id').annotate(completed_cnt=Count('id'))
-        completed_map = {lp['user_id']: lp['completed_cnt'] for lp in lesson_progresses}
-
-        total_lessons_in_chapter = chapter.lessons.filter(is_published=True).count()
-
-        practice_subs = Submission.objects.filter(
-            problem_id__in=problem_ids,
-            lesson__chapter=chapter,
-            points__isnull=False,
-        ).values('user_id', 'problem_id').annotate(best_points=Max('points'))
-        
-        practice_scores = {}
-        for ps in practice_subs:
-            uid = ps['user_id']
-            practice_scores[uid] = practice_scores.get(uid, 0.0) + (ps['best_points'] or 0.0)
-
-        exam_subs = Submission.objects.filter(
-            exam_id__in=exam_ids,
-            points__isnull=False,
-        ).values('user_id', 'exam_id', 'problem_id').annotate(best_points=Max('points'))
-        
-        exam_scores = {}
-        for es in exam_subs:
-            uid = es['user_id']
-            exam_scores[uid] = exam_scores.get(uid, 0.0) + (es['best_points'] or 0.0)
-
-        def clean_val(v):
-            if v is None:
-                return 0
-            r = round(float(v), 2)
-            return int(r) if r.is_integer() else r
-
-        ranking_list = []
-        for e in enrollments:
-            uid = e.user_id
-            p_score = clean_val(practice_scores.get(uid, 0.0))
-            ex_score = clean_val(exam_scores.get(uid, 0.0))
-            total_score = clean_val(p_score + ex_score)
-            completed_cnt = completed_map.get(uid, 0)
-            progress_pct = clean_val((completed_cnt / total_lessons_in_chapter * 100.0) if total_lessons_in_chapter > 0 else 100.0)
-
-            ranking_list.append({
-                'user_id': uid,
-                'username': e.user.user.username,
-                'full_name': getattr(e.user, 'display_name', '') or e.user.user.get_full_name() or e.user.user.username,
-                'practice_score': p_score,
-                'exam_score': ex_score,
-                'total_score': total_score,
-                'completed_lessons': completed_cnt,
-                'total_lessons': total_lessons_in_chapter,
-                'progress_percentage': progress_pct,
-                'is_expired': e.is_expired,
-            })
-
-        ranking_list.sort(key=lambda x: (-x['total_score'], -x['completed_lessons'], x['username']))
-
-        for idx, item in enumerate(ranking_list, start=1):
-            item['rank'] = idx
-
-        return JsonResponse({
-            'chapter': {'id': chapter.id, 'title': chapter.title},
-            'total_lessons': total_lessons_in_chapter,
-            'rankings': ranking_list,
-        })
