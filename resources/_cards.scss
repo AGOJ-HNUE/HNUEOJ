@@ -1,0 +1,152 @@
+@use "vars" as *;
+@use "variables" as *;
+@use "mixins" as *;
+
+// Cards Grid Layout
+.prov-cards-grid {
+    @include grid-responsive(260px, 18px);
+    margin-bottom: 28px;
+
+    @include mobile-only {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+}
+
+// Exam Bank & Contest Content Cards
+.prov-card {
+    @include card-base;
+    @include card-hover;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 200px;
+}
+
+.prov-card-header {
+    @include flex-between;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.prov-card-tag {
+    @include pill-badge;
+    font-size: 0.75rem;
+
+    &.thpt {
+        background: $tag-thpt-bg;
+        color: $tag-thpt-text;
+        border: 1px solid $tag-thpt-border;
+    }
+
+    &.thcs {
+        background: $tag-thcs-bg;
+        color: $tag-thcs-text;
+        border: 1px solid $tag-thcs-border;
+    }
+
+    &.other {
+        background: $tag-other-bg;
+        color: $tag-other-text;
+        border: 1px solid $tag-other-border;
+    }
+}
+
+.prov-card-province {
+    @include pill-badge($tag-province-bg, $tag-province-text, $tag-province-border);
+    font-size: 0.76rem;
+}
+
+.prov-card-title {
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--lms-text-main);
+    margin: 0 0 14px 0;
+    text-decoration: none !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.2s ease;
+
+    &:hover {
+        color: var(--lms-primary);
+    }
+}
+
+.prov-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--lms-card-border);
+    margin-top: auto;
+    margin-bottom: 14px;
+    font-size: 0.82rem;
+    color: var(--lms-text-sub);
+}
+
+.prov-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
+}
+
+.prov-card-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 14px;
+    border-radius: $radius-md;
+    background: var(--lms-primary);
+    color: #ffffff !important;
+    font-size: 0.86rem;
+    font-weight: 700;
+    text-decoration: none !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+
+    &:hover {
+        background: var(--lms-primary-hover);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        transform: translateY(-1px);
+    }
+}
+
+// Empty State Card Component
+.prov-empty-state {
+    background: var(--lms-card-bg);
+    border: 2px dashed var(--lms-card-border);
+    border-radius: $radius-xl;
+    padding: 48px 24px;
+    text-align: center;
+    margin-bottom: 28px;
+    box-shadow: var(--lms-shadow-sm);
+}
+
+.prov-empty-icon {
+    font-size: 2.8rem;
+    color: var(--lms-text-muted);
+    margin-bottom: 14px;
+}
+
+.prov-empty-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--lms-text-main);
+    margin-bottom: 8px;
+}
+
+.prov-empty-text {
+    font-size: 0.88rem;
+    color: var(--lms-text-sub);
+    max-width: 440px;
+    margin: 0 auto 20px auto;
+    line-height: 1.5;
+}

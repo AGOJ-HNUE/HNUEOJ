@@ -1,180 +1,316 @@
 {% extends "base.html" %}
 
-{% block media %}
-    <link rel="stylesheet" href="{{ static('course_lms.css') }}">
+{% block title %}
+{{ _('Tuyển Sinh & Khóa Học Bồi Dưỡng Lập Trình Thi Đấu - LMS HNUEOJ') }}
 {% endblock %}
 
 {% block body %}
-<div class="lms-container">
-    <div class="lms-header">
-        <div class="lms-breadcrumb">
-            <a href="{{ url('home') }}"><i class="fa fa-home"></i> {{ _('Trang chủ') }}</a>
-            <i class="fa fa-angle-right"></i>
-            <span>{{ _('Cổng Học tập LMS HNUEOJ') }}</span>
+<div class="admissions-container">
+    <!-- Hero Banner Section -->
+    <div class="admissions-hero">
+        <div class="admissions-hero-badge">
+            <i class="fa fa-graduation-cap"></i> {{ _('Các khoá học bồi dưỡng kiến thức chuyên Tin') }}
         </div>
-        
-        <div class="lms-title-row">
-            <div>
-                <h1 class="lms-page-title">{{ _('Chương trình Đào tạo & Khóa học Chuyên đề') }}</h1>
-                <p style="color: var(--lms-text-muted); margin: 6px 0 0; font-size: 0.9375rem; line-height: 1.5;">
-                    {{ _('Hệ thống đào tạo trực tuyến, bồi dưỡng thuật toán và khảo thí năng lực lập trình chuẩn học thuật - Trường Đại học Sư phạm Hà Nội (LMS HNUEOJ).') }}
+
+        <div
+            style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+            <div style="max-width: 820px;">
+                <h1 class="admissions-hero-title">
+                    {{ _('Các khóa học bồi dưỡng kiến thức chuyên Tin') }}
+                </h1>
+                <p class="admissions-hero-subtitle">
+                    {{ _('Hệ thống các khóa học trực tuyến được xây dựng bài bản từ cơ bản đến nâng cao, dành cho học
+                    sinh THCS và THPT có định hướng học Tin học, bồi dưỡng Học sinh giỏi Tin học, Lập trình thi đấu
+                    (Competitive Programming) và ôn thi Chuyên Tin.') }}
                 </p>
             </div>
-            
-            {% if request.user.is_authenticated and (request.user.is_superuser or perms.judge.edit_all_course or teaching_count > 0) %}
-                <button type="button" class="lms-btn lms-btn-primary" onclick="openCreateCourseModal()">
-                    <i class="fa fa-plus-circle"></i> {{ _('Khởi tạo Học phần mới') }}
-                </button>
+
+            {% if request.user.is_authenticated and (request.user.is_superuser or perms.judge.edit_all_course or
+            teaching_count > 0) %}
+            <button type="button" class="btn-modern btn-modern--primary" onclick="openCreateCourseModal()">
+                <i class="fa fa-plus-circle"></i> {{ _('Khởi tạo Khóa học Mới') }}
+            </button>
             {% endif %}
         </div>
+
+        <!-- KPI Statistics -->
+        <!-- <div class="admissions-kpi-grid">
+            <div class="admissions-kpi-card">
+                <div class="kpi-icon"><i class="fa fa-trophy"></i></div>
+                <div>
+                    <div class="kpi-value">92%</div>
+                    <div class="kpi-label">{{ _('Học viên đạt giải HSG / CP') }}</div>
+                </div>
+            </div>
+            <div class="admissions-kpi-card">
+                <div class="kpi-icon"><i class="fa fa-users"></i></div>
+                <div>
+                    <div class="kpi-value">1.200+</div>
+                    <div class="kpi-label">{{ _('Học viên đã tham gia học') }}</div>
+                </div>
+            </div>
+            <div class="admissions-kpi-card">
+                <div class="kpi-icon"><i class="fa fa-code"></i></div>
+                <div>
+                    <div class="kpi-value">500+</div>
+                    <div class="kpi-label">{{ _('Chuyên đề & Bài tập luyện thi') }}</div>
+                </div>
+            </div>
+            <div class="admissions-kpi-card">
+                <div class="kpi-icon"><i class="fa fa-certificate"></i></div>
+                <div>
+                    <div class="kpi-value">100%</div>
+                    <div class="kpi-label">{{ _('Giảng viên Cựu HSG Quốc Gia') }}</div>
+                </div>
+            </div>
+        </div> -->
     </div>
 
-    <!-- Tabs & Search -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
-        <div class="lms-tabs" style="margin-bottom: 0;">
-            <a href="?tab=all" class="lms-tab{% if current_tab == 'all' %} active{% endif %}">
-                <i class="fa fa-th-large"></i> {{ _('Tất cả học phần') }}
+    <!-- Category Pill Tabs Filter Bar -->
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
+        <div class="admissions-tabs-bar" style="margin-bottom: 0;">
+            <a href="?tab=all" class="admissions-tab-item{% if current_tab == 'all' %} active{% endif %}">
+                <i class="fa fa-th-large"></i> {{ _('Tất cả khóa học') }}
+            </a>
+            <a href="?tab=thcs" class="admissions-tab-item{% if current_tab == 'thcs' %} active{% endif %}">
+                <i class="fa fa-child"></i> {{ _('Khối THCS') }}
+            </a>
+            <a href="?tab=thpt" class="admissions-tab-item{% if current_tab == 'thpt' %} active{% endif %}">
+                <i class="fa fa-university"></i> {{ _('Khối THPT') }}
+            </a>
+            <a href="?tab=chuyen" class="admissions-tab-item{% if current_tab == 'chuyen' %} active{% endif %}">
+                <i class="fa fa-star"></i> {{ _('Lớp Chuyên / Đội tuyển HSG') }}
+            </a>
+            <a href="?tab=online" class="admissions-tab-item{% if current_tab == 'online' %} active{% endif %}">
+                <i class="fa fa-video-camera"></i> {{ _('Khóa Online') }}
+            </a>
+            <a href="?tab=offline" class="admissions-tab-item{% if current_tab == 'offline' %} active{% endif %}">
+                <i class="fa fa-building"></i> {{ _('Khóa Trực tiếp') }}
             </a>
             {% if request.user.is_authenticated %}
-                <a href="?tab=enrolled" class="lms-tab{% if current_tab == 'enrolled' %} active{% endif %}">
-                    <i class="fa fa-book"></i> {{ _('Đang theo học') }}
-                    <span class="lms-tab-badge">{{ enrolled_count }}</span>
-                </a>
-                <a href="?tab=teaching" class="lms-tab{% if current_tab == 'teaching' %} active{% endif %}">
-                    <i class="fa fa-graduation-cap"></i> {{ _('Đang phụ trách giảng dạy') }}
-                    <span class="lms-tab-badge">{{ teaching_count }}</span>
-                </a>
+            <a href="?tab=enrolled" class="admissions-tab-item{% if current_tab == 'enrolled' %} active{% endif %}">
+                <i class="fa fa-book"></i> {{ _('Đang học') }} ({{ enrolled_count }})
+            </a>
+            {% if teaching_count > 0 %}
+            <a href="?tab=teaching" class="admissions-tab-item{% if current_tab == 'teaching' %} active{% endif %}">
+                <i class="fa fa-user-md"></i> {{ _('Đang phụ trách') }} ({{ teaching_count }})
+            </a>
+            {% endif %}
             {% endif %}
         </div>
 
         <form method="get" action="" style="display: flex; gap: 8px;">
             <input type="hidden" name="tab" value="{{ current_tab }}">
             <div style="position: relative;">
-                <input type="text" name="q" value="{{ search_query }}" placeholder="{{ _('Tìm kiếm học phần, từ khóa...') }}" 
-                       style="padding: 8px 14px 8px 34px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-card-bg); color: var(--lms-text-main); font-size: 0.875rem; width: 260px;">
-                <i class="fa fa-search" style="position: absolute; left: 12px; top: 11px; color: var(--lms-text-light);"></i>
+                <input type="text" name="q" value="{{ search_query }}" placeholder="{{ _('Tìm khóa học, từ khóa...') }}"
+                    style="padding: 8px 14px 8px 34px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--text-main); font-size: 0.88rem; width: 240px;">
+                <i class="fa fa-search"
+                    style="position: absolute; left: 12px; top: 11px; color: var(--text-muted);"></i>
             </div>
-            <button type="submit" class="lms-btn lms-btn-secondary lms-btn-sm">{{ _('Tìm kiếm') }}</button>
+            <button type="submit" class="btn-course-outline" style="padding: 8px 14px;">{{ _('Tìm') }}</button>
         </form>
     </div>
 
-    <!-- Course Grid -->
+    <!-- Course Cards Grid -->
     {% if courses %}
-        <div class="lms-course-grid">
-            {% for course in courses %}
-                {% set enrollment = user_enrollments.get(course.id) %}
-                <a href="{{ course.get_absolute_url() }}" class="lms-course-card">
-                    <div class="lms-card-cover">
-                        {% if course.thumbnail_url %}
-                            <img src="{{ course.thumbnail_url }}" alt="{{ course.title }}">
-                        {% else %}
-                            <i class="fa fa-code lms-card-icon"></i>
-                        {% endif %}
-                        <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; flex-direction: column; align-items: flex-end;">
-                            <span class="lms-badge" style="background: rgba(16, 185, 129, 0.95); color: #fff; font-weight: 700; box-shadow: var(--lms-shadow-sm);">
-                                {{ course.formatted_price }}
-                            </span>
-                            {% if course.is_locked %}
-                                <span class="lms-badge" style="background: rgba(239, 68, 68, 0.95); color: #fff;">
-                                    <i class="fa fa-lock"></i> {{ _('Đang khóa') }}
-                                </span>
-                            {% elif course.status == 'DRAFT' %}
-                                <span class="lms-badge lms-badge-draft">{{ _('Bản nháp') }}</span>
-                            {% endif %}
+    <div class="course-grid">
+        {% for course in courses %}
+        {% set enrollment = user_enrollments.get(course.id) %}
+        <div class="course-card">
+            <div>
+                <!-- Header Badges -->
+                <div class="course-card__header">
+                    <span class="course-badge {{ course.reg_status_badge_class }}">
+                        <i class="fa fa-circle"></i> {{ course.reg_status_display }}
+                    </span>
+                    <span class="course-badge badge-audience">
+                        <i class="fa fa-user"></i> {{ course.target_audience or 'Mọi đối tượng' }}
+                    </span>
+                </div>
+
+                <!-- Card Body -->
+                <div class="course-card__body">
+                    <h3 class="course-card__title">
+                        <a href="{{ course.get_absolute_url() }}">{{ course.title }}</a>
+                    </h3>
+
+                    <div class="course-card__instructor">
+                        <div class="instructor-avatar">
+                            {{ course.instructor_initial }}
                         </div>
+                        <span>{{ course.instructor_name }}</span>
                     </div>
 
-                    <div class="lms-card-body">
-                        <h3 class="lms-card-title">{{ course.title }}</h3>
-                        <p class="lms-card-desc">{{ course.description|striptags }}</p>
+                    <p class="course-card__desc">
+                        {{ course.description|striptags or _('Chương trình bồi dưỡng chuyên sâu trang bị đầy đủ kiến
+                        thức thuật toán và kỹ năng lập trình thi đấu.') }}
+                    </p>
+                </div>
+            </div>
 
-                        {% if enrollment %}
-                            <div class="lms-progress-wrap">
-                                <div class="lms-progress-bar">
-                                    <div class="lms-progress-fill" style="width: {{ enrollment.progress_percentage }}%;"></div>
-                                </div>
-                                <div class="lms-progress-label">
-                                    <span>{{ _('Tiến độ hoàn thành') }}</span>
-                                    <span style="font-weight: 700;">{{ enrollment.progress_percentage }}%</span>
-                                </div>
-                            </div>
-                        {% endif %}
+            <div>
+                <!-- Meta Chips -->
+                <div class="course-card__meta-chips">
+                    <span class="meta-chip">
+                        <i class="fa fa-video-camera"></i> {{ course.format_type or 'Online qua Zoom' }}
+                    </span>
+                    <span class="meta-chip">
+                        <i class="fa fa-clock-o"></i> {{ course.duration_info or '12 tuần' }}
+                    </span>
+                    <span class="meta-chip">
+                        <i class="fa fa-calendar"></i> {{ course.schedule_info or 'Tối T3, T5' }}
+                    </span>
+                    <span class="meta-chip">
+                        <i class="fa fa-flag"></i> {{ _('Khai giảng:') }} {{ course.start_date_info or '15/09/2026' }}
+                    </span>
+                    {% if course.price == 0 %}
+                    <span class="meta-chip fee-free">
+                        <i class="fa fa-tag"></i> {{ _('Miễn phí') }}
+                    </span>
+                    {% else %}
+                    <span class="meta-chip fee-paid">
+                        <i class="fa fa-tag"></i> {{ course.formatted_price }}
+                    </span>
+                    {% endif %}
+                </div>
 
-                        <div class="lms-card-meta">
-                            <div class="lms-instructor">
-                                <div class="lms-avatar-sm">
-                                    {{ course.instructor_initial }}
-                                </div>
-                                <span>{{ course.instructor_name }}</span>
-                            </div>
-                            <div>
-                                <i class="fa fa-users" style="color: var(--lms-text-light); margin-right: 4px;"></i>
-                                <span>{{ course.student_count }} {{ _('học viên') }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            {% endfor %}
+                <!-- Card Actions / Buttons -->
+                <div class="course-card__actions">
+                    {% if course.is_paid %}
+                    <a href="{{ course.effective_contact_url }}" target="_blank" rel="noopener"
+                        class="btn-course-cta btn-contact-fb">
+                        <i class="fa fa-facebook-square"></i> {{ _('Liên hệ đăng ký') }}
+                    </a>
+                    {% else %}
+                    <a href="{{ course.get_absolute_url() }}" class="btn-course-cta">
+                        <i class="fa fa-paper-plane"></i> {{ _('Đăng ký ngay') }}
+                    </a>
+                    {% endif %}
+
+                    <a href="{{ course.get_absolute_url() }}" class="btn-course-outline"
+                        title="{{ _('Xem chi tiết lộ trình') }}">
+                        <i class="fa fa-list-alt"></i> {{ _('Xem lộ trình') }}
+                    </a>
+                </div>
+            </div>
         </div>
+        {% endfor %}
+    </div>
     {% else %}
-        <div style="text-align: center; padding: 64px 20px; background: var(--lms-card-bg); border: 1px dashed var(--lms-card-border); border-radius: var(--lms-radius-lg); margin-top: 24px;">
-            <i class="fa fa-folder-open-o" style="font-size: 3rem; color: var(--lms-text-light); margin-bottom: 12px;"></i>
-            <h3 style="margin: 0 0 6px; font-size: 1.125rem; font-weight: 700;">{{ _('Chưa có học phần nào') }}</h3>
-            <p style="color: var(--lms-text-muted); font-size: 0.875rem; margin: 0;">
-                {{ _('Hiện chưa tìm thấy học phần hoặc khóa học nào phù hợp với bộ lọc tìm kiếm.') }}
-            </p>
-        </div>
+    <div
+        style="text-align: center; padding: 56px 20px; background: var(--bg-surface); border: 2px dashed var(--border-color); border-radius: 16px; margin-bottom: 32px;">
+        <i class="fa fa-folder-open-o" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 12px;"></i>
+        <h3 style="margin: 0 0 6px; font-size: 1.15rem; font-weight: 700; color: var(--text-main);">{{ _('Không tìm thấy
+            khóa học phù hợp') }}</h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0;">
+            {{ _('Hiện chưa có khóa học nào thuộc phân loại này. Vui lòng chọn tab khác hoặc quay lại sau.') }}
+        </p>
+    </div>
     {% endif %}
+
 </div>
 
 <!-- Create Course Modal -->
-<div id="createCourseModal" class="lms-modal-overlay">
-    <div style="background: var(--lms-card-bg); max-width: 540px; width: 90%; margin: 80px auto; padding: 28px; border-radius: var(--lms-radius-lg); box-shadow: var(--lms-shadow-xl); border: 1px solid var(--lms-card-border);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700;">{{ _('Khởi tạo Học phần Đào tạo Mới') }}</h3>
-            <button type="button" class="lms-close-btn" onclick="closeCreateCourseModal()">&times;</button>
-        </div>
+{% if request.user.is_authenticated and (request.user.is_superuser or perms.judge.edit_all_course or teaching_count > 0)
+%}
+<div id="createCourseModal" class="featherlight" style="display:none;">
+    <div class="featherlight-content" style="max-width: 580px; width: 90%; margin: 60px auto;">
+        <button type="button" class="featherlight-close-icon" onclick="closeCreateCourseModal()">&times;</button>
+        <h3 style="margin: 0 0 16px; font-size: 1.2rem; font-weight: 700;">{{ _('Khởi tạo Khóa học Mới') }}</h3>
+
         <form id="createCourseForm" onsubmit="handleCreateCourse(event)">
             {% csrf_token %}
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Tên học phần / Khóa học') }} *</label>
-                <input type="text" id="course_title" required placeholder="Ví dụ: Cấu trúc dữ liệu & Giải thuật nâng cao" 
-                       style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">{{ _('Tên khóa
+                    học') }} *</label>
+                <input type="text" id="course_title" required
+                    placeholder="Ví dụ: Bồi dưỡng HSG Tin học THPT & Lập trình thi đấu" class="prov-sidebox-input">
             </div>
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Mã định danh URL (Slug)') }} *</label>
-                <input type="text" id="course_key" required placeholder="cau-truc-du-lieu-thuat-toan" 
-                       style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">{{ _('Slug /
+                    URL Key') }} *</label>
+                <input type="text" id="course_key" required placeholder="hsg-tin-hoc-thpt" class="prov-sidebox-input">
+            </div>
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">{{ _('Mô tả
+                    ngắn khóa học') }}</label>
+                <textarea id="course_desc" rows="3" class="prov-sidebox-input"
+                    placeholder="Mục tiêu khóa học và đối tượng phù hợp..."></textarea>
+            </div>
+            <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+                <div style="flex: 1;">
+                    <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">{{ _('Học
+                        phí (VNĐ)') }}</label>
+                    <input type="number" id="course_price" value="0" min="0" class="prov-sidebox-input"
+                        placeholder="0 = Miễn phí">
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">{{ _('Trạng
+                        thái tuyển sinh') }}</label>
+                    <select id="course_reg_status" class="prov-sidebox-select">
+                        <option value="OPEN">{{ _('Đang mở đăng ký') }}</option>
+                        <option value="UPCOMING">{{ _('Sắp khai giảng') }}</option>
+                        <option value="CLOSED">{{ _('Hết chỗ / Đóng') }}</option>
+                    </select>
+                </div>
             </div>
             <div style="margin-bottom: 20px;">
-                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Mục tiêu & Tóm tắt học phần') }}</label>
-                <textarea id="course_desc" rows="4" placeholder="Mô tả mục tiêu kiến thức, chuẩn đầu ra và đối tượng người học..." 
-                          style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;"></textarea>
+                <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">{{ _('Link
+                    Facebook / Tư vấn đăng ký (cho khóa tốn phí)') }}</label>
+                <input type="url" id="course_contact_url" placeholder="https://facebook.com/..."
+                    class="prov-sidebox-input">
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="lms-btn lms-btn-secondary" onclick="closeCreateCourseModal()">{{ _('Hủy bỏ') }}</button>
-                <button type="submit" class="lms-btn lms-btn-primary">{{ _('Khởi tạo Học phần') }}</button>
+
+            <div style="text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-course-outline" onclick="closeCreateCourseModal()">{{ _('Hủy bỏ')
+                    }}</button>
+                <button type="submit" class="btn-course-cta">{{ _('Tạo khóa học') }}</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-function openCreateCourseModal() {
-    const m = document.getElementById('createCourseModal');
-    if (m) { m.classList.add('active'); m.classList.add('is-active'); }
-}
-function closeCreateCourseModal() {
-    const m = document.getElementById('createCourseModal');
-    if (m) { m.classList.remove('active'); m.classList.remove('is-active'); }
-}
-function handleCreateCourse(e) {
-    e.preventDefault();
-    const title = document.getElementById('course_title').value.trim();
-    const key = document.getElementById('course_key').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
-    const desc = document.getElementById('course_desc').value.trim();
-    
-    window.location.href = `/admin/judge/course/add/?title=${encodeURIComponent(title)}&key=${encodeURIComponent(key)}&description=${encodeURIComponent(desc)}`;
-}
+    function openCreateCourseModal() {
+        document.getElementById('createCourseModal').style.display = 'block';
+    }
+    function closeCreateCourseModal() {
+        document.getElementById('createCourseModal').style.display = 'none';
+    }
+    function handleCreateCourse(e) {
+        e.preventDefault();
+        const title = document.getElementById('course_title').value;
+        const key = document.getElementById('course_key').value;
+        const description = document.getElementById('course_desc').value;
+        const price = document.getElementById('course_price').value;
+        const reg_status = document.getElementById('course_reg_status').value;
+        const contact_url = document.getElementById('course_contact_url').value;
+
+        fetch('/course/save-info/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                title: title,
+                key: key,
+                description: description,
+                price: price,
+                reg_status: reg_status,
+                contact_url: contact_url,
+                is_public: true,
+                status: 'PUBLISHED'
+            })
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.error || 'Có lỗi xảy ra');
+            }
+        }).catch(err => alert('Lỗi kết nối'));
+    }
 </script>
+{% endif %}
 {% endblock %}

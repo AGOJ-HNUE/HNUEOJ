@@ -16,21 +16,20 @@
 }
 
 a {
-    color: $color_link75;
+    color: var(--primary, $color_link75);
+    transition: color 0.15s ease;
 
     &:hover {
-        color: $color_link100;
+        color: var(--primary-hover, $color_link100);
     }
 
     &:active {
-        color: $color_link200;
+        color: var(--primary, $color_link200);
     }
 }
 
 img {
     max-width: 100%;
-    // width: auto;
-    // height: auto;
 }
 
 .full {
@@ -38,9 +37,9 @@ img {
 }
 
 table.sortable thead {
-    background-color: $color_primary10;
-    color: #666;
-    font-weight: bold;
+    background-color: var(--bg-hover, $color_primary10);
+    color: var(--text-muted, #71717a);
+    font-weight: 700;
     cursor: default;
 }
 
@@ -69,12 +68,12 @@ hr {
     height: 0;
     border: 0;
     font-style: italic;
-    border-bottom: 1px solid $color_primary25;
+    border-bottom: 1px solid var(--border-color, $color_primary25);
     padding: 0;
 }
 
 .dashed {
-    border-bottom: 1px dashed $color_primary25;
+    border-bottom: 1px dashed var(--border-color, $color_primary25);
 }
 
 th {
@@ -83,10 +82,10 @@ th {
 
 .form-area {
     display: inline-block;
-    background: $color_primary5;
-    padding: 5px 10px 10px;
+    background: var(--bg-surface, $color_primary5);
+    padding: 8px 12px 12px;
     border-radius: $widget_border_radius;
-    border: 1px solid $color_primary25;
+    border: 1px solid var(--border-color, $color_primary25);
 }
 
 div.info-float {
@@ -95,11 +94,16 @@ div.info-float {
 }
 
 footer {
-    color: $color_primary50;
+    color: var(--text-muted, $color_primary50);
     display: block;
     width: 100%;
     position: absolute;
     bottom: 0;
+    text-align: center;
+    height: 44px;
+    line-height: 44px;
+    border-top: 1px solid var(--border-color, $color_primary25);
+    background: var(--bg-surface, $color_primary10);
 }
 
 body {
@@ -107,11 +111,12 @@ body {
     min-height: 100%;
     margin: 0 auto;
     font-size: $base_font_size;
-    line-height: 1.231;
-    background: $color_primary5;
-    font-family: "Segoe UI", "Lucida Grande", Arial, sans-serif;
-    color: $color_primary100;
+    line-height: 1.5;
+    background: var(--bg-page, $color_primary5);
+    font-family: "Inter", "Be Vietnam Pro", "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text-main, $color_primary100);
     height: 100%;
+    -webkit-font-smoothing: antialiased;
 }
 
 .unselectable {
@@ -119,62 +124,57 @@ body {
 }
 
 h1 {
-    font-size: 5em;
-    letter-spacing: -2px;
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
     margin: 0;
     padding: 0;
-    line-height: 1em;
+    line-height: 1.2;
 }
 
 b {
-    font-weight: bold;
+    font-weight: 700;
 }
 
 h2 {
-    font-weight: 400;
-    font-size: 2em;
+    font-weight: 700;
+    font-size: 1.65rem;
+    letter-spacing: -0.02em;
     border-radius: $widget_border_radius;
     padding: 0;
     margin: 0;
 }
 
 h3 {
-    font-weight: 400;
-    font-size: 1.4em;
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
     border-radius: $widget_border_radius;
     padding: 0;
     margin: 0;
 }
 
 h4 {
-    font-size: 1.1em;
+    font-size: 1.05rem;
+    font-weight: 600;
     padding: 0;
     margin: 0;
 }
 
 hr {
-    color: rgba(0, 0, 0, 0.2);
+    color: var(--border-color, rgba(0, 0, 0, 0.1));
 }
 
 #content {
     margin: 52px auto auto;
-
-    // Header
     width: 90%;
     height: 100%;
     min-height: 25em;
     display: block;
 
     .title {
-        color: $color_primary75;
+        color: var(--text-main, $color_primary75);
     }
-}
-
-footer {
-    text-align: center;
-    height: 40px;
-    border-top: 1px solid $color_primary25;
-    background: $color_primary10;
 }
 
 html {
@@ -188,13 +188,13 @@ a {
 }
 
 noscript #noscript {
-    font-family: Arial, sans-serif;
-    font-size: 111%;
+    font-family: "Inter", sans-serif;
+    font-size: 105%;
     color: white;
     font-weight: bold;
     background: $announcement_red;
     text-align: center;
-    padding: 5px 0;
+    padding: 6px 0;
     left: 0;
     right: 0;
     position: fixed;
@@ -202,34 +202,35 @@ noscript #noscript {
 }
 
 #announcement {
-    font-family: Arial, sans-serif;
-    font-size: 111%;
+    font-family: "Inter", sans-serif;
+    font-size: 0.9rem;
     color: white;
-    font-weight: bold;
+    font-weight: 600;
     background: $announcement_red;
     text-align: center;
-    max-width: 30%;
+    max-width: 360px;
     position: fixed;
     border-radius: $widget_border_radius;
     z-index: 100;
-    bottom: -4px;
-    right: -4px;
-    padding: 5px 6px 6px 5px;
+    bottom: 12px;
+    right: 12px;
+    padding: 8px 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 
     a {
-        color: orange;
+        color: #fde047;
     }
 }
 
 .time {
-    color: $color_primary75;
+    color: var(--text-muted, $color_primary75);
 }
 
 .toggle {
     font-weight: bold;
 
     .fa {
-        transition: transform 0.4s;
+        transition: transform 0.3s ease;
     }
 
     &.open .fa {
@@ -238,23 +239,23 @@ noscript #noscript {
 }
 
 #form-errors, .form-errors {
-    background: rgba(255, 0, 0, 0.3);
-    border: 3px solid red;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #ef4444;
     border-radius: $widget_border_radius;
-    padding: 0 1em 0.1em 1em;
-    margin: 0.3em 0 0.5em 0;
+    padding: 8px 14px;
+    margin: 8px 0;
 }
 
 #contest-info {
-    font-size: 1.25em;
-    border: 5px solid $highlight_blue;
-    border-left: 5px dotted white;
-    border-radius: 0 $widget_border_radius $widget_border_radius 0;
-    background: rgba(0, 0, 0, 0.77);
+    font-size: 1.15em;
+    border: 1px solid var(--primary, $highlight_blue);
+    border-radius: $widget_border_radius;
+    background: var(--bg-surface, rgba(24, 24, 27, 0.95));
     z-index: 100000;
-    padding: 10px 12px;
-    color: white;
-    cursor: move;
+    padding: 10px 14px;
+    color: var(--text-main, white);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     position: fixed;
     left: 20px;
     top: 90%;
@@ -264,7 +265,7 @@ noscript #noscript {
         height: 1.4em;
         padding: 0;
         margin: 0;
-        color: white;
+        color: var(--primary, white);
         display: block;
     }
 }
@@ -277,21 +278,15 @@ noscript #noscript {
     min-height: 100%;
     position: relative;
     margin: 0 auto;
-    border-right: 1px solid $color_primary25;
-    border-left: 1px solid $color_primary25;
-    background: $color_pageBg;
+    border-right: 1px solid var(--border-color, $color_primary25);
+    border-left: 1px solid var(--border-color, $color_primary25);
+    background: var(--bg-page, $color_pageBg);
     max-width: 100em;
 }
-
-// border-bottom: 1px solid rgb(204, 204, 204)
-// border-bottom-left-radius: 4px
-// border-bottom-right-radius: 4px
 
 #content-body {
     padding-bottom: 4em;
 }
-
-// Offset the footer
 
 .title-line-action {
     float: right;
@@ -312,14 +307,12 @@ math {
     #page-container {
         border-left: none;
         border-right: none;
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
     }
 }
 
 @media (max-width: 760px) {
     #content {
         width: auto;
-        padding: 0 5px;
+        padding: 0 10px;
     }
 }

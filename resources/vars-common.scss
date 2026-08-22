@@ -1,9 +1,15 @@
-$highlight_blue: #1261A6;
-$announcement_red: #ae0000;
+$highlight_blue: #6366f1;
+$announcement_red: #ef4444;
 
 $base_font_size: 15px;
-$widget_border_radius: 4px;
+$widget_border_radius: 8px;
 
-$table_header_rounding: 6px;
+$radius-sm: 6px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-pill: 9999px;
 
-$monospace-fonts: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
+$table_header_rounding: 8px;
+
+$monospace-fonts: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", Monaco, "Courier New", Courier, monospace;

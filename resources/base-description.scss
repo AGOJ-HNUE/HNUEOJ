@@ -1,9 +1,10 @@
 @use "vars" as *;
 
 @mixin content-description {
-    line-height: 1.5em;
+    line-height: 1.6em;
     font-size: 1em;
-    font-family: "Segoe UI", "Lucida Grande", Arial, sans-serif;
+    font-family: "Inter", "Be Vietnam Pro", sans-serif;
+    color: var(--text-main, $color_primary90);
 
     p {
         margin: 1em 0 !important;
@@ -13,42 +14,41 @@
     img {
         max-width: 100%;
         height: auto;
+        border-radius: 8px;
     }
 
     h1, h2, h3, h4, h5, h6 {
-        font-weight: normal;
-        color: $color_primary90;
+        font-weight: 700;
+        color: var(--text-main, $color_primary90);
         margin-bottom: 0.75em;
+        margin-top: 1.25em;
         padding: 0;
         background: 0;
-    }
-
-    h3, h4, h5, h6 {
-        font-weight: bold;
+        letter-spacing: -0.02em;
     }
 
     h1 {
-        font-size: 2.5em;
+        font-size: 2.2em;
     }
 
     h2 {
-        font-size: 2em;
+        font-size: 1.75em;
     }
 
     h3 {
-        font-size: 1.6em;
+        font-size: 1.4em;
     }
 
     h4 {
-        font-size: 1.4em;
-        border-bottom: 1px solid rgba($color_primary100, 0.1);
+        font-size: 1.2em;
+        border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
         line-height: 1.225;
         padding-bottom: 0.3em;
         padding-top: 0.5em;
     }
 
     h5 {
-        font-size: 1.15em;
+        font-size: 1.05em;
         margin-top: 0;
     }
 
@@ -57,19 +57,21 @@
     }
 
     blockquote {
-        color: $color_primary50;
-        border-left: 0.5em rgba($color_primary100, 0.1) solid;
-        margin: 1em 1em;
-        padding: 1px 1px 1px 1.5em;
+        color: var(--text-muted, $color_primary50);
+        border-left: 4px solid var(--primary, #6366f1);
+        background: var(--bg-hover, rgba(99, 102, 241, 0.04));
+        border-radius: 0 8px 8px 0;
+        margin: 1.2em 0;
+        padding: 8px 16px;
     }
 
     blockquote.spoiler {
         position: relative;
-        background: $color_primary5;
-        border-radius: 5px;
+        background: var(--bg-hover, $color_primary5);
+        border-radius: 8px;
         cursor: pointer;
         min-height: 48px;
-        border: solid 1px $color_primary25;
+        border: solid 1px var(--border-color, $color_primary25);
     }
 
     blockquote.spoiler > * {
@@ -84,8 +86,8 @@
         bottom: 0;
         left: 0;
         width: 4px;
-        border-radius: 8px;
-        background: $color_primary25;
+        border-radius: 8px 0 0 8px;
+        background: var(--primary, $color_primary25);
     }
 
     blockquote.spoiler::after {
@@ -93,7 +95,7 @@
         background-repeat: no-repeat;
         background-position: center right;
         font-size: 13px;
-        color: $color_primary33;
+        color: var(--text-muted, $color_primary33);
         padding-right: 22px;
         position: absolute;
         top: 1em;
@@ -117,53 +119,52 @@
         display: block;
         height: 0;
         border: 0;
-        font-style: italic;
-        border-bottom: 1px solid $color_primary25;
+        border-bottom: 1px solid var(--border-color, $color_primary25);
         margin: 25px 0 20px 0;
         padding: 0;
     }
 
     pre, code, kbd, samp, span.code {
-        color: $color_primary100;
+        color: var(--text-main, $color_primary100);
         page-break-inside: avoid;
-        font-family: $monospace-fonts;
-        font-size: 0.98em;
+        font-family: Consolas, Monaco, "Andale Mono", monospace;
+        font-size: 0.94em;
     }
 
     code, span.code {
-        font-family: $monospace-fonts !important;
+        font-family: Consolas, Monaco, "Andale Mono", monospace !important;
         margin: 0 2px;
-        padding: 0 5px;
-        border: 1px solid $color_primary25;
-        background-color: $color_primary5;
-        border-radius: $widget_border_radius;
-        font-size: 0.95em;
-        color: $color_primary75;
+        padding: 2px 6px;
+        border: 1px solid var(--border-color, $color_primary25);
+        background-color: var(--bg-hover, $color_primary5);
+        border-radius: 4px;
+        font-size: 0.9em;
+        color: var(--text-main, $color_primary75);
     }
 
     pre {
         code, div.code {
             border: 0;
-            line-height: 1em;
+            line-height: 1.4em;
             margin: 0;
             padding: 0;
             background: transparent;
             font-size: 1em;
-            color: $color_primary100;
+            color: var(--text-main, $color_primary100);
         }
 
         white-space: pre-wrap;
         word-wrap: break-word;
         margin: 1.5em 0 1.5em 0;
-        padding: 1em;
-        border: 1px solid $color_primary25;
-        background-color: $color_primary5;
-        color: $color_primary100;
-        border-radius: $widget_border_radius;
+        padding: 1.2em;
+        border: 1px solid var(--border-color, $color_primary25);
+        background-color: var(--bg-hover, $color_primary5);
+        color: var(--text-main, $color_primary100);
+        border-radius: 8px;
     }
 
     b, strong {
-        font-weight: bold;
+        font-weight: 700;
     }
 
     dfn {
@@ -171,16 +172,18 @@
     }
 
     ins {
-        background: #ff9;
-        color: #000;
+        background: rgba(245, 158, 11, 0.2);
+        color: var(--text-main);
         text-decoration: none;
     }
 
     mark {
-        background: #ff0;
-        color: #000;
-        font-style: italic;
-        font-weight: bold;
+        background: rgba(99, 102, 241, 0.2);
+        color: var(--text-main);
+        font-style: normal;
+        font-weight: 600;
+        padding: 1px 4px;
+        border-radius: 3px;
     }
 
     sub {
@@ -203,7 +206,7 @@
     }
 
     ul, ol {
-        padding: 0 0 0 2em;
+        padding: 0 0 0 1.8em;
     }
 
     li p:last-child {
@@ -211,7 +214,7 @@
     }
 
     dd {
-        margin: 0 0 0 2em;
+        margin: 0 0 0 1.8em;
     }
 
     img {

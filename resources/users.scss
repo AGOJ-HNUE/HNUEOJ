@@ -7,7 +7,7 @@ td.user-name, td.personal-info, td.organization-name {
 
 tr {
     &:target {
-        background: rgba($color_link200, 0.2);
+        background: var(--primary-light, rgba(99, 102, 241, 0.15));
     }
 
     td.full-score, td.failed-score, td.partial-score {
@@ -19,11 +19,16 @@ tr {
 
 span.organization {
     font-size: 12px;
+    color: var(--text-muted, #71717a);
 }
 
 #search-handle {
     width: 100%;
-    height: 2.3em;
+    height: 2.4em;
+    border-radius: 8px;
+    border: 1px solid var(--border-color, #e4e4e7);
+    background: var(--bg-surface, #ffffff);
+    color: var(--text-main, #18181b);
 }
 
 .user-search-image, .user-search-name {
@@ -40,8 +45,8 @@ span.organization {
     }
 
     th.rank {
-        padding-left: 5px;
-        padding-right: 5px;
+        padding-left: 8px;
+        padding-right: 8px;
     }
 
     th.username {
@@ -50,7 +55,7 @@ span.organization {
 
     .personal-info {
         a, span {
-            color: $color_primary50;
+            color: var(--text-muted, $color_primary50);
             font-weight: 600;
         }
     }
@@ -61,20 +66,20 @@ span.organization {
         transition: background-color linear .2s;
 
         &:hover {
-            background: rgba($color_primary100, 0.05);
+            background: var(--bg-hover, rgba(99, 102, 241, 0.04));
         }
 
         &.highlight {
-            background: rgba($color_link200, 0.2) !important;
+            background: var(--primary-light, rgba(99, 102, 241, 0.15)) !important;
         }
     }
 
     th a {
-        color: $color_primary0;
+        color: var(--text-muted, $color_primary0);
 
         &:link,
         &:visited {
-            color: $color_primary0;
+            color: var(--text-muted, $color_primary0);
         }
     }
 }
@@ -94,11 +99,12 @@ span.organization {
 }
 
 .user-problem-group h3 {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1.25em;
     margin-bottom: -10px;
     max-height: 20%;
     line-height: 2.5em;
+    color: var(--text-main);
 }
 
 .hide-solved-problems {
@@ -117,7 +123,7 @@ span.organization {
     top: 50%;
     width: 100000px;
     height: 1px;
-    background: $color_primary25;
+    background: var(--border-color, $color_primary25);
     right: 100%;
     margin-right: 5px;
 }
@@ -127,14 +133,16 @@ span.organization {
 }
 
 .user-sidebar {
-    width: 150px;
+    width: 160px;
     padding-left: 15px;
 }
 
 img.user-gravatar {
     display: block;
-    border-radius: 6px;
-    background-color: white;
+    border-radius: 12px;
+    background-color: var(--bg-surface, white);
+    border: 1px solid var(--border-color, #e4e4e7);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .user-content {
@@ -159,12 +167,13 @@ img.user-gravatar {
 
 .pp-table {
     .pp {
-        font-weight: 600;
+        font-weight: 700;
         font-size: 1.4em;
+        color: var(--text-main);
     }
 
     .pp-weighted {
-        color: $color_primary50;
+        color: var(--text-muted, $color_primary50);
     }
 
     div.sub-pp {
@@ -177,18 +186,23 @@ img.user-gravatar {
 
 #pp-load-link-wrapper {
     text-align: center;
-    border: 1px solid $color_primary25;
+    border: 1px solid var(--border-color, $color_primary25);
+    border-radius: 8px;
+    background: var(--bg-surface);
 }
 
 #pp-load-more-link {
     display: block;
-    padding: 0.5em 0;
+    padding: 0.6em 0;
+    color: var(--primary);
+    font-weight: 600;
 }
 
 .pp-breakdown-header {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1.25em;
     margin-bottom: 0.2em;
+    color: var(--text-main);
 }
 
 #rating-chart {
@@ -199,16 +213,18 @@ img.user-gravatar {
 #rating-tooltip {
     display: none;
     position: absolute;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 3px;
-    border-radius: 3px;
+    background: var(--bg-surface, rgba(24, 24, 27, 0.9));
+    color: var(--text-main, white);
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
     transition: all .1s ease;
     pointer-events: none;
     transform: translate(-50%, 0);
 
     .rate-group {
-        color: white;
+        color: var(--text-main, white);
     }
 }
 
@@ -217,16 +233,20 @@ img.user-gravatar {
         text-align: center;
         #prev-year-action, #next-year-action {
             font-size: 1.75em;
+            color: var(--primary);
         }
         #year {
             font-size: 1.25em;
-            color: $color_primary75;
+            color: var(--text-main, $color_primary75);
+            font-weight: 700;
         }
     }
 
     #submission-activity-display {
-        border: 1px solid $color_primary25;
-        border-radius: $table_header_rounding;
+        border: 1px solid var(--border-color, $color_primary25);
+        border-radius: 12px;
+        background: var(--bg-surface, white);
+        padding: 12px;
 
         .info-bar {
             display: flex;
@@ -243,16 +263,17 @@ img.user-gravatar {
         }
 
         .info-text {
-            font-size: 0.75em;
+            font-size: 0.78em;
             line-height: 1;
-            font-weight: 100;
-            color: $color_primary75;
+            font-weight: 500;
+            color: var(--text-muted, $color_primary75);
         }
 
         #submission-total-count {
             align-self: center;
             padding-left: 8%;
-            font-size: 0.85em;
+            font-size: 0.88em;
+            font-weight: 600;
 
             @media (max-width: 1000px) {
                 padding-left: 5px;
@@ -272,7 +293,7 @@ img.user-gravatar {
             }
 
             td {
-                border-radius: 20%;
+                border-radius: 3px;
 
                 div {
                     margin-top: 100%;
@@ -281,25 +302,26 @@ img.user-gravatar {
                 &.activity-label {
                     position: relative;
                     white-space: nowrap;
+                    color: var(--text-muted);
                 }
 
                 &.activity-blank {
-                    background-color: $color_pageBg;
+                    background-color: var(--bg-page, $color_pageBg);
                 }
                 &.activity-0 {
-                    background-color: $color_user_submission_activity0;
+                    background-color: var(--border-color, $color_user_submission_activity0);
                 }
                 &.activity-1 {
-                    background-color: $color_user_submission_activity1;
+                    background-color: #a7f3d0;
                 }
                 &.activity-2 {
-                    background-color: $color_user_submission_activity2;
+                    background-color: #34d399;
                 }
                 &.activity-3 {
-                    background-color: $color_user_submission_activity3;
+                    background-color: #10b981;
                 }
                 &.activity-4 {
-                    background-color: $color_user_submission_activity4;
+                    background-color: #059669;
                 }
             }
         }

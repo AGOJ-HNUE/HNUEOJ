@@ -75,7 +75,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 16px 64px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Be Vietnam Pro", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--lms-text-main);
   box-sizing: border-box;
 }
@@ -1845,7 +1845,7 @@
   color: var(--lms-text-main);
   line-height: 1.65;
   font-size: 0.9375rem;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Be Vietnam Pro", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .lms-problem-statement-content p {

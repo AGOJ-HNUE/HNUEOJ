@@ -7,7 +7,7 @@
 }
 
 #submissions-table {
-    background: rgba($color_primary100, .01);
+    background: var(--bg-surface, $color_primary0);
 }
 
 .submissions-status-table {
@@ -16,13 +16,14 @@
 
 .submission-row {
     display: flex;
-    border-top: $color_primary25 1px solid;
-    border-left: $color_primary25 1px solid;
-    border-right: $color_primary25 1px solid;
+    border-top: var(--border-color, $color_primary25) 1px solid;
+    border-left: var(--border-color, $color_primary25) 1px solid;
+    border-right: var(--border-color, $color_primary25) 1px solid;
     transition: background-color linear 0.2s;
+    background: var(--bg-surface, $color_primary0);
 
     &:hover {
-        background: $color_primary10;
+        background: var(--bg-hover, $color_primary10);
     }
 
     &:not(:empty) ~ & {
@@ -30,9 +31,9 @@
     }
 
     > div {
-        padding: 7px 5px;
+        padding: 8px 10px;
         vertical-align: middle;
-        border-bottom: $color_primary25 1px solid;
+        border-bottom: var(--border-color, $color_primary25) 1px solid;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -42,21 +43,21 @@
         min-width: 80px;
         width: 80px;
         text-align: center;
-        border-bottom-color: $color_primary0;
-        border-right: $color_primary25 1px solid;
+        border-bottom-color: var(--border-color, $color_primary0);
+        border-right: var(--border-color, $color_primary25) 1px solid;
 
         .state {
-            font-size: 0.7em;
-            font-weight: bold;
-            padding-top: 0.5em;
+            font-size: 0.72em;
+            font-weight: 700;
+            padding-top: 0.4em;
         }
 
         .score {
-            // font-size: 1.3em;
-            color: #000;
+            color: var(--text-main, #000);
+            font-weight: 700;
 
             .grading-spinner {
-                color: $color_primary100;
+                color: var(--primary, $color_primary100);
             }
         }
     }
@@ -75,14 +76,16 @@
 
             .name {
                 font-weight: 700;
-                font-size: 1.2em;
+                font-size: 1.1em;
+                color: var(--text-main, $color_primary100);
             }
         }
 
         .sub-testcase {
-            color: $color_primary50;
+            color: var(--text-muted, $color_primary50);
             white-space: nowrap;
             padding-right: 5px;
+            font-size: 0.85em;
         }
 
         .sub-prop {
@@ -93,14 +96,15 @@
     }
 
     .sub-usage {
-        min-width: 70px;
-        width: 70px;
+        min-width: 80px;
+        width: 80px;
         white-space: nowrap;
         text-align: center;
-        border-left: $color_primary25 1px solid;
+        border-left: var(--border-color, $color_primary25) 1px solid;
 
         .time {
-            font-weight: bold;
+            font-weight: 700;
+            color: var(--text-main, $color_primary100);
         }
     }
 }
@@ -110,17 +114,20 @@
 }
 
 .sub-prop .grey-label {
-    color: $color_primary50;
-    font-style: italic;
+    color: var(--text-muted, $color_primary50);
+    font-style: normal;
+    font-size: 0.85em;
 }
 
 .sub-prop .grey-icon {
-    color: $color_primary50;
+    color: var(--text-muted, $color_primary50);
 }
 
 label[for="language"], label[for="status"], label[for="organization"] {
     padding-bottom: 0.25em;
     display: block;
+    font-weight: 600;
+    color: var(--text-sub, $color_primary66);
 }
 
 #language {
@@ -133,11 +140,11 @@ label[for="language"], label[for="status"], label[for="organization"] {
 }
 
 #statistics-table tr:not(:first-child) td {
-    border-top: 1px solid white !important;
+    border-top: 1px solid var(--border-color, #e4e4e7) !important;
 }
 
 #statistics-table tr:not(:last-child) td:not(:last-child) {
-    border-right: 1px solid white;
+    border-right: 1px solid var(--border-color, #e4e4e7);
 }
 
 #statistics-table {
@@ -172,17 +179,17 @@ label[for="language"], label[for="status"], label[for="organization"] {
 }
 
 .submission-contest {
-    color: $color_primary75;
+    color: var(--text-muted, $color_primary75);
 }
 
 .source-ln {
-    color: $color_primary50;
-    border-right: 1px solid $color_primary50;
-    padding-right: 5px;
+    color: var(--text-muted, $color_primary50);
+    border-right: 1px solid var(--border-color, $color_primary50);
+    padding-right: 8px;
     text-align: right;
 
     a {
-        color: $color_primary50;
+        color: var(--text-muted, $color_primary50);
         display: block;
 
         &:hover {
@@ -203,6 +210,7 @@ label[for="language"], label[for="status"], label[for="organization"] {
     margin: 0;
     padding: 0;
     white-space: pre;
+    font-family: Consolas, Monaco, "Andale Mono", monospace;
 }
 
 .source-code {
@@ -211,16 +219,20 @@ label[for="language"], label[for="status"], label[for="organization"] {
 
 .source-wrap {
     overflow-x: auto;
+    background: var(--bg-hover, #f4f4f5);
+    border: 1px solid var(--border-color, #e4e4e7);
+    border-radius: 8px;
+    padding: 12px;
 }
 
 .statistics-table {
     .status {
-        font-weight: bold;
+        font-weight: 700;
         text-align: left;
     }
 
     .count {
-        color: black;
+        color: var(--text-main, black);
     }
 }
 
@@ -232,13 +244,13 @@ label[for="language"], label[for="status"], label[for="organization"] {
     .batch-cases {
         margin: 0;
         padding-left: 1em;
-        padding-bottom: 3px;
-        padding-top: 3px;
+        padding-bottom: 4px;
+        padding-top: 4px;
         display: inline-block;
     }
 
     .batch-cases .case-row td b {
-        font-weight: 500;
+        font-weight: 600;
     }
 
     .case-row td:nth-child(3) {
@@ -257,12 +269,13 @@ label[for="language"], label[for="status"], label[for="organization"] {
     .case-info {
         margin: 0;
         padding-left: 1em;
-        padding-bottom: 3px;
-        padding-top: 3px;
-        border: 1px solid #2980b9;
-        border-left-width: .5em;
-        border-radius: 4px;
-        color: $color_primary75;
+        padding-bottom: 4px;
+        padding-top: 4px;
+        border: 1px solid var(--primary, #6366f1);
+        border-left-width: .4em;
+        border-radius: 6px;
+        color: var(--text-main, $color_primary75);
+        background: var(--bg-surface, #ffffff);
     }
 
     .case-output {
@@ -294,28 +307,28 @@ label[for="language"], label[for="status"], label[for="organization"] {
 }
 
 .case-AC {
-    color: green;
-    font-weight: bold;
+    color: #10b981;
+    font-weight: 700;
 }
 
 .case-_AC {
-    color: #BBCC00;
-    font-weight: bold;
+    color: #3b82f6;
+    font-weight: 700;
 }
 
 .case-WA {
-    color: red;
-    font-weight: bold;
+    color: #ef4444;
+    font-weight: 700;
 }
 
 .case-TLE, .case-SC {
-    color: gray;
-    font-weight: bold;
+    color: #f59e0b;
+    font-weight: 700;
 }
 
 .case-MLE, .case-OLE, .case-RTE, .case-IR {
-    color: orange;
-    font-weight: bold;
+    color: #8b5cf6;
+    font-weight: 700;
 }
 
 .case-bad {
@@ -342,7 +355,7 @@ label[for="language"], label[for="status"], label[for="organization"] {
     }
 
     a:active .line .highlighter {
-        background: rgba(255, 212, 0, 0.48);
+        background: rgba(99, 102, 241, 0.15);
     }
 }
 
@@ -351,6 +364,6 @@ label[for="language"], label[for="status"], label[for="organization"] {
     float: right;
 
     .submission-date {
-        color: $color_primary50;
+        color: var(--text-muted, $color_primary50);
     }
 }

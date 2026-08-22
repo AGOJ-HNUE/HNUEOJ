@@ -66,6 +66,14 @@ PROVINCE_CHOICES = (
 
 PROVINCE_DICT = dict(PROVINCE_CHOICES)
 
+PROVINCE_CATEGORY_CHOICES = (
+    ('thpt', _('Đề thi HSG THPT')),
+    ('thcs', _('Đề thi HSG THCS')),
+    ('other', _('Đề thi Khác (Olympic, Trại hè, Chuyên...)')),
+)
+
+PROVINCE_CATEGORY_DICT = dict(PROVINCE_CATEGORY_CHOICES)
+
 
 class MinValueOrNoneValidator(MinValueValidator):
     def compare(self, a, b):
@@ -134,6 +142,9 @@ class Contest(models.Model):
     province = models.CharField(verbose_name=_('Province/City'), max_length=10, choices=PROVINCE_CHOICES,
                                 blank=True, default='', db_index=True)
     is_province_contest = models.BooleanField(verbose_name=_('Provincial contest'), default=False, db_index=True)
+    province_category = models.CharField(verbose_name=_('Category (Provincial contest)'), max_length=10,
+                                         choices=PROVINCE_CATEGORY_CHOICES, blank=True, default='other',
+                                         db_index=True, help_text=_('Contest category: THPT, THCS, or Other (for provincial contests).'))
     registration_start = models.DateTimeField(verbose_name=_('registration start time'),
                                               blank=True, null=True, default=None)
     registration_end = models.DateTimeField(verbose_name=_('registration end time'),

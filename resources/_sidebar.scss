@@ -1,0 +1,124 @@
+@use "vars" as *;
+@use "variables" as *;
+@use "mixins" as *;
+
+// Filter Sidebar Container & Sidebox
+.sidebox {
+    border-radius: $radius-lg;
+    background: var(--lms-card-bg);
+    border: 1px solid var(--lms-card-border);
+    box-shadow: var(--lms-shadow-sm);
+    overflow: hidden;
+    margin-bottom: 20px;
+
+    h3 {
+        margin: 0;
+        background: var(--lms-primary);
+        color: #ffffff;
+        padding: 10px 14px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .fa {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+        }
+    }
+}
+
+.sidebox-content {
+    padding: 14px 16px;
+    background: var(--lms-card-bg);
+}
+
+// Sidebar Filter Form Controls
+.filter-form-group {
+    margin-bottom: 12px;
+
+    label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--lms-text-sub);
+        margin-bottom: 6px;
+
+        i {
+            font-style: normal;
+        }
+    }
+}
+
+.prov-sidebox-input, .prov-sidebox-select {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: $radius-md;
+    border: 1px solid var(--lms-card-border);
+    background: var(--lms-card-bg);
+    color: var(--lms-text-main);
+    font-size: 0.86rem;
+    font-family: var(--lms-font-sans);
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+
+    &:hover {
+        border-color: var(--lms-text-muted);
+    }
+
+    &:focus {
+        border-color: var(--lms-primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+}
+
+// Compact Quick Filter Chips (Pill Tags)
+.prov-chips-compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-top: 8px;
+
+    &::-webkit-scrollbar {
+        width: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: var(--lms-text-muted);
+        border-radius: 4px;
+    }
+}
+
+.prov-chip-sm {
+    @include filter-chip;
+
+    &.all-chip.active {
+        background: var(--lms-text-main);
+        color: var(--lms-card-bg) !important;
+        border-color: var(--lms-text-main);
+    }
+}
+
+// Mobile Responsiveness for Sidebar
+@include mobile-only {
+    div.info-float {
+        float: none !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    #content-right.problems {
+        width: 100% !important;
+        float: none !important;
+        margin-bottom: 20px;
+    }
+
+    #content-left.problems {
+        width: 100% !important;
+        float: none !important;
+    }
+}

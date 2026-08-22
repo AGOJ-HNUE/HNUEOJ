@@ -90,6 +90,13 @@
         "price": {{ course.price }},
         "thumbnail_url": {{ (course.thumbnail_url or '')|tojson }},
         "status": {{ course.status|tojson }},
+        "reg_status": {{ course.reg_status|tojson }},
+        "target_audience": {{ (course.target_audience or '')|tojson }},
+        "schedule_info": {{ (course.schedule_info or '')|tojson }},
+        "format_type": {{ (course.format_type or '')|tojson }},
+        "duration_info": {{ (course.duration_info or '')|tojson }},
+        "start_date_info": {{ (course.start_date_info or '')|tojson }},
+        "contact_url": {{ (course.contact_url or '')|tojson }},
         "is_public": {{ 'true' if course.is_public else 'false' }},
         "is_locked": {{ 'true' if course.is_locked else 'false' }},
         "allow_self_enrollment": {{ 'true' if course.allow_self_enrollment else 'false' }},
@@ -377,6 +384,53 @@
                 <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Ảnh bìa đại diện học phần (URL)') }}</label>
                 <input type="url" id="ci_thumbnail" placeholder="https://..." 
                        style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Trạng thái tuyển sinh') }}</label>
+                    <select id="ci_reg_status" style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                        <option value="OPEN">{{ _('Đang mở đăng ký') }}</option>
+                        <option value="UPCOMING">{{ _('Sắp khai giảng') }}</option>
+                        <option value="CLOSED">{{ _('Hết chỗ / Đóng đăng ký') }}</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Đối tượng / Khối lớp') }}</label>
+                    <input type="text" id="ci_target_audience" placeholder="Ví dụ: Học sinh THCS (Lớp 8, 9)" 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Hình thức học') }}</label>
+                    <input type="text" id="ci_format_type" placeholder="Online qua Zoom / Trực tiếp" 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Lịch học') }}</label>
+                    <input type="text" id="ci_schedule_info" placeholder="Tối T3, T5 (19h30 - 21h30)" 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Thời lượng') }}</label>
+                    <input type="text" id="ci_duration_info" placeholder="12 tuần (24 buổi)" 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Ngày khai giảng') }}</label>
+                    <input type="text" id="ci_start_date_info" placeholder="15/09/2026" 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Link Facebook / Tư vấn đăng ký') }}</label>
+                    <input type="url" id="ci_contact_url" placeholder="https://facebook.com/..." 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; background: var(--lms-bg); padding: 12px 16px; border-radius: var(--lms-radius-md); border: 1px solid var(--lms-card-border);">
@@ -709,6 +763,13 @@ function openEditCourseInfoModal() {
     document.getElementById('ci_title').value = data.title;
     document.getElementById('ci_price').value = data.price;
     document.getElementById('ci_status').value = data.status;
+    if (document.getElementById('ci_reg_status')) document.getElementById('ci_reg_status').value = data.reg_status || 'OPEN';
+    if (document.getElementById('ci_target_audience')) document.getElementById('ci_target_audience').value = data.target_audience || 'Khối THPT';
+    if (document.getElementById('ci_schedule_info')) document.getElementById('ci_schedule_info').value = data.schedule_info || '';
+    if (document.getElementById('ci_format_type')) document.getElementById('ci_format_type').value = data.format_type || 'Online qua Zoom';
+    if (document.getElementById('ci_duration_info')) document.getElementById('ci_duration_info').value = data.duration_info || '';
+    if (document.getElementById('ci_start_date_info')) document.getElementById('ci_start_date_info').value = data.start_date_info || '';
+    if (document.getElementById('ci_contact_url')) document.getElementById('ci_contact_url').value = data.contact_url || '';
     document.getElementById('ci_thumbnail').value = data.thumbnail_url || '';
     document.getElementById('ci_is_public').checked = !!data.is_public;
     document.getElementById('ci_is_locked').checked = !!data.is_locked;
@@ -723,6 +784,13 @@ function saveCourseInfo(e) {
     const title = document.getElementById('ci_title').value.trim();
     const price = parseInt(document.getElementById('ci_price').value) || 0;
     const status = document.getElementById('ci_status').value;
+    const reg_status = document.getElementById('ci_reg_status') ? document.getElementById('ci_reg_status').value : 'OPEN';
+    const target_audience = document.getElementById('ci_target_audience') ? document.getElementById('ci_target_audience').value.trim() : '';
+    const schedule_info = document.getElementById('ci_schedule_info') ? document.getElementById('ci_schedule_info').value.trim() : '';
+    const format_type = document.getElementById('ci_format_type') ? document.getElementById('ci_format_type').value.trim() : '';
+    const duration_info = document.getElementById('ci_duration_info') ? document.getElementById('ci_duration_info').value.trim() : '';
+    const start_date_info = document.getElementById('ci_start_date_info') ? document.getElementById('ci_start_date_info').value.trim() : '';
+    const contact_url = document.getElementById('ci_contact_url') ? document.getElementById('ci_contact_url').value.trim() : '';
     const thumbnail = document.getElementById('ci_thumbnail').value.trim();
     const isPublic = document.getElementById('ci_is_public').checked;
     const isLocked = document.getElementById('ci_is_locked').checked;
@@ -737,6 +805,13 @@ function saveCourseInfo(e) {
             title: title,
             price: price,
             status: status,
+            reg_status: reg_status,
+            target_audience: target_audience,
+            schedule_info: schedule_info,
+            format_type: format_type,
+            duration_info: duration_info,
+            start_date_info: start_date_info,
+            contact_url: contact_url,
             thumbnail_url: thumbnail,
             is_public: isPublic,
             is_locked: isLocked,

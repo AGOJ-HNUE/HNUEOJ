@@ -170,15 +170,63 @@ class ProvincialContestList(ContestList):
     title = gettext_lazy('Kỳ thi các Tỉnh / Thành phố')
 
     def _get_queryset(self):
-        qs = ContestListMixin.get_queryset(self).filter(Q(is_province_contest=True) | ~Q(province='')).prefetch_related('tags', 'organization', 'authors', 'curators', 'testers')
+        qs = ContestListMixin.get_queryset(self).filter(
+            Q(is_province_contest=True) | ~Q(province='')
+        ).prefetch_related('tags', 'organization', 'authors', 'curators', 'testers')
+
+        # Province filter
         selected_province = self.request.GET.get('province', '').strip().upper()
         if selected_province:
             qs = qs.filter(province=selected_province)
+
+        # Year filter
+        selected_year = self.request.GET.get('year', '').strip()
+        if selected_year and selected_year.isdigit():
+            qs = qs.filter(start_time__year=int(selected_year))
+
+        # Category filter (thpt, thcs, other)
+        selected_category = self.request.GET.get('category', '').strip().lower()
+        if selected_category == 'thpt':
+            qs = qs.filter(
+                Q(province_category='thpt') |
+                Q(tags__name__icontains='thpt') |
+                Q(name__icontains='THPT') |
+                Q(name__icontains='Cấp THPT') |
+                Q(name__icontains='Lớp 10') |
+                Q(name__icontains='Lớp 11') |
+                Q(name__icontains='Lớp 12')
+            ).distinct()
+        elif selected_category == 'thcs':
+            qs = qs.filter(
+                Q(province_category='thcs') |
+                Q(tags__name__icontains='thcs') |
+                Q(name__icontains='THCS') |
+                Q(name__icontains='Cấp THCS') |
+                Q(name__icontains='Lớp 6') |
+                Q(name__icontains='Lớp 7') |
+                Q(name__icontains='Lớp 8') |
+                Q(name__icontains='Lớp 9')
+            ).distinct()
+        elif selected_category == 'other':
+            thpt_thcs_q = (
+                Q(province_category__in=['thpt', 'thcs']) |
+                Q(tags__name__icontains='thpt') | Q(tags__name__icontains='thcs') |
+                Q(name__icontains='THPT') | Q(name__icontains='THCS') |
+                Q(name__icontains='Cấp THPT') | Q(name__icontains='Cấp THCS') |
+                Q(name__icontains='Lớp 6') | Q(name__icontains='Lớp 7') | Q(name__icontains='Lớp 8') |
+                Q(name__icontains='Lớp 9') | Q(name__icontains='Lớp 10') | Q(name__icontains='Lớp 11') | Q(name__icontains='Lớp 12')
+            )
+            qs = qs.exclude(thpt_thcs_q).distinct()
+
         return qs
 
     def get_queryset(self):
         self.search_query = None
-        query_set = self._get_queryset().filter(end_time__isnull=False, end_time__lt=self._now).order_by('-end_time', 'key')
+        # Include all provincial contests regardless of active/past status, ordered by start_time descending
+        query_set = self._get_queryset().annotate(
+            problem_count=Count('problems', distinct=True)
+        ).order_by('-start_time', '-id')
+
         if 'search' in self.request.GET:
             self.search_query = search_query = ' '.join(self.request.GET.getlist('search')).strip()
             if search_query:
@@ -186,12 +234,32 @@ class ProvincialContestList(ContestList):
         return query_set
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        # Call ListView.get_context_data directly to bypass ContestList time-partitioning logic
+        context = super(ContestList, self).get_context_data(**kwargs)
         from judge.models.contest import PROVINCE_CHOICES, PROVINCE_DICT
+
         selected_province = self.request.GET.get('province', '').strip().upper()
+        selected_year = self.request.GET.get('year', '').strip()
+        selected_category = self.request.GET.get('category', '').strip().lower()
+
+        # Compute available years from all provincial contests
+        base_prov_qs = ContestListMixin.get_queryset(self).filter(
+            Q(is_province_contest=True) | ~Q(province='')
+        ).filter(start_time__isnull=False)
+
+        years_list = sorted(list(set(
+            base_prov_qs.values_list('start_time__year', flat=True)
+        )), reverse=True)
+
         context['provinces'] = PROVINCE_CHOICES
         context['selected_province'] = selected_province
         context['selected_province_name'] = PROVINCE_DICT.get(selected_province, '')
+        context['years'] = years_list
+        context['selected_year'] = selected_year
+        context['selected_category'] = selected_category
+        context['search_query'] = self.search_query
+        context['now'] = self._now
+        context.update(paginate_query_context(self.request))
         return context
 
 

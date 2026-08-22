@@ -864,7 +864,7 @@ class ContestForm(ModelForm):
         model = Contest
         fields = [
             'key', 'name',
-            'start_time', 'end_time', 'province', 'is_province_contest', 'is_visible',
+            'start_time', 'end_time', 'province', 'is_province_contest', 'province_category', 'is_visible',
             'use_clarifications',
             'hide_problem_tags',
             'hide_problem_authors',
@@ -883,6 +883,7 @@ class ContestForm(ModelForm):
             'description': MartorWidget(attrs={'data-markdownfy-url': reverse_lazy('contest_preview')}),
             'scoreboard_visibility': Select2Widget(),
             'format_name': Select2Widget(),
+            'province_category': Select2Widget(),
             'private_contestants': HeavySelect2MultipleWidget(
                 data_view='profile_select2',
                 attrs={'style': 'width: 100%'},

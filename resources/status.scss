@@ -1,44 +1,89 @@
 .AB {
-    background-color: #CCC;
-    color: black;
+    background-color: var(--bg-hover, #f4f4f5);
+    color: var(--text-muted, #71717a);
+    border: 1px solid var(--border-color, #e4e4e7);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.8em;
+    font-weight: 700;
 }
 
 .AC {
-    background-color: #53f23f;
-    color: green;
+    background-color: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.8em;
+    font-weight: 700;
 }
 
 ._AC {
-    background-color: #DFFF00;
-    color: green;
+    background-color: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.8em;
+    font-weight: 700;
 }
 
 .WA {
-    background-color: #CCC;
-    color: #ef1b53;
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.8em;
+    font-weight: 700;
 }
 
 .TLE, .MLE {
-    background-color: #CCC;
-    color: black;
+    background-color: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.8em;
+    font-weight: 700;
 }
 
 .OLE, .IR, .RTE, .OTH {
-    background-color: #FAB623;
-    color: black;
+    background-color: rgba(139, 92, 246, 0.12);
+    color: #8b5cf6;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.8em;
+    font-weight: 700;
 }
 
 .CE {
-    background-color: #CCC;
-    color: black;
+    background-color: var(--bg-hover, #f4f4f5);
+    color: var(--text-muted, #71717a);
+    border: 1px solid var(--border-color, #e4e4e7);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.8em;
+    font-weight: 700;
 }
 
 .IE {
-    background-color: red;
-    color: black;
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.8em;
+    font-weight: 700;
 }
 
 .QU, .G {
-    background: white;
-    color: black;
+    background: var(--bg-hover, #f4f4f5);
+    color: var(--primary, #6366f1);
+    border: 1px solid var(--border-color, #e4e4e7);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.8em;
+    font-weight: 700;
 }

@@ -83,6 +83,60 @@ class Course(models.Model):
         verbose_name=_('Thời hạn học (ngày)'),
         help_text=_('Thời gian học tính bằng ngày kể từ mốc ghi danh. Để trống nếu không giới hạn.'),
     )
+    REG_STATUS_OPEN = 'OPEN'
+    REG_STATUS_UPCOMING = 'UPCOMING'
+    REG_STATUS_CLOSED = 'CLOSED'
+    REG_STATUS_CHOICES = (
+        (REG_STATUS_OPEN, _('Đang mở đăng ký')),
+        (REG_STATUS_UPCOMING, _('Sắp khai giảng')),
+        (REG_STATUS_CLOSED, _('Hết chỗ / Đóng đăng ký')),
+    )
+
+    reg_status = models.CharField(
+        max_length=16,
+        choices=REG_STATUS_CHOICES,
+        default=REG_STATUS_OPEN,
+        verbose_name=_('Trạng thái tuyển sinh'),
+        db_index=True,
+    )
+    target_audience = models.CharField(
+        max_length=128,
+        default='Khối THPT',
+        blank=True,
+        verbose_name=_('Đối tượng / Khối lớp'),
+    )
+    schedule_info = models.CharField(
+        max_length=255,
+        default='Tối T3, T5 (19h30 - 21h30)',
+        blank=True,
+        verbose_name=_('Lịch học'),
+    )
+    format_type = models.CharField(
+        max_length=64,
+        default='Online qua Zoom',
+        blank=True,
+        verbose_name=_('Hình thức học'),
+    )
+    duration_info = models.CharField(
+        max_length=128,
+        default='12 tuần (24 buổi)',
+        blank=True,
+        verbose_name=_('Thời lượng học'),
+    )
+    start_date_info = models.CharField(
+        max_length=128,
+        default='15/09/2026',
+        blank=True,
+        verbose_name=_('Ngày khai giảng'),
+    )
+    contact_url = models.CharField(
+        max_length=512,
+        default='',
+        blank=True,
+        verbose_name=_('Link Facebook / Tư vấn đăng ký'),
+        help_text=_('Đường dẫn mở khi học viên bấm "Liên hệ đăng ký" (cho khóa học tốn phí).'),
+    )
+
     thumbnail_url = models.CharField(
         max_length=255,
         verbose_name=_('Ảnh bìa khóa học'),
@@ -151,10 +205,32 @@ class Course(models.Model):
         return self.price == 0
 
     @property
+    def is_paid(self):
+        return self.price > 0
+
+    @property
     def formatted_price(self):
         if self.price == 0:
             return _('Miễn phí')
         return f'{self.price:,.0f} đ'.replace(',', '.')
+
+    @property
+    def reg_status_display(self):
+        return dict(self.REG_STATUS_CHOICES).get(self.reg_status, _('Đang mở đăng ký'))
+
+    @property
+    def reg_status_badge_class(self):
+        if self.reg_status == self.REG_STATUS_UPCOMING:
+            return 'status-upcoming'
+        elif self.reg_status == self.REG_STATUS_CLOSED:
+            return 'status-closed'
+        return 'status-open'
+
+    @property
+    def effective_contact_url(self):
+        if self.contact_url:
+            return self.contact_url
+        return 'https://facebook.com'
 
     @property
     def instructor_name(self):

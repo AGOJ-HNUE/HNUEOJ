@@ -47,9 +47,20 @@ class CourseListView(TitleMixin, ListView):
                 if tab == 'all':
                     qs = Course.objects.all()
 
+        if tab == 'thcs':
+            qs = qs.filter(Q(target_audience__icontains='THCS') | Q(title__icontains='THCS'))
+        elif tab == 'thpt':
+            qs = qs.filter(Q(target_audience__icontains='THPT') | Q(title__icontains='THPT'))
+        elif tab == 'chuyen':
+            qs = qs.filter(Q(target_audience__icontains='Chuyên') | Q(target_audience__icontains='Đội tuyển') | Q(title__icontains='Chuyên') | Q(title__icontains='HSG'))
+        elif tab == 'online':
+            qs = qs.filter(format_type__icontains='Online')
+        elif tab == 'offline':
+            qs = qs.filter(Q(format_type__icontains='Trực tiếp') | Q(format_type__icontains='Offline'))
+
         query = self.request.GET.get('q', '').strip()
         if query:
-            qs = qs.filter(Q(title__icontains=query) | Q(description__icontains=query))
+            qs = qs.filter(Q(title__icontains=query) | Q(description__icontains=query) | Q(target_audience__icontains=query))
 
         return qs.select_related('instructor__user').prefetch_related('enrollments')
 
@@ -577,6 +588,14 @@ class SaveCourseInfoAjax(LoginRequiredMixin, View):
         else:
             validity_duration_days = None
 
+        reg_status = data.get('reg_status', course.reg_status)
+        target_audience = data.get('target_audience', course.target_audience).strip()
+        schedule_info = data.get('schedule_info', course.schedule_info).strip()
+        format_type = data.get('format_type', course.format_type).strip()
+        duration_info = data.get('duration_info', course.duration_info).strip()
+        start_date_info = data.get('start_date_info', course.start_date_info).strip()
+        contact_url = data.get('contact_url', course.contact_url).strip()
+
         if not title:
             return JsonResponse({'error': _('Tên khóa học không được để trống.')}, status=400)
 
@@ -586,6 +605,14 @@ class SaveCourseInfoAjax(LoginRequiredMixin, View):
         course.thumbnail_url = thumbnail_url
         if status in dict(Course.STATUS_CHOICES):
             course.status = status
+        if reg_status in dict(Course.REG_STATUS_CHOICES):
+            course.reg_status = reg_status
+        course.target_audience = target_audience
+        course.schedule_info = schedule_info
+        course.format_type = format_type
+        course.duration_info = duration_info
+        course.start_date_info = start_date_info
+        course.contact_url = contact_url
         course.is_public = is_public
         course.is_locked = is_locked
         course.allow_self_enrollment = allow_self_enrollment

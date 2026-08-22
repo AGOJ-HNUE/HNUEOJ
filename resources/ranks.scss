@@ -1,13 +1,13 @@
 @use "vars" as *;
 
 .admin a, .admin {
-    color: $color_primary100 !important;
-    font-weight: bold !important;
+    color: var(--primary, $color_primary100) !important;
+    font-weight: 700 !important;
 }
 
 .banned a, .banned {
-    color: black !important;
-    font-weight: normal !important;
+    color: var(--text-muted, #71717a) !important;
+    font-weight: 400 !important;
     text-decoration: line-through !important;
 }
 
@@ -16,8 +16,8 @@
 }
 
 .staff a, .staff {
-    color: #ff888a !important;
-    font-weight: bold !important;
+    color: #f43f5e !important;
+    font-weight: 700 !important;
 }
 
 .staff a::before {
@@ -25,8 +25,8 @@
 }
 
 .daor a, .daor {
-    color: #ff0066 !important;
-    font-weight: bold !important;
+    color: #ec4899 !important;
+    font-weight: 700 !important;
 }
 
 .daor a::before {
@@ -38,9 +38,9 @@
 }
 
 .deleted-user, .deleted-user a {
-    color: #999;
-    font-weight: normal;
-    text-decoration: line-through $color_primary100;
+    color: var(--text-muted, #71717a);
+    font-weight: 400;
+    text-decoration: line-through var(--text-muted, $color_primary100);
 }
 
 @mixin rate-svg-color($color) {
@@ -98,11 +98,11 @@ svg.rate-box {
 }
 
 .rating {
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .rate-none, .rate-none a {
-    color: $color_rating_none;
+    color: var(--text-muted, $color_rating_none);
     font-weight: normal;
 }
 
@@ -138,13 +138,13 @@ svg.rate-box {
 }
 
 .rate-legendary-grandmaster a::first-letter {
-    color: $color_primary100;
+    color: var(--text-main, $color_primary100);
 }
 
 .rate-group {
     white-space: nowrap;
     display: inline-block;
-    color: black;
+    color: var(--text-main, black);
 
     .rating {
         display: inline-block;

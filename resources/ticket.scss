@@ -17,11 +17,11 @@ form#ticket-form {
 
 #ticket-list {
     .fa-check-circle-o, .fa-arrow-up {
-        color: #44AD41;
+        color: #10b981;
     }
 
     .fa-exclamation-circle {
-        color: #DE2121;
+        color: #ef4444;
     }
 }
 
@@ -50,18 +50,18 @@ form#ticket-form {
 div.ticket-title {
     display: flex;
     align-items: center;
-    column-gap: 0.3em;
+    column-gap: 0.4em;
 
     .fa-check-circle-o, .fa-arrow-up {
-        color: #00a900;
+        color: #10b981;
     }
 
     .fa-exclamation-circle {
-        color: #ff130f;
+        color: #ef4444;
     }
 
     small {
-        color: $color_primary50;
+        color: var(--text-muted, #71717a);
         font-size: 0.9em;
     }
 }
@@ -102,40 +102,43 @@ div.ticket-title {
         bottom: 0;
         left: 65px;
         width: 2px;
-        background-color: $color_primary25;
+        background-color: var(--border-color, #e4e4e7);
         z-index: 0;
     }
 }
 
 .info-box {
     margin: 5px 0 10px;
-    border: 1px $color_primary50 solid;
-    border-radius: 5px;
+    border: 1px solid var(--border-color, #e4e4e7);
+    border-radius: 8px;
+    background: var(--bg-surface, #ffffff);
 
     a.edit-notes {
         float: right;
     }
 
     .fa {
-        color: $color_primary50;
+        color: var(--text-muted, #71717a);
     }
 }
 
 .info-title {
-    padding: 2px 5px;
-    font-weight: 600;
-    border-bottom: 1px $color_primary50 solid;
-    background: $color_primary10;
-    border-radius: 5px 5px 0 0;
+    padding: 6px 10px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border-color, #e4e4e7);
+    background: var(--bg-hover, #f4f4f5);
+    border-radius: 8px 8px 0 0;
+    color: var(--text-main);
 }
 
 .info-data {
-    padding: 2px 5px;
+    padding: 8px 10px;
     word-break: break-all;
+    color: var(--text-main);
 }
 
 .info-empty {
-    color: $color_primary50;
+    color: var(--text-muted, #71717a);
     font-style: italic;
 }
 
@@ -146,24 +149,28 @@ div.ticket-title {
 .close-ticket, .vote-good {
     display: block;
     width: 100%;
-    background: linear-gradient(to bottom, #4bad00 0%, #278811 100%);
-    border-color: #24710e;
+    background: #10b981;
+    border-color: #059669;
+    color: white !important;
     font-weight: 600;
+    border-radius: 8px;
 
     &:hover {
-        background: #24710e;
+        background: #059669;
     }
 }
 
 .open-ticket, .vote-norm {
     display: block;
     width: 100%;
-    background: linear-gradient(to bottom, #ff130f, #b03d17);
-    border-color: #853011;
+    background: #ef4444;
+    border-color: #dc2626;
+    color: white !important;
     font-weight: 600;
+    border-radius: 8px;
 
     &:hover {
-        background: #853011;
+        background: #dc2626;
     }
 }
 
@@ -183,7 +190,7 @@ div.ticket-title {
     margin: 15px 0;
     position: relative;
     border-left: none;
-    color: #586069;
+    color: var(--text-muted, #71717a);
     font-size: 0.9em;
     z-index: 1;
 
@@ -191,22 +198,22 @@ div.ticket-title {
         position: absolute;
         left: 65px;
         transform: translateX(-50%);
-        background: $color_primary0;
+        background: var(--bg-surface, #ffffff);
         width: 32px;
         height: 32px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 2px solid $color_primary25;
+        border: 2px solid var(--border-color, #e4e4e7);
         box-sizing: border-box;
 
         .fa-check-circle {
-            color: #44AD41;
+            color: #10b981;
             font-size: 16px;
         }
         .fa-exclamation-circle {
-            color: #DE2121;
+            color: #ef4444;
             font-size: 16px;
         }
     }
@@ -214,7 +221,7 @@ div.ticket-title {
     .action-gravatar {
         width: 20px;
         height: 20px;
-        border-radius: 6px;
+        border-radius: 50%;
         vertical-align: middle;
     }
 }
@@ -235,15 +242,17 @@ div.ticket-title {
         margin: 0 auto;
         position: relative;
         z-index: 2;
+        border-radius: 50%;
     }
 
     .detail {
-        border: 1px $color_primary50 solid;
-        border-radius: 5px;
+        border: 1px solid var(--border-color, #e4e4e7);
+        border-radius: 10px;
         flex: 1;
         min-width: 300px;
         position: relative;
-        background: $color_primary0;
+        background: var(--bg-surface, #ffffff);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 
         &::before {
             content: "";
@@ -252,7 +261,7 @@ div.ticket-title {
             left: -8px;
             border-style: solid;
             border-width: 8px 8px 8px 0;
-            border-color: transparent $color_primary50 transparent transparent;
+            border-color: transparent var(--border-color, #e4e4e7) transparent transparent;
             display: block;
             width: 0;
             z-index: 0;
@@ -265,7 +274,7 @@ div.ticket-title {
             left: -7px;
             border-style: solid;
             border-width: 7px 7px 7px 0;
-            border-color: transparent $color_primary10 transparent transparent;
+            border-color: transparent var(--bg-surface, #ffffff) transparent transparent;
             display: block;
             width: 0;
             z-index: 1;
@@ -273,10 +282,10 @@ div.ticket-title {
     }
 
     .header {
-        background: $color_primary10;
-        border-bottom: 1px solid $color_primary50;
-        border-radius: 5px 5px 0 0;
-        padding: 6px 10px;
+        background: var(--bg-hover, #f4f4f5);
+        border-bottom: 1px solid var(--border-color, #e4e4e7);
+        border-radius: 10px 10px 0 0;
+        padding: 8px 12px;
         text-align: left;
         display: flex;
         flex-wrap: wrap;
@@ -288,12 +297,13 @@ div.ticket-title {
         flex: auto;
 
         .fa {
-            color: $color_primary50;
+            color: var(--text-muted, #71717a);
         }
     }
 
     .content {
-        padding: 7px;
+        padding: 12px;
+        color: var(--text-main);
 
         > :first-child {
             margin-top: 0;
@@ -314,7 +324,7 @@ div.ticket-title {
     padding: 15px;
 
     &::after {
-        border-color: transparent $color_primary0 transparent transparent;
+        border-color: transparent var(--bg-surface) transparent transparent;
     }
 }
 
@@ -325,9 +335,9 @@ div.ticket-title {
 .auto-reply {
     margin: 10px 0;
     padding: 10px;
-    border: 1px $color_primary50 solid;
-    border-radius: 5px;
-    background: $color_primary10;
+    border: 1px solid var(--border-color, #e4e4e7);
+    border-radius: 8px;
+    background: var(--bg-hover, #f4f4f5);
     cursor: pointer;
 }
 
@@ -337,15 +347,15 @@ div.ticket-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #fff;
-    border: 1px solid $color_primary25;
-    border-radius: $widget_border_radius;
-    padding: 6px 10px;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-color, #e4e4e7);
+    border-radius: 8px;
+    padding: 8px 12px;
     cursor: pointer;
     width: 100%;
     box-sizing: border-box;
     user-select: none;
-    color: $color_primary33;
+    color: var(--text-muted, #71717a);
     font-size: 0.88rem;
 
     .trigger-text {
@@ -355,7 +365,7 @@ div.ticket-title {
         flex: 1;
     }
 
-    &.has-value { color: $color_primary90; }
+    &.has-value { color: var(--text-main, #18181b); }
 }
 
 .autofill-popup {
@@ -365,10 +375,10 @@ div.ticket-title {
     left: 0;
     right: 0;
     min-width: 300px;
-    background: $color_primary0;
-    border: 1px solid $color_primary25;
-    border-radius: $widget_border_radius;
-    box-shadow: 0 4px 16px rgba(0,0,0,.15);
+    background: var(--bg-surface, #ffffff);
+    border: 1px solid var(--border-color, #e4e4e7);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
     z-index: 9999;
 
     &.open { display: block; }
@@ -377,8 +387,10 @@ div.ticket-title {
 .autofill-search {
     width: 100%;
     border: none;
-    border-bottom: 1px solid $color_primary10;
-    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color, #e4e4e7);
+    background: var(--bg-surface);
+    color: var(--text-main);
+    padding: 10px 12px;
     outline: none;
     box-sizing: border-box;
 }
@@ -388,19 +400,19 @@ div.ticket-title {
 .autofill-item {
     padding: 8px 12px;
     cursor: pointer;
-    border-bottom: 1px solid $color_primary5;
+    border-bottom: 1px solid var(--border-color, #e4e4e7);
 
     &:last-child { border-bottom: none; }
-    &:hover, &.active { background: $color_info25; }
+    &:hover, &.active { background: var(--bg-hover, #f4f4f5); }
 
-    .item-vi { font-size: 0.78rem; color: $color_primary50; margin-top: 1px; }
+    .item-vi { font-size: 0.78rem; color: var(--text-muted, #71717a); margin-top: 1px; }
 }
 
-.autofill-no-results { padding: 10px; color: $color_primary33; font-size: 0.85rem; text-align: center; }
+.autofill-no-results { padding: 10px; color: var(--text-muted, #71717a); font-size: 0.85rem; text-align: center; }
 
 .autofill-controls { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.4rem; }
 
-.lang-toggle { padding: 3px 10px; font-size: 0.75rem; }
+.lang-toggle { padding: 4px 12px; font-size: 0.75rem; border-radius: 6px; }
 .lang-toggle:not(.active) { opacity: 0.45; }
 
 @media (max-width: 768px) {

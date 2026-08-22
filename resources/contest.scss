@@ -3,44 +3,52 @@
 #contest-calendar {
     border-collapse: collapse;
     width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
 
     th {
-        border: 1px solid $color_primary25;
-        background: $color_primary5;
+        border: 1px solid var(--border-color, $color_primary25);
+        background: var(--bg-hover, $color_primary5);
+        color: var(--text-muted, #71717a);
+        padding: 8px;
+        font-weight: 700;
     }
 
     td {
         height: 110px;
         width: 170px;
         vertical-align: top;
-        border: 1px solid $color_primary25;
-        transition-duration: 0.2s;
+        border: 1px solid var(--border-color, $color_primary25);
+        transition: background 0.2s ease;
+        background: var(--bg-surface, #ffffff);
 
         .num {
             text-align: right;
-            font-weight: bold;
+            font-weight: 700;
             display: block;
-            border-bottom: 1px dashed $color_primary25;
-            padding-right: 0.2em;
+            border-bottom: 1px dashed var(--border-color, $color_primary25);
+            padding-right: 0.4em;
             margin-bottom: 0.4em;
+            color: var(--text-muted, #71717a);
         }
 
         ul {
-            font-size: 0.75em;
+            font-size: 0.78em;
             padding: 0;
             margin: 0;
 
             li {
-                margin: 0 0 0.2em 17px;
+                margin: 0 0 0.2em 14px;
 
                 i.fa {
-                    color: $color_link200;
+                    color: var(--primary, $color_link200);
                 }
 
                 a {
-                    color: $color_primary75;
+                    color: var(--text-main, $color_primary75);
 
                     &:hover {
+                        color: var(--primary, $color_link100);
                         text-decoration: underline;
                     }
                 }
@@ -48,23 +56,27 @@
         }
 
         &:hover {
-            background: rgba($color_link100, 0.2);
+            background: var(--bg-hover, rgba(99, 102, 241, 0.06));
         }
     }
 
     .noday {
-        background: $color_primary10;
+        background: var(--bg-hover, $color_primary10);
     }
 
     .today {
-        background: rgba($color_link200, 0.2);
+        background: rgba(99, 102, 241, 0.12);
+
+        .num {
+            color: var(--primary, #6366f1);
+        }
     }
 }
 
 #banner {
-    border-bottom: 1px solid $color_primary25;
-    padding-bottom: 1em;
-    color: $color_primary75;
+    border-bottom: 1px solid var(--border-color, $color_primary25);
+    padding-bottom: 1.2em;
+    color: var(--text-main, $color_primary75);
     font-size: $base_font_size;
 
     a.date {
@@ -73,21 +85,19 @@
         text-align: center;
         line-height: 1.3;
         font-size: 2.3em;
+        font-weight: 800;
         padding-bottom: 0.15em;
-        color: $color_link50;
+        color: var(--primary, $color_link50);
 
         &:hover {
-            color: $color_link100;
-        }
-
-        &:active {
-            color: $color_link200;
+            color: var(--primary-hover, $color_link100);
         }
     }
 
     #time {
         text-align: center;
         display: block;
+        color: var(--text-muted, #71717a);
     }
 
     div#details ul {
@@ -118,11 +128,15 @@
 
     tbody tr {
         height: 4em;
+
+        &:hover {
+            background: var(--bg-hover, rgba(99, 102, 241, 0.04));
+        }
     }
 
     .time-left {
         text-align: left;
-        color: $color_primary50;
+        color: var(--text-muted, $color_primary50);
         padding-top: 0.5em;
     }
 
@@ -142,38 +156,41 @@
     }
 
     a.contest-sort-link {
-        color: $color_primary0;
+        color: var(--text-muted, $color_primary0);
     }
 }
 
 .contest-tag {
-    box-shadow: inset 0 -0.1em 0 rgba(0, 0, 0, 0.12);
-    padding: 0.15em 0.3em;
-    border-radius: 0.15em;
+    padding: 3px 8px;
+    border-radius: 9999px;
     font-weight: 600;
+    font-size: 0.76rem;
     margin-right: 0.45em;
     position: relative;
+    background: var(--bg-hover, #f4f4f5);
+    border: 1px solid var(--border-color, #e4e4e7);
+    color: var(--text-main, #18181b);
 }
 
 .contest-list-title {
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main, #18181b);
 }
 
 form.contest-join-pseudotab {
     display: inline;
-    padding: 6px 8px !important;
+    padding: 6px 12px !important;
     line-height: 1.7em;
     margin-left: 0.5em;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
 
     input {
         display: inline;
         border: none;
         padding: 0;
         background: none;
-        font-weight: 600;
+        font-weight: 700;
+        color: var(--primary, #6366f1);
     }
 }
 
@@ -182,11 +199,11 @@ form.contest-join-pseudotab {
     display: flex;
 
     .fa {
-        color: $color_primary75;
+        color: var(--text-muted, $color_primary75);
     }
 
     a + a {
-        padding-left: 1px;
+        padding-left: 4px;
     }
 
     padding: 0 5px;
@@ -220,25 +237,26 @@ form.contest-join-pseudotab {
         display: block;
     }
 
-    /* Make problem table headers green on hover */
     th a:hover {
-        color: #0F0;
+        color: var(--primary, #6366f1);
     }
 
     th a, th a:link, th a:visited {
-        color: $color_primary0;
+        color: var(--text-muted, $color_primary0);
     }
 
     .rank {
-        min-width: 2.4em
+        min-width: 2.4em;
+        font-weight: 700;
     }
 
     .points {
         min-width: 2.4em;
+        font-weight: 700;
     }
 
     .disqualified {
-        background-color: $color_contest_ranking_disqualified !important;
+        background-color: rgba(239, 68, 68, 0.15) !important;
     }
 
     tr.ghost {
@@ -251,8 +269,9 @@ form.contest-join-pseudotab {
     }
 
     .point-denominator {
-        border-top: 1px solid $color_primary50;
+        border-top: 1px solid var(--border-color, $color_primary50);
         font-size: 0.7em;
+        color: var(--text-muted);
     }
 
     .start-time {
@@ -264,12 +283,12 @@ form.contest-join-pseudotab {
     }
 
     .virtual-participation {
-        color: grey;
+        color: var(--text-muted, grey);
         float: right
     }
 
     .user-points, .user-points a {
-        color: $color_primary100;
+        color: var(--text-main, $color_primary100);
     }
 }
 
@@ -279,13 +298,14 @@ form.contest-join-pseudotab {
 
 #org-check-list-wrapper {
     display: none;
-    background: $color_primary0;
-    border: 1px solid gray;
-    padding: 10px;
-
+    background: var(--bg-surface, $color_primary0);
+    border: 1px solid var(--border-color, gray);
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
     right: auto;
     position: absolute;
-    z-index: 1;
+    z-index: 10;
 
     button {
         margin-bottom: 5px;
@@ -293,8 +313,8 @@ form.contest-join-pseudotab {
     }
 
     #org-check-list {
-        border-bottom: 1px solid gray;
-        color: $color_primary100;
+        border-bottom: 1px solid var(--border-color, gray);
+        color: var(--text-main, $color_primary100);
         text-align: left;
         font-weight: normal;
 

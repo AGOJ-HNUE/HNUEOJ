@@ -2,21 +2,23 @@
 
 #judge-versions {
     .version {
-        font-family: $monospace-fonts;
+        font-family: Consolas, Monaco, monospace;
     }
 
     .version-blank {
-        background: $color_primary10;
+        background: var(--bg-hover, $color_primary10);
     }
 
     .version-latest {
-        background: #af3c;
-        color: black;
+        background: rgba(16, 185, 129, 0.15);
+        color: #059669;
+        font-weight: 600;
     }
 
     .version-outdated {
-        background: #f00c;
-        color: white;
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        font-weight: 600;
     }
 
     tr:first-child {
@@ -30,13 +32,19 @@
 
     th {
         vertical-align: top;
-        padding-top: 4px;
+        padding-top: 6px;
+        color: var(--text-sub);
     }
 }
 
 .centered-form {
     max-width: 800px;
     margin: auto;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 
     .submit-bar {
         float: right;
@@ -58,5 +66,5 @@
 }
 
 .grayed {
-    color: $color_primary75;
+    color: var(--text-muted, $color_primary75);
 }

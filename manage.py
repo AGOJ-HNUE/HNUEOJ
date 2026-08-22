@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/hnueoj/venv/bin/python
 import os
 import sys
 

@@ -1,161 +1,163 @@
 {% extends "base.html" %}
 
 {% block media %}
-    {% include "timezone/media-css.html" %}
-    {{ form.media.css }}
-    <style>
-        .sortedm2m-container, .sortedm2m-container p.selector-filter {
-            width: 300px;
-        }
+{% include "timezone/media-css.html" %}
+{{ form.media.css }}
+<style>
+    .sortedm2m-container,
+    .sortedm2m-container p.selector-filter {
+        width: 300px;
+    }
 
-        .sortedm2m-container p.selector-filter input {
-            width: 262px;
-        }
+    .sortedm2m-container p.selector-filter input {
+        width: 262px;
+    }
 
-        ul.sortedm2m {
-            width: 284px;
-            min-height: 100px;
-            max-height: 200px;
-        }
+    ul.sortedm2m {
+        width: 284px;
+        min-height: 100px;
+        max-height: 200px;
+    }
 
-        .sortedm2m-container, .sortedm2m-container p.selector-filter {
-            width: 300px;
-        }
+    .sortedm2m-container,
+    .sortedm2m-container p.selector-filter {
+        width: 300px;
+    }
 
-        .sortedm2m-container p.selector-filter input {
-            width: 262px;
-        }
+    .sortedm2m-container p.selector-filter input {
+        width: 262px;
+    }
 
-        ul.sortedm2m {
-            width: 284px;
-            min-height: 70px;
-            max-height: 200px;
-            height: 70px
-        }
+    ul.sortedm2m {
+        width: 284px;
+        min-height: 70px;
+        max-height: 200px;
+        height: 70px
+    }
 
-        .inline-header {
-            float: left;
-            font-size: 1.1em;
-            padding: 4px 8px;
-            padding-left: 0;
-        }
+    .inline-header {
+        float: left;
+        font-size: 1.1em;
+        padding: 4px 8px;
+        padding-left: 0;
+    }
 
-        .block-header {
-            color: #555;
-            font-size: 1.1em;
-            font-weight: 600;
-            padding-bottom: 0.2em;
-            padding-left: 2px;
-            margin-top: 0.75em
-        }
+    .block-header {
+        color: #555;
+        font-size: 1.1em;
+        font-weight: 600;
+        padding-bottom: 0.2em;
+        padding-left: 2px;
+        margin-top: 0.75em
+    }
 
-        .fullwidth {
-            display: block;
-            overflow: hidden;
-        }
+    .fullwidth {
+        display: block;
+        overflow: hidden;
+    }
 
-        .fullwidth input {
-            width: 100%;
-        }
+    .fullwidth input {
+        width: 100%;
+    }
 
-        .fullwidth-error input {
-            width: 100%;
-            border-color: red;
-        }
+    .fullwidth-error input {
+        width: 100%;
+        border-color: red;
+    }
 
-        .form-field-error {
-            color: red;
-        }
+    .form-field-error {
+        color: red;
+    }
 
-        small {
-            font-size: 0.7em;
-            padding-left: 0.6em;
-        }
+    small {
+        font-size: 0.7em;
+        padding-left: 0.6em;
+    }
 
-        #edit-form {
-            border: unset;
-            background: unset;
-        }
+    #edit-form {
+        border: unset;
+        background: unset;
+    }
 
-        #content-body {
-            text-align: center;
-        }
+    #content-body {
+        text-align: center;
+    }
 
-        #center-float {
-            display: inline-block;
-            text-align: initial;
-            max-width: 100%;
-            width: 450px;
-        }
+    #center-float {
+        display: inline-block;
+        text-align: initial;
+        max-width: 100%;
+        width: 450px;
+    }
 
-        ul.errorlist {
-            margin: 0px;
-            text-align: right;
-            list-style: none;
-        }
+    ul.errorlist {
+        margin: 0px;
+        text-align: right;
+        list-style: none;
+    }
 
-        .full-textfield {
-            padding-top: 0.5em;
-        }
+    .full-textfield {
+        padding-top: 0.5em;
+    }
 
-        .tos-section {
-            display: inline-block;
-            padding-right: 1em;
-        }
+    .tos-section {
+        display: inline-block;
+        padding-right: 1em;
+    }
 
-        .pass-req {
-            padding: 0;
-        }
+    .pass-req {
+        padding: 0;
+    }
 
-        h4 {
-            padding-top: 1em;
-        }
+    h4 {
+        padding-top: 1em;
+    }
 
-        .social {
-            display: inline;
-            font-size: 2.3em;
-            float: none;
-        }
+    .social {
+        display: inline;
+        font-size: 2.3em;
+        float: none;
+    }
 
-        .google-icon i {
-            color: #DD4B38;
-        }
+    .google-icon i {
+        color: #DD4B38;
+    }
 
-        .facebook-icon i {
-            color: #133783;
-        }
+    .facebook-icon i {
+        color: #133783;
+    }
 
-        .github-icon i {
-            color: black;
-        }
-    </style>
+    .github-icon i {
+        color: black;
+    }
+</style>
 {% endblock %}
 
 {% block js_media %}
-    {% include "timezone/media-js.html" %}
-    {{ form.media.js }}
-    <script type="text/javascript">
-        $(function () {
-            $('.pass-req-link').click(function () {
-                $('.pass-req').toggle('fast');
-                return false;
-            });
-            try {
-                var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                if (typeof tz === 'string' && $('#id_timezone option[value="' + tz + '"]').length) {
-                    $('#id_timezone').val(tz).change();
-                }
-            } catch (e) {}
+{% include "timezone/media-js.html" %}
+{{ form.media.js }}
+<script type="text/javascript">
+    $(function () {
+        $('.pass-req-link').click(function () {
+            $('.pass-req').toggle('fast');
+            return false;
         });
-    </script>
-    {% if form.captcha %}
-        {{ recaptcha_init(LANGUAGE_CODE) }}
-    {% endif %}
+        try {
+            var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (typeof tz === 'string' && $('#id_timezone option[value="' + tz + '"]').length) {
+                $('#id_timezone').val(tz).change();
+            }
+        } catch (e) { }
+    });
+</script>
+{% if form.captcha %}
+{{ recaptcha_init(LANGUAGE_CODE) }}
+{% endif %}
 {% endblock %}
 
 {% block body %}
 <div id="center-float">
-            {% if not oauth_only %}
+    <!-- {% if not oauth_only %}
             <form id="edit-form" action="" method="post" class="form-area">
                 {% csrf_token %}
 
@@ -236,19 +238,20 @@
                 <hr>
                 <button style="float:right;" type="submit">{{ _('Register!') }}</button>
             </form>
-            {% endif %}
-            {% include "registration/oauth.html" %}
-            {% if tos_url %}
-                <span class="tos-section">
-                    {{ (_('By registering, you agree to our [Terms & Conditions][0].') + '\n\n  [0]: ' + tos_url)|markdown('flatpage', strip_paragraphs=True) }}
-                </span>
-            {% endif %}
-        </div>
+            {% endif %} -->
+    {% include "registration/oauth.html" %}
+    {% if tos_url %}
+    <span class="tos-section">
+        {{ (_('By registering, you agree to our [Terms & Conditions][0].') + '\n\n [0]: ' +
+        tos_url)|markdown('flatpage', strip_paragraphs=True) }}
+    </span>
+    {% endif %}
+</div>
 
-        <div class="map-wrap">
-            <div class="map-inset">
-                <div class="map-axis-x"></div>
-                <div class="map-axis-y"></div>
-            </div>
-        </div>
+<div class="map-wrap">
+    <div class="map-inset">
+        <div class="map-axis-x"></div>
+        <div class="map-axis-y"></div>
+    </div>
+</div>
 {% endblock %}

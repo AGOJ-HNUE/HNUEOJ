@@ -10,11 +10,11 @@
 }
 
 .tweet-this i {
-    color: #55ACEE;
+    color: #38bdf8;
 }
 
 .facebook-this i {
-    color: #133783;
+    color: #2563eb;
 }
 
 .social {
@@ -22,137 +22,139 @@
     float: right;
 }
 
-// Bootstrap-y buttons
+// Nordic Minimalist Buttons
 .button, button, input[type=submit] {
     color: white !important;
     text-decoration: none !important;
     cursor: pointer;
     vertical-align: middle;
     white-space: nowrap;
-    font-weight: 400;
+    font-weight: 600;
     line-height: 1.4;
-    background: #1261A6;
-    background: -webkit-linear-gradient(top, #1771bf 0, #1261A6 100%) repeat-x;
-    background: linear-gradient(to bottom, #1771bf 0, #1261A6 100%) repeat-x;
-    border-radius: $widget_border_radius;
-    padding: 6px 12px;
-    display: block;
-    border: 0;
+    background: var(--primary, #6366f1);
+    border-radius: 8px;
+    padding: 8px 16px;
+    display: inline-block;
+    border: 1px solid transparent;
     text-align: center;
-
-    // 4k hack
     font-size: $base_font_size;
+    font-family: "Inter", sans-serif;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
     &:hover {
-        background: #0e4f88;
+        background: var(--primary-hover, #4f46e5);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
     }
 
     &:active {
-        border-color: #0b3d6b;
-        background: #0e4f88;
+        transform: translateY(1px);
     }
 
     &.full {
-        padding: 6px 0;
+        padding: 8px 0;
+        width: 100%;
+        display: block;
     }
 
     &.disabled {
-        background: linear-gradient(to bottom, darkgray 0, gray 100%) repeat-x !important;
-        border-color: grey !important;
+        background: var(--bg-hover, #e4e4e7) !important;
+        color: var(--text-muted, #94a3b8) !important;
+        border-color: var(--border-color, #d4d4d8) !important;
         cursor: not-allowed;
+        box-shadow: none;
     }
 }
 
 .inline-button {
     display: inline;
     vertical-align: top;
-    padding: 3px 6px;
+    padding: 4px 8px;
 }
 
 input {
     &[type=text], &[type=password], &[type=email], &[type=number], &[type=url] {
-        padding: 4px 8px;
-        color: $color_primary75;
-        background: $color_primary0 none;
-        border: 1px solid $color_primary25;
-        border-radius: $widget_border_radius;
-        box-shadow: 0 1px 1px rgba($color_primary100, 0.075) inset;
-        transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+        padding: 8px 12px;
+        color: var(--text-main, #18181b);
+        background: var(--bg-surface, #ffffff);
+        border: 1px solid var(--border-color, #e4e4e7);
+        border-radius: 8px;
+        transition: all 0.15s ease;
         box-sizing: border-box;
-
-        // Need this explicitly because UA stylesheet for Chrome on 4k makes
-        // everything look bad otherwise (forces it to 9.3px)
         font-size: $base_font_size;
+        font-family: "Inter", sans-serif;
 
         &:hover {
-            border-color: rgba(18, 97, 166, 0.8);
-            box-shadow: inset 0 1px 1px rgba($color_primary100, 0.075), 0 0 4px rgba(18, 97, 166, 0.6);
+            border-color: var(--border-focus, #a1a1aa);
         }
 
         &:focus {
-            border-color: rgba(18, 97, 166, 0.8);
-            box-shadow: inset 0 1px 1px rgba($color_primary100, 0.075), 0 0 8px rgba(18, 97, 166, 0.6);
+            border-color: var(--primary, #6366f1);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
             outline: 0;
         }
     }
 
     &[type=number] {
-        padding: 2px 0 2px 5px;
+        padding: 6px 8px;
     }
 
     &[type=checkbox] {
         appearance: none;
         vertical-align: middle;
-        border: 1px solid $color_primary50;
-        background: $color_primary0;
-        border-radius: 2px;
-        width: 0.95em;
-        height: 0.95em;
+        border: 1px solid var(--border-color, #a1a1aa);
+        background: var(--bg-surface, #ffffff);
+        border-radius: 4px;
+        width: 1em;
+        height: 1em;
         cursor: pointer;
 
         &:checked {
             appearance: auto;
-            accent-color: $highlight_blue;
+            accent-color: var(--primary, #6366f1);
         }
     }
 }
 
 textarea {
-    padding: 4px 8px;
-    color: $color_primary75;
-    background: $color_primary0 none;
-    border: 1px solid $color_primary25;
-    border-radius: $widget_border_radius;
-    box-shadow: 0 1px 1px rgba($color_primary100, 0.075) inset;
-    transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+    padding: 8px 12px;
+    color: var(--text-main, #18181b);
+    background: var(--bg-surface, #ffffff);
+    border: 1px solid var(--border-color, #e4e4e7);
+    border-radius: 8px;
+    transition: all 0.15s ease;
     box-sizing: border-box;
+    font-family: "Inter", sans-serif;
+
+    &:hover {
+        border-color: var(--border-focus, #a1a1aa);
+    }
+
+    &:focus {
+        border-color: var(--primary, #6366f1);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+        outline: 0;
+    }
 }
 
-textarea:hover {
-    border-color: rgba(18, 97, 166, 0.8);
-    box-shadow: inset 0 1px 1px rgba($color_primary100, 0.075), 0 0 4px rgba(18, 97, 166, 0.6);
-}
-
-textarea:focus {
-    border-color: rgba(18, 97, 166, 0.8);
-    box-shadow: inset 0 1px 1px rgba($color_primary100, 0.075), 0 0 8px rgba(18, 97, 166, 0.6);
-    outline: 0;
-}
-
-// Bootstrap-y copy button
 .btn-clipboard {
     top: 0;
     right: 0;
     display: block;
     font-size: 12px;
-    font-weight: bold;
-    color: $color_primary50;
+    font-weight: 600;
+    color: var(--text-muted, #71717a);
     cursor: pointer;
-    background-color: $color_pageBg;
-    border: 1px solid $color_primary25;
-    border-radius: 0 $widget_border_radius;
+    background-color: var(--bg-hover, #f4f4f5);
+    border: 1px solid var(--border-color, #e4e4e7);
+    border-radius: 0 8px 0 8px;
     position: absolute;
-    padding: 5px 8px;
+    padding: 4px 10px;
+
+    &:hover {
+        color: var(--text-main);
+        background-color: var(--border-color);
+    }
 }
 
 .copy-clipboard {
@@ -160,20 +162,18 @@ textarea:focus {
     margin-top: 1.5em;
 }
 
-// Bootstrap-y tabs
+// Minimalist Tabs
 .ul_tab_a_active {
-    color: $color_primary100;
-    // Cover up the bottom border of active tabs with this color
-    background: $color_pageBg;
+    color: var(--text-main, #18181b);
+    background: var(--bg-surface, #ffffff);
     cursor: default;
-    border: 1px solid $color_primary25;
-    border-bottom-color: $color_pageBg;
-    border-image: none;
+    border: 1px solid var(--border-color, #e4e4e7);
+    border-bottom-color: var(--bg-surface, #ffffff);
 }
 
 .tabs {
-    border-bottom: 1px solid $color_primary25;
-    margin: 0 0 8px;
+    border-bottom: 1px solid var(--border-color, #e4e4e7);
+    margin: 0 0 12px;
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -181,31 +181,31 @@ textarea:focus {
 
     .tab {
         .tab-icon {
-            padding-right: 0.3em;
-            color: $color_primary50;
+            padding-right: 0.4em;
+            color: var(--text-muted, #71717a);
 
             &.fa-plus {
-                color: green !important;
+                color: #10b981 !important;
             }
         }
 
         a, span {
-            border-top-width: 3px !important;
+            border-top-width: 2px !important;
         }
 
         &.active {
             a, span {
-                border-top-color: $highlight_blue !important;
+                border-top-color: var(--primary, #6366f1) !important;
             }
 
             .tab-icon {
-                color: $color_primary100;
+                color: var(--text-main, #18181b);
             }
         }
     }
 
     h2 {
-        color: $color_primary75;
+        color: var(--text-main, #18181b);
     }
 
     > ul {
@@ -215,7 +215,6 @@ textarea:focus {
         list-style: outside none none;
         display: flex;
         overflow-x: auto;
-        overflow-y: hidden;
 
         > li {
             position: relative;
@@ -223,25 +222,18 @@ textarea:focus {
 
             &.active > a, &.active > span {
                 @extend .ul_tab_a_active;
-
-                &:hover {
-                    @extend .ul_tab_a_active;
-                }
-
-                &:focus {
-                    @extend .ul_tab_a_active;
-                }
             }
 
             > a, > span {
-                margin-right: 2px;
-                line-height: 1.42857;
+                margin-right: 4px;
+                line-height: 1.4;
                 border: 1px solid transparent;
-                border-radius: $widget_border_radius $widget_border_radius 0 0;
+                border-radius: 8px 8px 0 0;
                 position: relative;
                 display: block;
-                padding: 10px 15px;
-                color: $color_primary66;
+                padding: 10px 18px;
+                color: var(--text-muted, #71717a);
+                font-weight: 600;
                 text-decoration: none;
                 white-space: nowrap;
             }
@@ -249,9 +241,9 @@ textarea:focus {
     }
 }
 
-// Bootstrap-y pagination
+// Minimalist Pagination
 ul.pagination a:hover {
-    background: rgba($color_primary100, 0.55);
+    background: var(--primary-hover, #4f46e5);
 }
 
 ul.pagination {
@@ -266,15 +258,15 @@ ul.pagination {
             &:first-child > {
                 a, span {
                     margin-left: 0;
-                    border-top-left-radius: $widget_border_radius;
-                    border-bottom-left-radius: $widget_border_radius;
+                    border-top-left-radius: 8px;
+                    border-bottom-left-radius: 8px;
                 }
             }
 
             &:last-child > {
                 a, span {
-                    border-top-right-radius: $widget_border_radius;
-                    border-bottom-right-radius: $widget_border_radius;
+                    border-top-right-radius: 8px;
+                    border-bottom-right-radius: 8px;
                 }
             }
 
@@ -282,29 +274,32 @@ ul.pagination {
                 a, span {
                     position: relative;
                     float: left;
-                    padding: 4px 12px;
-                    line-height: 1.42857;
+                    padding: 6px 14px;
+                    line-height: 1.4;
                     text-decoration: none;
-                    color: $color_primary0;
-                    background-color: $color_primary75;
-                    border: 1px solid $color_primary50;
+                    color: var(--text-main, #18181b);
+                    background-color: var(--bg-surface, #ffffff);
+                    border: 1px solid var(--border-color, #e4e4e7);
                     margin-left: -1px;
+                    font-weight: 600;
+                    font-size: 0.88rem;
                 }
             }
         }
 
         .disabled-page > {
             a, span {
-                color: $color_primary50;
+                color: var(--text-muted, #94a3b8);
+                background-color: var(--bg-hover, #f4f4f5);
             }
         }
 
         .active-page > {
             a, span {
                 z-index: 2;
-                color: #FFF;
-                background-color: $highlight_blue;
-                border-color: transparent;
+                color: #ffffff;
+                background-color: var(--primary, #6366f1);
+                border-color: var(--primary, #6366f1);
                 cursor: default;
             }
         }
@@ -312,39 +307,40 @@ ul.pagination {
 }
 
 .top-pagination-bar {
-    margin: 11px 0 7px;
+    margin: 12px 0 8px;
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
 }
 
 .bottom-pagination-bar {
-    margin-top: 10px;
+    margin-top: 12px;
 }
 
 .alert {
-    padding: 15px;
+    padding: 14px 18px;
     margin-bottom: 20px;
     border: 1px solid transparent;
-    border-radius: $widget_border_radius;
+    border-radius: 10px;
+    font-size: 0.92rem;
 }
 
 .alert-info {
-    color: $color_info100;
-    background-color: $color_info25;
-    border-color: $color_info50;
+    color: #4f46e5;
+    background-color: #eef2ff;
+    border-color: #c7d2fe;
 }
 
 .alert-warning {
-    color: $color_warning100;
-    background-color: $color_warning25;
-    border-color: $color_warning50;
+    color: #d97706;
+    background-color: #fffbeb;
+    border-color: #fde68a;
 }
 
 .alert-danger {
-    color: $color_danger100;
-    background-color: $color_danger25;
-    border-color: $color_danger50;
+    color: #ef4444;
+    background-color: #fef2f2;
+    border-color: #fecaca;
 }
 
 .alert-dismissable, .alert-dismissible {
@@ -363,75 +359,64 @@ ul.pagination {
     font-size: 21px;
     font-weight: 700;
     line-height: 1;
-    color: $color_primary100;
-    filter: alpha(opacity=20);
-    opacity: 0.2;
+    color: var(--text-main, #18181b);
+    opacity: 0.4;
+
+    &:focus, &:hover {
+        opacity: 0.8;
+        cursor: pointer;
+    }
 }
 
 a.close {
     text-decoration: none !important;
     font-size: 18px !important;
-    line-height: 1;
-
-    &:hover {
-        color: $color_primary100;
-    }
-}
-
-.close {
-    &:focus, &:hover {
-        color: #000;
-        text-decoration: none;
-        cursor: pointer;
-        filter: alpha(opacity=50);
-        opacity: 0.5;
-    }
 }
 
 .badge {
     min-width: 10px;
-    padding: 0 7px;
-    font-size: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
     font-weight: 700;
-    line-height: 1;
+    line-height: 1.2;
     color: #fff;
     text-align: center;
     white-space: nowrap;
     vertical-align: middle;
-    background-color: #e84848;
-    border-radius: 10px;
+    background-color: #ef4444;
+    border-radius: 9999px;
     box-sizing: border-box;
 }
 
 .form-submit-group {
-    border-top: 1px solid rgba($color_primary100, 0.1);
-    margin-top: 0.8em;
-    padding-top: 0.5em;
+    border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+    margin-top: 1em;
+    padding-top: 0.7em;
     text-align: right;
 }
 
 .sidebox h3 {
-    margin: 0 -5px;
-    background: $color_primary75;
-    border-radius: $widget_border_radius $widget_border_radius 0 0;
-    color: $color_primary0;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-left: 7px;
-    font-size: 1.3em;
+    margin: 0;
+    background: var(--bg-hover, #18181b);
+    border-radius: 10px 10px 0 0;
+    color: var(--text-main, #ffffff);
+    padding: 10px 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
 }
 
 .sidebox h3 .fa {
-    color: $color_primary0;
+    color: var(--text-muted, #ffffff);
     float: right;
-    margin: 0.2em 0.4em 0 0;
+    margin-top: 2px;
 }
 
 .sidebox-content {
-    border: 1px solid $color_primary25;
+    border: 1px solid var(--border-color, #e4e4e7);
     border-top: none;
-    margin: 0 -5px;
-    padding: 1px 0.5em 3px;
+    border-radius: 0 0 10px 10px;
+    padding: 12px 14px;
+    background: var(--bg-surface, #ffffff);
 
     &.sidebox-table {
         border: none;
@@ -444,26 +429,24 @@ a.close {
 }
 
 .sidebox {
-    border-top-left-radius: $widget_border_radius;
-    border-top-right-radius: $widget_border_radius;
-    padding: 0 5px !important;
-    padding-bottom: 1.5em !important;
+    border-radius: 10px;
+    margin-bottom: 20px;
 }
 
 .ws-closed {
     position: sticky;
-    top: 42px;
-    background: $announcement_red;
-    border-radius: 5px 5px 0 0;
+    top: 52px;
+    background: #ef4444;
+    border-radius: 6px 6px 0 0;
     display: none;
 }
 
 .ws-closed a {
     display: block;
-    padding: 7px 0;
+    padding: 8px 0;
     text-align: center;
     color: white;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .semibold {
@@ -475,72 +458,76 @@ a.close {
     padding: 0;
 
     li {
-        padding: 1em 1.5em;
+        padding: 12px 16px;
         margin-bottom: 1em;
         border: 1px solid transparent;
-        border-radius: 5px;
+        border-radius: 8px;
+        font-weight: 500;
 
         &.debug {
-            color: $color_primary75;
-            background-color: $color_primary10;
-            border-color: $color_primary25;
+            color: var(--text-main);
+            background-color: var(--bg-hover);
+            border-color: var(--border-color);
         }
 
         &.info {
-            color: $color_info100;
-            background-color: $color_info25;
-            border-color: $color_info50;
+            color: #4f46e5;
+            background-color: #eef2ff;
+            border-color: #c7d2fe;
         }
 
         &.success {
-            color: $color_success100;
-            background-color: $color_success25;
-            border-color: $color_success50;
+            color: #059669;
+            background-color: #ecfdf5;
+            border-color: #a7f3d0;
         }
 
         &.warning {
-            color: $color_warning100;
-            background-color: $color_warning25;
-            border-color: $color_warning50;
+            color: #d97706;
+            background-color: #fffbeb;
+            border-color: #fde68a;
         }
 
         &.error {
-            color: $color_danger100;
-            background-color: $color_danger25;
-            border-color: $color_danger50;
+            color: #ef4444;
+            background-color: #fef2f2;
+            border-color: #fecaca;
         }
     }
 }
 
 details {
-    border: 1px solid $color_primary25;
-    background: $color_primary5;
-    padding: 5px 10px;
-    border-radius: 4px;
+    border: 1px solid var(--border-color, #e4e4e7);
+    background: var(--bg-surface, #ffffff);
+    padding: 8px 12px;
+    border-radius: 8px;
 }
 
 .tab-bar {
     display: flex;
-    border-bottom: 2px solid $color_primary25;
+    border-bottom: 1px solid var(--border-color, #e4e4e7);
 
     .tab-bar-btn {
         flex: 1;
-        padding: 8px 12px;
-        border: 2px solid transparent;
-        background: $color_primary10;
-        font-size: 12px;
-        font-weight: 700;
-        color: $color_primary66 !important;
+        padding: 8px 14px;
+        border: 1px solid transparent;
+        background: var(--bg-hover, #f4f4f5);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted, #71717a) !important;
         cursor: pointer;
-        margin-bottom: -2px;
+        margin-bottom: -1px;
         outline: none;
+        border-radius: 6px 6px 0 0;
 
-        &:hover { background: $color_primary25; }
+        &:hover { background: var(--border-color); }
 
         &.active {
-            background: $color_primary0;
-            border-color: $color_problem_tab_active_text;
-            color: $color_problem_tab_active_text !important;
+            background: var(--bg-surface, #ffffff);
+            border-color: var(--border-color);
+            border-bottom-color: var(--bg-surface);
+            color: var(--primary, #6366f1) !important;
+            font-weight: 700;
         }
     }
 }
