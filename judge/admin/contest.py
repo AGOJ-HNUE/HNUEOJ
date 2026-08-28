@@ -153,7 +153,7 @@ class ContestAdmin(AdminFastPaginationMixin, NoBatchDeleteMixin, SortableAdminBa
                                     'run_pretests_only', 'locked_after', 'scoreboard_visibility',
                                     'ranking_access_code', 'scoreboard_cache_timeout', 'show_submission_list',
                                     'points_precision', 'banned_judges')}),
-        (_('Scheduling'), {'fields': ('start_time', 'end_time', 'province', 'is_province_contest', 'province_category', 'registration_start', 'registration_end',
+        (_('Scheduling'), {'fields': ('start_time', 'end_time', 'registration_start', 'registration_end',
                                       'time_limit')}),
         (_('Details'), {'fields': ('description', 'terms', 'og_image', 'logo_override_image', 'tags', 'summary')}),
         (_('Format'), {'fields': ('format_name', 'frozen_last_minutes', 'format_config', 'problem_label_script')}),
@@ -164,9 +164,8 @@ class ContestAdmin(AdminFastPaginationMixin, NoBatchDeleteMixin, SortableAdminBa
         (_('Justice'), {'fields': ('banned_users',)}),
         (_('Ranking'), {'fields': ('csv_ranking',)}),
     )
-    list_display = ('key', 'name', 'province', 'is_province_contest', 'province_category', 'is_visible', 'is_rated', 'locked_after', 'start_time', 'end_time', 'time_limit',
+    list_display = ('key', 'name', 'is_visible', 'is_rated', 'locked_after', 'start_time', 'end_time', 'time_limit',
                     'user_count')
-    list_filter = ('is_province_contest', 'province', 'province_category', 'is_visible', 'is_rated')
     search_fields = ('key', 'name')
     inlines = [ContestProblemInline, ContestAnnouncementInline]
     actions_on_top = True

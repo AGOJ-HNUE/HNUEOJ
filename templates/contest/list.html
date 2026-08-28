@@ -74,16 +74,6 @@
             {{- contest.name -}}
         </a>
         <span class="contest-tags">
-            {% if contest.province %}
-                <span style="background-color: #2563eb; color: #ffffff" class="contest-tag">
-                    <i class="fa fa-map-marker"></i> {{ contest.get_province_display() }}
-                </span>
-            {% endif %}
-            {% if not contest.end_time %}
-                <span style="background-color: #059669; color: #ffffff" class="contest-tag">
-                    <i class="fa fa-infinity"></i> {{ _('Tự do / Không giới hạn') }}
-                </span>
-            {% endif %}
             {% if not contest.is_visible %}
                 <span style="background-color: #000000; color: #ffffff" class="contest-tag">
                     <i class="fa fa-eye-slash"></i> {{ _('hidden') }}
@@ -120,25 +110,19 @@
 
 {% macro time_left(contest) %}
     <div class="time time-left">
-        {% if contest.end_time %}
-            {% if contest.time_limit %}
-                {{ contest.start_time|date(_("M j, Y, G:i")) }} -
-                {{ contest.end_time|date(_("M j, Y, G:i")) }}
-            {% else %}
-                {{ contest.start_time|date(_("M j, Y, G:i")) }}
-            {% endif %}
-            <br>
-            {% if contest.time_limit %}
-                {% set time_limit=contest.time_limit|timedelta('localized-no-seconds') %}
-                {{ _('%(time_limit)s window', time_limit=time_limit) }}
-            {% else %}
-                {% set duration=contest.contest_window_length|timedelta('localized-no-seconds') %}
-                {{ _('%(duration)s long', duration=duration) }}
-            {% endif %}
+        {% if contest.time_limit %}
+            {{ contest.start_time|date(_("M j, Y, G:i")) }} -
+            {{ contest.end_time|date(_("M j, Y, G:i")) }}
         {% else %}
-            Từ {{ contest.start_time|date(_("M j, Y, G:i")) }}
-            <br>
-            <span style="color: #059669; font-weight: 600;">Không giới hạn thời gian</span>
+            {{ contest.start_time|date(_("M j, Y, G:i")) }}
+        {% endif %}
+        <br>
+        {% if contest.time_limit %}
+            {% set time_limit=contest.time_limit|timedelta('localized-no-seconds') %}
+            {{ _('%(time_limit)s window', time_limit=time_limit) }}
+        {% else %}
+            {% set duration=contest.contest_window_length|timedelta('localized-no-seconds') %}
+            {{ _('%(duration)s long', duration=duration) }}
         {% endif %}
     </div>
 {% endmacro %}

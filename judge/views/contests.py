@@ -53,7 +53,7 @@ from judge.utils.stats import get_bar_chart, get_pie_chart, get_stacked_bar_char
 from judge.utils.views import SingleObjectFormView, TitleMixin, \
     add_file_response, generic_message, paginate_query_context
 
-__all__ = ['ContestList', 'ProvincialContestList', 'ContestDetail', 'ContestRanking', 'ContestJoin', 'ContestLeave', 'ContestCalendar',
+__all__ = ['ContestList', 'ContestDetail', 'ContestRanking', 'ContestJoin', 'ContestLeave', 'ContestCalendar',
            'ContestClone', 'ContestStats', 'ContestMossView', 'ContestMossDelete',
            'ContestParticipationDisqualify',
            'ContestProblemMakePublic']
@@ -105,7 +105,7 @@ class ContestList(InfinitePaginationMixin, TitleMixin, ContestListMixin, ListVie
         return timezone.now()
 
     def _get_queryset(self):
-        return super().get_queryset().filter(is_province_contest=False, province='').prefetch_related('tags', 'organization', 'authors', 'curators', 'testers')
+        return super().get_queryset().prefetch_related('tags', 'organization', 'authors', 'curators', 'testers')
 
     def get_queryset(self):
         self.search_query = None
@@ -142,16 +142,8 @@ class ContestList(InfinitePaginationMixin, TitleMixin, ContestListMixin, ListVie
                     active.append(participation)
                     present.remove(participation.contest)
 
-        def _contest_sort_key(c):
-            end = c.end_time
-            return (end is None, end, c.key)
-
-        def _part_sort_key(p):
-            end = p.end_time
-            return (end is None, end, p.key)
-
-        active.sort(key=_part_sort_key)
-        present.sort(key=_contest_sort_key)
+        active.sort(key=attrgetter('end_time', 'key'))
+        present.sort(key=attrgetter('end_time', 'key'))
         future.sort(key=attrgetter('start_time'))
         context['active_participations'] = active
         context['current_contests'] = present
@@ -161,104 +153,6 @@ class ContestList(InfinitePaginationMixin, TitleMixin, ContestListMixin, ListVie
         context['first_page_href'] = '.'
         context['page_suffix'] = '#past-contests'
         context['search_query'] = self.search_query
-        context.update(paginate_query_context(self.request))
-        return context
-
-
-class ProvincialContestList(ContestList):
-    template_name = 'contest/province_list.html'
-    title = gettext_lazy('Kỳ thi các Tỉnh / Thành phố')
-
-    def _get_queryset(self):
-        qs = ContestListMixin.get_queryset(self).filter(
-            Q(is_province_contest=True) | ~Q(province='')
-        ).prefetch_related('tags', 'organization', 'authors', 'curators', 'testers')
-
-        # Province filter
-        selected_province = self.request.GET.get('province', '').strip().upper()
-        if selected_province:
-            qs = qs.filter(province=selected_province)
-
-        # Year filter
-        selected_year = self.request.GET.get('year', '').strip()
-        if selected_year and selected_year.isdigit():
-            qs = qs.filter(start_time__year=int(selected_year))
-
-        # Category filter (thpt, thcs, other)
-        selected_category = self.request.GET.get('category', '').strip().lower()
-        if selected_category == 'thpt':
-            qs = qs.filter(
-                Q(province_category='thpt') |
-                Q(tags__name__icontains='thpt') |
-                Q(name__icontains='THPT') |
-                Q(name__icontains='Cấp THPT') |
-                Q(name__icontains='Lớp 10') |
-                Q(name__icontains='Lớp 11') |
-                Q(name__icontains='Lớp 12')
-            ).distinct()
-        elif selected_category == 'thcs':
-            qs = qs.filter(
-                Q(province_category='thcs') |
-                Q(tags__name__icontains='thcs') |
-                Q(name__icontains='THCS') |
-                Q(name__icontains='Cấp THCS') |
-                Q(name__icontains='Lớp 6') |
-                Q(name__icontains='Lớp 7') |
-                Q(name__icontains='Lớp 8') |
-                Q(name__icontains='Lớp 9')
-            ).distinct()
-        elif selected_category == 'other':
-            thpt_thcs_q = (
-                Q(province_category__in=['thpt', 'thcs']) |
-                Q(tags__name__icontains='thpt') | Q(tags__name__icontains='thcs') |
-                Q(name__icontains='THPT') | Q(name__icontains='THCS') |
-                Q(name__icontains='Cấp THPT') | Q(name__icontains='Cấp THCS') |
-                Q(name__icontains='Lớp 6') | Q(name__icontains='Lớp 7') | Q(name__icontains='Lớp 8') |
-                Q(name__icontains='Lớp 9') | Q(name__icontains='Lớp 10') | Q(name__icontains='Lớp 11') | Q(name__icontains='Lớp 12')
-            )
-            qs = qs.exclude(thpt_thcs_q).distinct()
-
-        return qs
-
-    def get_queryset(self):
-        self.search_query = None
-        # Include all provincial contests regardless of active/past status, ordered by start_time descending
-        query_set = self._get_queryset().annotate(
-            problem_count=Count('problems', distinct=True)
-        ).order_by('-start_time', '-id')
-
-        if 'search' in self.request.GET:
-            self.search_query = search_query = ' '.join(self.request.GET.getlist('search')).strip()
-            if search_query:
-                query_set = query_set.filter(Q(key__icontains=search_query) | Q(name__icontains=search_query))
-        return query_set
-
-    def get_context_data(self, **kwargs):
-        # Call ListView.get_context_data directly to bypass ContestList time-partitioning logic
-        context = super(ContestList, self).get_context_data(**kwargs)
-        from judge.models.contest import PROVINCE_CHOICES, PROVINCE_DICT
-
-        selected_province = self.request.GET.get('province', '').strip().upper()
-        selected_year = self.request.GET.get('year', '').strip()
-        selected_category = self.request.GET.get('category', '').strip().lower()
-
-        # Compute available years from all provincial contests
-        base_prov_qs = ContestListMixin.get_queryset(self).filter(
-            Q(is_province_contest=True) | ~Q(province='')
-        ).filter(start_time__isnull=False)
-
-        years_list = sorted(list(set(
-            base_prov_qs.values_list('start_time__year', flat=True)
-        )), reverse=True)
-
-        context['provinces'] = PROVINCE_CHOICES
-        context['selected_province'] = selected_province
-        context['selected_province_name'] = PROVINCE_DICT.get(selected_province, '')
-        context['years'] = years_list
-        context['selected_year'] = selected_year
-        context['selected_category'] = selected_category
-        context['search_query'] = self.search_query
-        context['now'] = self._now
         context.update(paginate_query_context(self.request))
         return context
 
@@ -407,7 +301,7 @@ class ContestDetail(ContestMixin, TitleMixin, CommentedDetailView):
     def is_comment_locked(self):
         if self.object.use_clarifications:
             now = timezone.now()
-            if self.is_in_contest or (self.object.start_time <= now and (self.object.end_time is None or now <= self.object.end_time)):
+            if self.is_in_contest or (self.object.start_time <= now and now <= self.object.end_time):
                 return True
 
         return super(ContestDetail, self).is_comment_locked()
@@ -478,7 +372,7 @@ class ContestComments(ContestMixin, CommentedDetailView):
     def is_comment_locked(self):
         if self.object.use_clarifications:
             now = timezone.now()
-            if self.is_in_contest or (self.object.start_time <= now and (self.object.end_time is None or now <= self.object.end_time)):
+            if self.is_in_contest or (self.object.start_time <= now and now <= self.object.end_time):
                 return True
 
         return super(ContestComments, self).is_comment_locked()
@@ -777,10 +671,7 @@ class ContestCalendar(TitleMixin, ContestListMixin, TemplateView):
         starts, ends, oneday = (defaultdict(list) for i in range(3))
         for contest in contests:
             start_date = timezone.localtime(contest.start_time).date()
-            if contest.end_time:
-                end_date = timezone.localtime(contest.end_time - timedelta(seconds=1)).date()
-            else:
-                end_date = start_date
+            end_date = timezone.localtime(contest.end_time - timedelta(seconds=1)).date()
             if start_date == end_date:
                 oneday[start_date].append(contest)
             else:
@@ -850,8 +741,7 @@ class ContestICal(TitleMixin, ContestListMixin, BaseListView):
             event.add('summary', contest.name)
             event.add('location', self.request.build_absolute_uri(contest.get_absolute_url()))
             event.add('dtstart', contest.start_time.astimezone(timezone.utc))
-            if contest.end_time:
-                event.add('dtend', contest.end_time.astimezone(timezone.utc))
+            event.add('dtend', contest.end_time.astimezone(timezone.utc))
             event.add('dtstamp', now)
             cal.add_component(event)
         return cal.to_ical()
@@ -1384,7 +1274,7 @@ def contest_replay_data_path(contest):
 
 
 def build_contest_replay_data(contest):
-    duration = int((contest.end_time - contest.start_time).total_seconds()) if contest.end_time else 0
+    duration = int((contest.end_time - contest.start_time).total_seconds())
 
     problems = list(
         contest.contest_problems

@@ -44,14 +44,10 @@
 {% block body %}
     <div id="banner">
         <a href="https://www.timeanddate.com/worldclock/fixedtime.html?msg={{ contest.name|urlquote('') }}&amp;iso=
-                {{- (contest.start_time if (contest.start_time >= now or not contest.end_time) else contest.end_time)|utc|date('Y-m-d\TH:i:s') }}" class="date">
+                {{- (contest.start_time if contest.start_time >= now else contest.end_time)|utc|date('Y-m-d\TH:i:s') }}" class="date">
             {%- if is_in_contest and not request.participation.live -%}
                 {% if request.participation.spectate %}
-                    {% if contest.end_time %}
-                        {{- _('Spectating, contest ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) -}}
-                    {% else %}
-                        {{- _('Spectating open contest.') -}}
-                    {% endif %}
+                    {{- _('Spectating, contest ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) -}}
                 {% elif request.participation.end_time %}
                     {{- _('Participating virtually, %(countdown)s remaining.', countdown=as_countdown(request.participation.time_remaining)) -}}
                 {% else %}
@@ -60,51 +56,30 @@
             {%- else -%}
                 {% if contest.start_time > now %}
                     {{- _('Starting in %(countdown)s.', countdown=as_countdown(contest.time_before_start)) -}}
-                {% elif contest.end_time and contest.end_time < now %}
+                {% elif contest.end_time < now %}
                     {{- _('Contest is over.') -}}
                 {% else %}
                     {%- if has_joined -%}
                         {% if live_participation.ended %}
-                            {% if contest.end_time %}
-                                {{- _('Your time is up! Contest ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) -}}
-                            {% else %}
-                                {{- _('Your time is up!') -}}
-                            {% endif %}
+                            {{- _('Your time is up! Contest ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) -}}
                         {% else %}
-                            {% if live_participation.time_remaining %}
-                                {{- _('You have %(countdown)s remaining.', countdown=as_countdown(live_participation.time_remaining)) -}}
-                            {% else %}
-                                {{- _('Kỳ thi đang diễn ra (Tự do / Không giới hạn thời gian).') -}}
-                            {% endif %}
+                            {{- _('You have %(countdown)s remaining.', countdown=as_countdown(live_participation.time_remaining)) -}}
                         {% endif %}
                     {%- else -%}
-                        {% if contest.end_time %}
-                            {{ _('Contest ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) }}
-                        {% else %}
-                            {{ _('Kỳ thi mở tự do, không có thời gian kết thúc.') }}
-                        {% endif %}
+                        {{ _('Contest ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) }}
                     {%- endif -%}
                 {% endif %}
             {%- endif -%}
         </a>
         <div id="time">
             {% with start_time=contest.start_time|date(_("F j, Y, G:i T")) %}
-                {% if contest.end_time %}
-                    {% if contest.time_limit %}
-                        {% set end_time=contest.end_time|date(_("F j, Y, G:i T")) %}
-                        {% set time_limit=contest.time_limit|timedelta('localized-no-seconds') %}
-                        {{ _('%(time_limit)s window between %(start_time)s and %(end_time)s', start_time=bold(start_time), end_time=bold(end_time), time_limit=bold(time_limit)) }}
-                    {% else %}
-                        {% set length=contest.contest_window_length|timedelta('localized-no-seconds') %}
-                        {{ _('%(length)s long starting on %(start_time)s', start_time=bold(start_time), length=bold(length)) }}
-                    {% endif %}
+                {% if contest.time_limit %}
+                    {% set end_time=contest.end_time|date(_("F j, Y, G:i T")) %}
+                    {% set time_limit=contest.time_limit|timedelta('localized-no-seconds') %}
+                    {{ _('%(time_limit)s window between %(start_time)s and %(end_time)s', start_time=bold(start_time), end_time=bold(end_time), time_limit=bold(time_limit)) }}
                 {% else %}
-                    {% if contest.time_limit %}
-                        {% set time_limit=contest.time_limit|timedelta('localized-no-seconds') %}
-                        Thời gian làm bài: {{ bold(time_limit) }} (Bắt đầu từ {{ bold(start_time) }})
-                    {% else %}
-                        Bắt đầu từ {{ bold(start_time) }} - <span style="color: #059669; font-weight: 600;">Kỳ thi mở tự do (Không giới hạn thời gian)</span>
-                    {% endif %}
+                    {% set length=contest.contest_window_length|timedelta('localized-no-seconds') %}
+                    {{ _('%(length)s long starting on %(start_time)s', start_time=bold(start_time), length=bold(length)) }}
                 {% endif %}
             {% endwith %}
         </div>
