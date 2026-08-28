@@ -17,6 +17,7 @@ __all__ = [
     'Chapter',
     'Lesson',
     'LessonProblem',
+    'CourseContest',
     'Exam',
     'ExamProblem',
     'LessonProgress',
@@ -190,6 +191,8 @@ class Course(models.Model):
         enrollment = self.enrollments.filter(user_id=profile.id).first()
         if not enrollment:
             return False
+        if enrollment.status in (Enrollment.STATUS_DROPPED, Enrollment.STATUS_EXPIRED):
+            return False
         return not enrollment.is_expired
 
     def get_enrollment(self, user):
@@ -249,7 +252,11 @@ class Course(models.Model):
 
     @cached_property
     def total_exams_count(self):
-        return Exam.objects.filter(course=self, is_published=True).count()
+        return self.course_contests.count() + Exam.objects.filter(course=self, is_published=True).count()
+
+    @cached_property
+    def total_contests_count(self):
+        return self.course_contests.count()
 
     @cached_property
     def student_count(self):
@@ -434,6 +441,90 @@ class LessonProblem(models.Model):
     @property
     def display_points(self):
         return self.custom_score if self.custom_score is not None else self.problem.points
+
+
+class CourseContest(models.Model):
+    SCOPE_CHAPTER = 'CHAPTER'
+    SCOPE_COURSE = 'COURSE'
+    SCOPE_CHOICES = (
+        (SCOPE_CHAPTER, _('Contest cấp Chương')),
+        (SCOPE_COURSE, _('Contest cấp Khóa học (Giữa kỳ / Cuối kỳ)')),
+    )
+
+    course = models.ForeignKey(
+        Course,
+        verbose_name=_('Khóa học'),
+        related_name='course_contests',
+        on_delete=CASCADE,
+    )
+    chapter = models.ForeignKey(
+        Chapter,
+        verbose_name=_('Chương'),
+        related_name='chapter_contests',
+        null=True,
+        blank=True,
+        on_delete=CASCADE,
+    )
+    contest = models.ForeignKey(
+        'Contest',
+        verbose_name=_('Contest liên kết'),
+        related_name='course_mappings',
+        on_delete=CASCADE,
+    )
+    scope_type = models.CharField(
+        max_length=16,
+        choices=SCOPE_CHOICES,
+        default=SCOPE_CHAPTER,
+        verbose_name=_('Phân cấp Contest'),
+        db_index=True,
+    )
+    weight = models.FloatField(
+        default=1.0,
+        verbose_name=_('Trọng số điểm (%)'),
+        help_text=_('Trọng số dùng để tính tổng điểm trung bình khóa học.'),
+    )
+    passing_grade = models.FloatField(
+        default=50.0,
+        verbose_name=_('Điểm đạt tối thiểu (%)'),
+        help_text=_('Tỷ lệ % điểm Contest cần đạt để coi là Phủ điểm/Pass.'),
+    )
+    is_required = models.BooleanField(
+        default=True,
+        verbose_name=_('Bắt buộc hoàn thành'),
+        help_text=_('Học viên phải tham gia/đạt chuẩn mới được tính hoàn thành Khóa học.'),
+    )
+    order_index = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_('Thứ tự hiển thị'),
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('Contest trong Khóa học')
+        verbose_name_plural = _('Các Contest trong Khóa học')
+        ordering = ('order_index', 'id')
+        unique_together = ('course', 'contest')
+
+    def __str__(self):
+        return f'{self.course.title} - {self.contest.name} ({self.get_scope_type_display()})'
+
+    def is_passed_by(self, user):
+        if not user.is_authenticated:
+            return False
+        from judge.models.contest import ContestParticipation
+        profile = getattr(user, 'profile', None)
+        if not profile:
+            return False
+        part = ContestParticipation.objects.filter(contest=self.contest, user=profile).first()
+        if not part:
+            return False
+        total_possible = self.contest.problems.aggregate(total=models.Sum('points'))['total'] or 0.0
+        score = getattr(part, 'score', 0.0) or (part.cumtime if part.cumtime else 0.0)
+        if total_possible > 0:
+            pct = (score / total_possible) * 100.0
+            return pct >= self.passing_grade or score > 0
+        return True
 
 
 class Exam(models.Model):
@@ -715,41 +806,10 @@ class Enrollment(models.Model):
         return f'{self.user.user.username} -> {self.course.title} ({self.progress_percentage:.1f}%)'
 
     def recalculate_progress(self):
-        """Tính toán lại % tiến độ và cập nhật trạng thái nếu đạt 100%"""
-        total_lessons = Lesson.objects.filter(chapter__course=self.course, is_published=True).count()
-        total_exams = Exam.objects.filter(course=self.course, is_published=True).count()
-        total_items = total_lessons + total_exams
-
-        if total_items == 0:
-            self.progress_percentage = 100.0
-            if self.status == self.STATUS_ACTIVE:
-                self.status = self.STATUS_READY_FOR_REVIEW
-            self.save(update_fields=['progress_percentage', 'status'])
-            return self.progress_percentage
-
-        completed_lessons = LessonProgress.objects.filter(
-            user=self.user,
-            lesson__chapter__course=self.course,
-            lesson__is_published=True,
-            is_completed=True,
-        ).count()
-
-        passed_exams = 0
-        for exam in Exam.objects.filter(course=self.course, is_published=True):
-            if exam.is_passed_by(self.user.user):
-                passed_exams += 1
-
-        completed_items = completed_lessons + passed_exams
-        self.progress_percentage = min(100.0, round((completed_items / total_items) * 100.0, 1))
-
-        if self.progress_percentage >= 100.0:
-            if self.status == self.STATUS_ACTIVE:
-                self.status = self.STATUS_READY_FOR_REVIEW
-        elif self.status == self.STATUS_READY_FOR_REVIEW:
-            self.status = self.STATUS_ACTIVE
-
-        self.save(update_fields=['progress_percentage', 'status'])
-        return self.progress_percentage
+        """Tiến độ khóa học đã bỏ qua"""
+        self.progress_percentage = 0.0
+        self.save(update_fields=['progress_percentage'])
+        return 0.0
 
 
 class Certificate(models.Model):
@@ -806,3 +866,17 @@ class Certificate(models.Model):
         if not self.verification_url:
             self.verification_url = f'/certificate/{self.cert_code}/'
         super().save(*args, **kwargs)
+
+
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+
+@receiver(pre_delete, sender=Course)
+def cleanup_course_contests_and_data(sender, instance, **kwargs):
+    """Tự động xóa tất cả các Contest riêng của Khóa học (is_course_only) khi xóa Khóa học"""
+    for cc in instance.course_contests.select_related('contest').all():
+        contest = cc.contest
+        if contest and contest.is_course_only:
+            if contest.course_mappings.exclude(course=instance).count() == 0:
+                contest.delete()
+

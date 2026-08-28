@@ -15,6 +15,7 @@ size_pack = struct.Struct('!I')
 
 
 def _post_update_submission(submission, done=False):
+    submission.refresh_from_db(fields=['status'])
     if submission.problem.is_public:
         event.post('submissions', {'type': 'done-submission' if done else 'update-submission',
                                    'id': submission.id,
@@ -104,11 +105,22 @@ def judge_submission(submission, rejudge=False, batch_rejudge=False, judge_id=No
     except BaseException:
         logger.exception('Failed to send request to judge')
         Submission.objects.filter(id=submission.id).update(status='IE', result='IE')
+        submission.refresh_from_db()
+        from judge.caching import finished_submission
+        finished_submission(submission)
+        _post_update_submission(submission, done=True)
         success = False
     else:
         if response['name'] != 'submission-received' or response['submission-id'] != submission.id:
             Submission.objects.filter(id=submission.id).update(status='IE', result='IE')
-        _post_update_submission(submission)
+            submission.refresh_from_db()
+            from judge.caching import finished_submission
+            finished_submission(submission)
+            _post_update_submission(submission, done=True)
+        else:
+            from judge.caching import finished_submission
+            finished_submission(submission)
+            _post_update_submission(submission)
         success = True
     return success
 
@@ -122,6 +134,7 @@ def update_disable_judge(judge):
 
 
 def abort_submission(submission):
+    from judge.caching import finished_submission
     from .models import Submission
     # We only want to try to abort a submission if it's still grading, otherwise this can lead to fully graded
     # submissions marked as aborted.
@@ -132,5 +145,7 @@ def abort_submission(submission):
     # and returns a bad-request, the submission is not falsely shown as "Aborted" when it will still be judged.
     if not response.get('judge-aborted', True):
         Submission.objects.filter(id=submission.id).update(status='AB', result='AB', points=0)
+        submission.refresh_from_db()
+        finished_submission(submission)
         event.post('sub_%s' % Submission.get_id_secret(submission.id), {'type': 'aborted'})
         _post_update_submission(submission, done=True)

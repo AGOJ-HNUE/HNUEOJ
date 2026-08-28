@@ -116,7 +116,7 @@ nav {
             button {
                 text-decoration: none;
                 vertical-align: middle;
-                color: var(--text-main, #ffffff);
+                color: var(--text-main, #ffffff) !important;
                 padding: 8px 12px;
                 margin: 8px 2px;
                 border-radius: $radius-md;

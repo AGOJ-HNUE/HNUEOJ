@@ -18,9 +18,10 @@ from django.views.generic import DetailView, ListView, TemplateView
 
 from judge import event_poster as event
 from judge.judgeapi import judge_submission
-from judge.models import Certificate, Chapter, Course, Enrollment, Exam, ExamProblem, \
+from judge.models import Certificate, Chapter, Contest, ContestParticipation, Course, CourseContest, Enrollment, Exam, ExamProblem, \
     Language, Lesson, LessonProblem, LessonProgress, Organization, Problem, Profile, Submission, SubmissionSource
 from judge.utils.views import TitleMixin
+from judge.views.contests import CreateContest, EditContest
 from judge.views.problem import ProblemSubmitForm, ProblemSubmitMixin
 
 
@@ -105,8 +106,9 @@ class CourseDetailView(TitleMixin, DetailView):
         course = self.object
         user = self.request.user
 
-        chapters = course.chapters.prefetch_related('lessons', 'exams').all()
+        chapters = course.chapters.prefetch_related('lessons', 'chapter_contests__contest', 'exams').all()
         context['chapters'] = chapters
+        context['course_contests'] = course.course_contests.filter(scope_type=CourseContest.SCOPE_COURSE).select_related('contest')
         context['course_exams'] = course.exams.filter(target_type=Exam.TARGET_COURSE, is_published=True)
 
         first_lesson = None
@@ -345,152 +347,6 @@ class ToggleLessonProgressAjax(LoginRequiredMixin, View):
         })
 
 
-class ExamDetailView(LoginRequiredMixin, TitleMixin, DetailView):
-    model = Exam
-    pk_url_kwarg = 'exam_id'
-    template_name = 'course/exam_detail.html'
-    context_object_name = 'exam'
-
-    def get_title(self):
-        return f'Khảo thí: {self.object.title} | {self.course.title} - LMS HNUEOJ'
-
-    def dispatch(self, request, slug, exam_id, *args, **kwargs):
-        self.course = get_object_or_404(Course, key=slug)
-        is_teacher = self.course.is_editable_by(request.user)
-        self.enrollment = self.course.get_enrollment(request.user)
-
-        # Non-teacher users MUST be enrolled to access exams
-        if not is_teacher and not self.enrollment:
-            from django.contrib import messages
-            messages.warning(request, _('Bạn cần ghi danh học phần trước khi tham gia kỳ khảo thí.'))
-            return redirect('course_detail', slug=self.course.key)
-
-        # Check course lock
-        if not is_teacher and self.course.is_locked:
-            from django.contrib import messages
-            messages.warning(request, _('Học phần này hiện đang tạm khóa đối với học viên. Vui lòng liên hệ Giảng viên phụ trách.'))
-            return redirect('course_detail', slug=self.course.key)
-
-        exam = get_object_or_404(Exam, id=exam_id, course=self.course)
-        if not is_teacher and not exam.can_access(request.user):
-            from django.contrib import messages
-            messages.warning(request, _('Kỳ khảo thí này hiện đang tạm khóa hoặc chưa được xuất bản bởi Giảng viên.'))
-            return redirect('course_detail', slug=self.course.key)
-
-        return super().dispatch(request, slug, exam_id=exam_id, *args, **kwargs)
-
-    def get_object(self, queryset=None):
-        exam = super().get_object(queryset)
-        if exam.course_id != self.course.id:
-            raise Http404()
-        return exam
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        exam = self.object
-        user = self.request.user
-
-        context['course'] = self.course
-        exam_problems = exam.exam_problems.select_related('problem').order_by('order_index', 'id')
-        context['exam_problems'] = exam_problems
-
-        # User's score on each problem
-        def clean_val(v):
-            if v is None:
-                return 0
-            r = round(float(v), 2)
-            return int(r) if r.is_integer() else r
-
-        problem_scores = {}
-        for ep in exam_problems:
-            best_sub = Submission.objects.filter(
-                user_id=user.profile.id,
-                problem_id=ep.problem_id,
-                exam=exam,
-                points__isnull=False,
-            ).order_by('-points').first()
-            pts = 0
-            if best_sub and best_sub.points is not None:
-                scaled = best_sub.points
-                if ep.custom_score is not None and ep.problem.points:
-                    scale = ep.custom_score / ep.problem.points
-                    scaled = min(ep.custom_score, best_sub.points * scale)
-                pts = clean_val(scaled)
-
-            problem_scores[ep.id] = {
-                'best_submission': best_sub,
-                'points': pts,
-                'result': best_sub.result if best_sub else None,
-            }
-
-        context['problem_scores'] = problem_scores
-        user_score, total_score = exam.get_user_score(user)
-        context['user_score'] = user_score
-        context['total_score'] = total_score
-        context['is_passed'] = exam.is_passed_by(user)
-
-        context['available_languages'] = Language.objects.all()
-        # Recent submissions in exam
-        context['recent_submissions'] = Submission.objects.filter(
-            exam=exam,
-            user=user.profile,
-        ).select_related('problem', 'language').order_by('-date')[:10]
-
-        return context
-
-
-class ExamSubmitView(LoginRequiredMixin, View):
-    def get(self, request, slug, exam_id):
-        return redirect('course_exam', slug=slug, exam_id=exam_id)
-
-    def post(self, request, slug, exam_id):
-        course = get_object_or_404(Course, key=slug)
-        exam = get_object_or_404(Exam, id=exam_id, course=course)
-
-        if not exam.can_access(request.user):
-            raise PermissionDenied()
-
-        problem_id = request.POST.get('problem_id')
-        problem_code = request.POST.get('problem_code')
-
-        if problem_id:
-            exam_problem = get_object_or_404(ExamProblem, exam=exam, problem_id=problem_id)
-        elif problem_code:
-            exam_problem = get_object_or_404(ExamProblem, exam=exam, problem__code=problem_code)
-        else:
-            return JsonResponse({'error': _('Chưa chọn bài tập.')}, status=400)
-
-        problem = exam_problem.problem
-
-        language_key = request.POST.get('language')
-        language = get_object_or_404(Language, key=language_key)
-        source_code = request.POST.get('source', '').strip()
-
-        if not source_code:
-            return JsonResponse({'error': _('Mã nguồn không được để trống.')}, status=400)
-
-        with transaction.atomic():
-            submission = Submission.objects.create(
-                user=request.profile,
-                problem=problem,
-                language=language,
-                exam=exam,
-                status='QU',
-            )
-            SubmissionSource.objects.create(
-                submission=submission,
-                source=source_code,
-            )
-
-        judge_submission(submission)
-
-        return JsonResponse({
-            'success': True,
-            'submission_id': submission.id,
-            'status_url': reverse('submission_status', args=[submission.id]),
-        })
-
-
 class LessonSubmitAjax(LoginRequiredMixin, View):
     def post(self, request, slug, lesson_id):
         course = get_object_or_404(Course, key=slug)
@@ -551,8 +407,10 @@ class CourseManageView(LoginRequiredMixin, TitleMixin, TemplateView):
         context['course'] = self.course
         context['chapters'] = self.course.chapters.prefetch_related(
             'lessons__lesson_problems__problem',
+            'chapter_contests__contest',
             'exams__exam_problems__problem'
         ).all()
+        context['course_contests'] = self.course.course_contests.filter(scope_type=CourseContest.SCOPE_COURSE).select_related('contest')
         context['course_exams'] = self.course.exams.filter(target_type=Exam.TARGET_COURSE).prefetch_related('exam_problems__problem')
         context['available_languages'] = Language.objects.all()
         return context
@@ -762,123 +620,6 @@ class SaveLessonAjax(LoginRequiredMixin, View):
         })
 
 
-class SaveExamAjax(LoginRequiredMixin, View):
-    def post(self, request, slug):
-        course = get_object_or_404(Course, key=slug)
-        if not course.is_editable_by(request.user):
-            raise PermissionDenied()
-
-        data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
-        exam_id = data.get('id')
-        chapter_id = data.get('chapter_id')
-        title = data.get('title', '').strip()
-        description = data.get('description', '')
-        target_type = data.get('target_type', Exam.TARGET_CHAPTER)
-        exam_type = data.get('exam_type', Exam.TYPE_PRACTICE)
-        pass_percentage = float(data.get('pass_percentage', 60.0))
-        order_index = int(data.get('order_index', 0))
-        is_published = data.get('is_published', True)
-        is_locked = bool(data.get('is_locked', False))
-
-        if not title:
-            return JsonResponse({'error': 'Tên kỳ thi không được để trống.'}, status=400)
-
-        chapter = None
-        if target_type == Exam.TARGET_CHAPTER and chapter_id:
-            chapter = get_object_or_404(Chapter, id=chapter_id, course=course)
-
-        if exam_id:
-            exam = get_object_or_404(Exam, id=exam_id, course=course)
-            exam.title = title
-            exam.description = description
-            exam.target_type = target_type
-            exam.chapter = chapter
-            exam.exam_type = exam_type
-            exam.pass_percentage = pass_percentage
-            exam.order_index = order_index
-            exam.is_published = is_published
-            exam.is_locked = is_locked
-            exam.save()
-        else:
-            exam = Exam.objects.create(
-                course=course,
-                chapter=chapter,
-                title=title,
-                description=description,
-                target_type=target_type,
-                exam_type=exam_type,
-                pass_percentage=pass_percentage,
-                order_index=order_index,
-                is_published=is_published,
-                is_locked=is_locked,
-            )
-
-        return JsonResponse({
-            'success': True,
-            'exam': {
-                'id': exam.id,
-                'title': exam.title,
-                'exam_type': exam.exam_type,
-                'is_locked': exam.is_locked,
-            },
-        })
-
-        return JsonResponse({
-            'success': True,
-            'exam': {
-                'id': exam.id,
-                'title': exam.title,
-                'exam_type': exam.exam_type,
-            },
-        })
-
-
-class SaveExamProblemAjax(LoginRequiredMixin, View):
-    def post(self, request, slug):
-        course = get_object_or_404(Course, key=slug)
-        if not course.is_editable_by(request.user):
-            raise PermissionDenied()
-
-        data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
-        exam_id = data.get('exam_id')
-        problem_code = data.get('problem_code', '').strip()
-        alias = data.get('alias', '').strip()
-        custom_score = data.get('custom_score')
-        custom_score = float(custom_score) if custom_score not in (None, '') else None
-        order_index = int(data.get('order_index', 0))
-        ep_id = data.get('id')
-        exam = get_object_or_404(Exam, id=exam_id, course=course)
-        problem = get_object_or_404(Problem, code=problem_code)
-
-        if ep_id:
-            ep = get_object_or_404(ExamProblem, id=ep_id, exam=exam)
-            ep.problem = problem
-            ep.alias = alias
-            ep.custom_score = custom_score
-            ep.order_index = order_index
-            ep.save()
-        else:
-            ep, created = ExamProblem.objects.update_or_create(
-                exam=exam,
-                problem=problem,
-                defaults={
-                    'alias': alias,
-                    'custom_score': custom_score,
-                    'order_index': order_index,
-                },
-            )
-
-        return JsonResponse({
-            'success': True,
-            'problem': {
-                'id': ep.id,
-                'code': problem.code,
-                'name': ep.display_title,
-                'points': ep.display_points,
-            },
-        })
-
-
 class SaveLessonProblemAjax(LoginRequiredMixin, View):
     def post(self, request, slug):
         course = get_object_or_404(Course, key=slug)
@@ -978,50 +719,6 @@ class BatchSaveLessonProblemsAjax(LoginRequiredMixin, View):
         return JsonResponse({'success': True})
 
 
-class BatchSaveExamProblemsAjax(LoginRequiredMixin, View):
-    def post(self, request, slug, exam_id):
-        course = get_object_or_404(Course, key=slug)
-        if not course.is_editable_by(request.user):
-            raise PermissionDenied()
-
-        exam = get_object_or_404(Exam, id=exam_id, course=course)
-        data = json.loads(request.body.decode('utf-8')) if request.body else {}
-        problems_data = data.get('problems', [])
-
-        existing_eps = {ep.problem.code: ep for ep in exam.exam_problems.select_related('problem')}
-        keep_codes = set()
-
-        for idx, item in enumerate(problems_data):
-            code = (item.get('problem_code') or '').strip()
-            if not code:
-                continue
-            order_idx = int(item.get('order', idx + 1))
-            problem = Problem.objects.filter(code=code).first()
-            if not problem:
-                return JsonResponse({'error': _('Không tìm thấy bài tập với mã "%s"') % code}, status=400)
-
-            if code in existing_eps:
-                ep = existing_eps[code]
-                ep.order_index = order_idx
-                ep.alias = ''
-                ep.custom_score = None
-                ep.save()
-            else:
-                ExamProblem.objects.create(
-                    exam=exam,
-                    problem=problem,
-                    alias='',
-                    custom_score=None,
-                    order_index=order_idx,
-                )
-            keep_codes.add(code)
-
-        # Remove deleted problems
-        ExamProblem.objects.filter(exam=exam).exclude(problem__code__in=keep_codes).delete()
-
-        return JsonResponse({'success': True})
-
-
 class CourseProblemSearchAjax(LoginRequiredMixin, View):
     def get(self, request, slug):
         course = get_object_or_404(Course, key=slug)
@@ -1061,6 +758,13 @@ class DeleteCourseItemAjax(LoginRequiredMixin, View):
             Lesson.objects.filter(id=item_id, chapter__course=course).delete()
         elif item_type == 'lesson_problem':
             LessonProblem.objects.filter(id=item_id, lesson__chapter__course=course).delete()
+        elif item_type == 'course_contest':
+            cc = CourseContest.objects.filter(id=item_id, course=course).first()
+            if cc:
+                contest = cc.contest
+                cc.delete()
+                if contest and contest.is_course_only and not contest.course_mappings.exists():
+                    contest.delete()
         elif item_type == 'exam':
             Exam.objects.filter(id=item_id, course=course).delete()
         elif item_type == 'exam_problem':
@@ -1092,13 +796,7 @@ class CourseMonitorView(LoginRequiredMixin, TitleMixin, TemplateView):
         context['ready_for_review_count'] = enrollments.filter(status=Enrollment.STATUS_READY_FOR_REVIEW).count()
         context['completed_count'] = enrollments.filter(status=Enrollment.STATUS_COMPLETED).count()
 
-        # Recent 20 submissions
-        context['recent_submissions'] = Submission.objects.filter(
-            Q(exam__course=course) | Q(lesson__chapter__course=course)
-        ).select_related('user__user', 'problem', 'language', 'exam', 'lesson').order_by('-date')[:20]
-
         context['enrollments'] = enrollments.order_by('-last_accessed_at')
-        context['monitor_channel'] = f'course_monitor_{course.id}'
         return context
 
 
@@ -1210,11 +908,6 @@ class IssueCertificateAjax(LoginRequiredMixin, View):
 
         enrollment = get_object_or_404(Enrollment, id=enrollment_id, course=course)
 
-        # Validate progress is 100%
-        enrollment.recalculate_progress()
-        if enrollment.progress_percentage < 100.0:
-            return JsonResponse({'error': _('Học viên chưa hoàn thành 100% khóa học.')}, status=400)
-
         data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
         grade = data.get('grade', 'Xuất sắc')
 
@@ -1240,6 +933,22 @@ class IssueCertificateAjax(LoginRequiredMixin, View):
             'cert_code': cert.cert_code,
             'verification_url': cert.verification_url,
         })
+
+
+class RevokeCertificateAjax(LoginRequiredMixin, View):
+    def post(self, request, slug, enrollment_id):
+        course = get_object_or_404(Course, key=slug)
+        if not course.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        enrollment = get_object_or_404(Enrollment, id=enrollment_id, course=course)
+        Certificate.objects.filter(user=enrollment.user, course=course).delete()
+
+        if enrollment.status == Enrollment.STATUS_COMPLETED:
+            enrollment.status = Enrollment.STATUS_ACTIVE
+            enrollment.save(update_fields=['status'])
+
+        return JsonResponse({'success': True})
 
 
 class CertificateDetailView(TitleMixin, DetailView):
@@ -1595,249 +1304,6 @@ def build_exam_ranking_data(course, exam, request):
     }
 
 
-def build_chapter_ranking_data(course, chapter, request):
-    _user_url_tpl = reverse('user_page', args=['__USERNAME__'])
-    _org_url_tpl = reverse('organization_home', args=['__SLUG__'])
-
-    lesson_problems = list(
-        LessonProblem.objects.filter(
-            lesson__chapter=chapter,
-            lesson__is_published=True,
-        ).select_related('lesson', 'problem').order_by('lesson__order_index', 'order_index', 'id')
-    )
-
-    exam_problems = list(
-        ExamProblem.objects.filter(
-            exam__chapter=chapter,
-            exam__is_published=True,
-        ).select_related('exam', 'problem').order_by('exam__order_index', 'order_index', 'id')
-    )
-
-    problems_data = []
-    for lp in lesson_problems:
-        prob_pts = lp.display_points
-        r_pts = round(float(prob_pts), 2)
-        clean_pts = int(r_pts) if r_pts.is_integer() else r_pts
-        problems_data.append({
-            'id': f'lp_{lp.id}',
-            'code': lp.problem.code,
-            'label': f'L{lp.lesson.order_index}.{lp.order_index}',
-            'name': f'[{lp.lesson.title}] {lp.display_title}',
-            'points': clean_pts,
-            'url': reverse('problem_detail', args=[lp.problem.code]),
-        })
-
-    for ep in exam_problems:
-        prob_pts = ep.display_points
-        r_pts = round(float(prob_pts), 2)
-        clean_pts = int(r_pts) if r_pts.is_integer() else r_pts
-        problems_data.append({
-            'id': f'ep_{ep.id}',
-            'code': ep.problem.code,
-            'label': f'E{ep.exam.order_index}.{ep.order_index}',
-            'name': f'[{ep.exam.title}] {ep.display_title}',
-            'points': clean_pts,
-            'url': reverse('problem_detail', args=[ep.problem.code]),
-        })
-
-    contest_data = {
-        'key': f'chapter_{chapter.id}',
-        'name': f'{chapter.title} - {course.title}',
-        'format': 'default',
-        'format_config': {},
-        'can_edit': course.is_editable_by(request.user),
-        'points_precision': 2,
-        'ended': False,
-        'url_templates': {
-            'all_submissions': reverse('course_detail', args=[course.key]),
-            'problem_submissions': reverse('course_detail', args=[course.key]),
-        },
-        'rank_header': _('Hạng'),
-    }
-
-    enrollments = Enrollment.objects.filter(course=course).select_related('user__user').prefetch_related('user__organizations')
-    profile_map = {e.user_id: e.user for e in enrollments}
-
-    lp_problem_ids = [lp.problem_id for lp in lesson_problems]
-    ep_exam_ids = [ep.exam_id for ep in exam_problems]
-
-    sub_user_ids = set()
-    if lp_problem_ids:
-        sub_user_ids.update(Submission.objects.filter(problem_id__in=lp_problem_ids, lesson__chapter=chapter).values_list('user_id', flat=True))
-    if ep_exam_ids:
-        sub_user_ids.update(Submission.objects.filter(exam_id__in=ep_exam_ids).values_list('user_id', flat=True))
-
-    missing_uids = sub_user_ids - set(profile_map.keys())
-    if missing_uids:
-        extra_profiles = Profile.objects.filter(id__in=missing_uids).select_related('user').prefetch_related('organizations')
-        for p in extra_profiles:
-            profile_map[p.id] = p
-
-    lp_subs_map = {}
-    if lesson_problems:
-        for lp in lesson_problems:
-            subs = Submission.objects.filter(
-                problem=lp.problem,
-                lesson__chapter=chapter,
-            ).order_by('date')
-            for sub in subs:
-                key = (sub.user_id, f'lp_{lp.id}')
-                if key not in lp_subs_map:
-                    lp_subs_map[key] = {'tries': 0, 'best_sub': None}
-                lp_subs_map[key]['tries'] += 1
-                if sub.points is not None:
-                    cur_best = lp_subs_map[key]['best_sub']
-                    if cur_best is None or sub.points > cur_best.points:
-                        lp_subs_map[key]['best_sub'] = sub
-
-    ep_subs_map = {}
-    if exam_problems:
-        for ep in exam_problems:
-            subs = Submission.objects.filter(
-                problem=ep.problem,
-                exam=ep.exam,
-            ).order_by('date')
-            for sub in subs:
-                key = (sub.user_id, f'ep_{ep.id}')
-                if key not in ep_subs_map:
-                    ep_subs_map[key] = {'tries': 0, 'best_sub': None}
-                ep_subs_map[key]['tries'] += 1
-                if sub.points is not None:
-                    cur_best = ep_subs_map[key]['best_sub']
-                    if cur_best is None or sub.points > cur_best.points:
-                        ep_subs_map[key]['best_sub'] = sub
-
-    start_ref = course.created_at
-
-    participations_data = []
-    for uid, profile in profile_map.items():
-        user = profile.user
-        org = profile.organization
-
-        format_data = {}
-        total_score = 0.0
-        total_cumtime = 0
-        ac_count = 0
-
-        for lp in lesson_problems:
-            p_key = f'lp_{lp.id}'
-            p_data = lp_subs_map.get((uid, p_key))
-            if not p_data or p_data['tries'] == 0:
-                continue
-
-            tries = p_data['tries']
-            best_sub = p_data['best_sub']
-
-            if best_sub and best_sub.points is not None:
-                scaled_points = best_sub.points
-                if lp.custom_score is not None and lp.problem.points:
-                    scale = lp.custom_score / lp.problem.points
-                    scaled_points = min(lp.custom_score, best_sub.points * scale)
-
-                r_p = round(float(scaled_points), 2)
-                clean_pts = int(r_p) if r_p.is_integer() else r_p
-
-                time_sec = max(0, int((best_sub.date - start_ref).total_seconds()))
-
-                format_data[p_key] = {
-                    'points': clean_pts,
-                    'time': time_sec,
-                    'tries': tries,
-                }
-                total_score += clean_pts
-                total_cumtime += time_sec
-                if best_sub.result == 'AC' or clean_pts >= (lp.display_points or 100):
-                    ac_count += 1
-            else:
-                format_data[p_key] = {
-                    'points': 0,
-                    'time': 0,
-                    'tries': tries,
-                }
-
-        for ep in exam_problems:
-            p_key = f'ep_{ep.id}'
-            p_data = ep_subs_map.get((uid, p_key))
-            if not p_data or p_data['tries'] == 0:
-                continue
-
-            tries = p_data['tries']
-            best_sub = p_data['best_sub']
-
-            if best_sub and best_sub.points is not None:
-                scaled_points = best_sub.points
-                if ep.custom_score is not None and ep.problem.points:
-                    scale = ep.custom_score / ep.problem.points
-                    scaled_points = min(ep.custom_score, best_sub.points * scale)
-
-                r_p = round(float(scaled_points), 2)
-                clean_pts = int(r_p) if r_p.is_integer() else r_p
-
-                time_sec = max(0, int((best_sub.date - start_ref).total_seconds()))
-
-                format_data[p_key] = {
-                    'points': clean_pts,
-                    'time': time_sec,
-                    'tries': tries,
-                }
-                total_score += clean_pts
-                total_cumtime += time_sec
-                if best_sub.result == 'AC' or clean_pts >= (ep.display_points or 100):
-                    ac_count += 1
-            else:
-                format_data[p_key] = {
-                    'points': 0,
-                    'time': 0,
-                    'tries': tries,
-                }
-
-        r_tot = round(float(total_score), 2)
-        clean_tot = int(r_tot) if r_tot.is_integer() else r_tot
-
-        user_dict = {
-            'username': user.username,
-            'display_name': getattr(profile, 'display_name', '') or user.get_full_name() or user.username,
-            'name': user.get_full_name() or user.username,
-            'css_class': Profile.get_user_css_class(profile.display_rank, profile.rating),
-            'url': _user_url_tpl.replace('__USERNAME__', user.username),
-            'organization': {
-                'short_name': org.short_name or org.name,
-                'url': _org_url_tpl.replace('__SLUG__', org.slug),
-            } if org else None,
-        }
-
-        participations_data.append({
-            'id': profile.id,
-            'score': clean_tot,
-            'cumtime': total_cumtime,
-            'tiebreaker': 0,
-            'is_disqualified': False,
-            'virtual': 0,
-            'user': user_dict,
-            'format_data': format_data,
-            'ac_count': ac_count,
-        })
-
-    participations_data.sort(key=lambda x: (-x['score'], -x['ac_count'], x['cumtime'], x['user']['username']))
-
-    rank = 0
-    delta = 1
-    last_key = None
-    for p in participations_data:
-        key = (p['score'], p['cumtime'])
-        if key != last_key:
-            rank += delta
-            delta = 0
-        delta += 1
-        p['rank'] = rank
-        last_key = key
-        del p['ac_count']
-
-    return {
-        'contest': contest_data,
-        'problems': problems_data,
-        'participations': participations_data,
-    }
 
 
 class CourseExamRankingView(LoginRequiredMixin, TitleMixin, TemplateView):
@@ -1883,45 +1349,302 @@ class CourseExamRankingDataAjax(LoginRequiredMixin, View):
         return JsonResponse(data)
 
 
-class CourseChapterRankingView(LoginRequiredMixin, TitleMixin, TemplateView):
-    template_name = 'course/chapter_ranking.html'
+class CourseContestDetailView(LoginRequiredMixin, View):
+    def dispatch(self, request, slug, cc_id, *args, **kwargs):
+        course = get_object_or_404(Course, key=slug)
+        cc = get_object_or_404(CourseContest, id=cc_id, course=course)
 
-    def get_title(self):
-        return f'Bảng xếp hạng Chương: {self.chapter.title} - LMS HNUEOJ'
+        if not course.is_accessible_by(request.user):
+            raise Http404(_('Khóa học không tồn tại hoặc bạn không có quyền truy cập.'))
 
-    def dispatch(self, request, slug, chapter_id, *args, **kwargs):
-        self.course = get_object_or_404(Course, key=slug)
-        self.chapter = get_object_or_404(Chapter, id=chapter_id, course=self.course)
-        if not self.course.is_accessible_by(request.user):
+        is_instructor = course.is_editable_by(request.user)
+
+        if not cc.contest.is_visible and not is_instructor and not request.user.has_perm('judge.see_private_contest'):
+            raise Http404(_('Kỳ thi chưa được mở công khai.'))
+
+        profile = getattr(request.user, 'profile', None)
+        if profile and (course.is_enrolled(request.user) or is_instructor):
+            ContestParticipation.objects.get_or_create(
+                contest=cc.contest,
+                user=profile,
+                defaults={'virtual': ContestParticipation.LIVE, 'real_start': timezone.now()}
+            )
+
+        return redirect('contest_view', contest=cc.contest.key)
+
+
+class SaveCourseContestAjax(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        course = get_object_or_404(Course, key=slug)
+        if not course.is_editable_by(request.user):
             raise PermissionDenied()
-        return super().dispatch(request, slug, chapter_id, *args, **kwargs)
 
-    def get(self, request, *args, **kwargs):
-        if request.GET.get('data') is not None or request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            data = build_chapter_ranking_data(self.course, self.chapter, request)
-            return JsonResponse(data)
-        return super().get(request, *args, **kwargs)
+        data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
+        cc_id = data.get('id')
+        contest_id = data.get('contest_id')
+        chapter_id = data.get('chapter_id')
+        scope_type = data.get('scope_type', CourseContest.SCOPE_CHAPTER)
+        weight = float(data.get('weight', 1.0))
+        passing_grade = float(data.get('passing_grade', 50.0))
+        is_required = bool(data.get('is_required', True))
+        order_index = int(data.get('order_index', 0))
+
+        name = data.get('name')
+        description = data.get('description')
+        time_limit_mins = data.get('time_limit_mins')
+        format_name = data.get('format_name')
+        problems = data.get('problems')
+
+        chapter = None
+        if scope_type == CourseContest.SCOPE_CHAPTER and chapter_id:
+            chapter = get_object_or_404(Chapter, id=chapter_id, course=course)
+
+        if cc_id:
+            cc = get_object_or_404(CourseContest, id=cc_id, course=course)
+            cc.chapter = chapter
+            cc.scope_type = scope_type
+            cc.weight = weight
+            cc.passing_grade = passing_grade
+            cc.is_required = is_required
+            cc.order_index = order_index
+            cc.save()
+
+            contest = cc.contest
+            if name:
+                contest.name = name.strip()
+            if description is not None:
+                contest.description = description.strip()
+            if time_limit_mins is not None:
+                contest.time_limit = timedelta(minutes=int(time_limit_mins)) if time_limit_mins else None
+            if format_name:
+                contest.format_name = format_name
+            contest.save()
+
+            if problems is not None:
+                from judge.models import ContestProblem, Problem
+                ContestProblem.objects.filter(contest=contest).delete()
+                for idx, p_item in enumerate(problems, 1):
+                    p_code = p_item.get('code', '').strip() if isinstance(p_item, dict) else str(p_item).strip()
+                    p_pts = p_item.get('points', 100) if isinstance(p_item, dict) else 100
+                    prob = Problem.objects.filter(code=p_code).first()
+                    if prob:
+                        ContestProblem.objects.create(
+                            contest=contest,
+                            problem=prob,
+                            points=p_pts,
+                            order=idx
+                        )
+        else:
+            contest = get_object_or_404(Contest, id=contest_id)
+            cc, created = CourseContest.objects.get_or_create(
+                course=course,
+                contest=contest,
+                defaults={
+                    'chapter': chapter,
+                    'scope_type': scope_type,
+                    'weight': weight,
+                    'passing_grade': passing_grade,
+                    'is_required': is_required,
+                    'order_index': order_index,
+                }
+            )
+            if not created:
+                cc.chapter = chapter
+                cc.scope_type = scope_type
+                cc.weight = weight
+                cc.passing_grade = passing_grade
+                cc.is_required = is_required
+                cc.order_index = order_index
+                cc.save()
+
+        return JsonResponse({
+            'success': True,
+            'course_contest': {
+                'id': cc.id,
+                'contest_id': cc.contest_id,
+                'contest_name': cc.contest.name,
+                'contest_key': cc.contest.key,
+                'scope_type': cc.scope_type,
+                'weight': cc.weight,
+                'passing_grade': cc.passing_grade,
+                'is_required': cc.is_required,
+                'order_index': cc.order_index,
+            }
+        })
+
+
+class CreateCourseContestAjax(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        course = get_object_or_404(Course, key=slug)
+        if not course.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
+        name = data.get('name', '').strip()
+        key = data.get('key', '').strip()
+        description = data.get('description', '').strip()
+        chapter_id = data.get('chapter_id')
+        scope_type = data.get('scope_type', CourseContest.SCOPE_CHAPTER)
+        time_limit_mins = data.get('time_limit_mins')
+        format_name = data.get('format_name', 'atcoder')
+        weight = float(data.get('weight', 1.0))
+        passing_grade = float(data.get('passing_grade', 50.0))
+        is_required = bool(data.get('is_required', True))
+        problems = data.get('problems', [])
+
+        if not name:
+            return JsonResponse({'error': 'Tên Contest không được để trống.'}, status=400)
+
+        if not key:
+            key = f"c{course.id}-ct-{timezone.now().strftime('%Y%m%d%H%M%S')}"[:30]
+
+        if Contest.objects.filter(key=key).exists():
+            return JsonResponse({'error': f'Mã Contest "{key}" đã tồn tại trên hệ thống.'}, status=400)
+
+        chapter = None
+        if scope_type == CourseContest.SCOPE_CHAPTER and chapter_id:
+            chapter = get_object_or_404(Chapter, id=chapter_id, course=course)
+
+        now = timezone.now()
+        start_time = now
+        end_time = now + timedelta(days=365)
+        time_limit = timedelta(minutes=int(time_limit_mins)) if time_limit_mins else None
+
+        contest = Contest.objects.create(
+            key=key,
+            name=name,
+            description=description,
+            start_time=start_time,
+            end_time=end_time,
+            time_limit=time_limit,
+            is_visible=False,
+            is_course_only=True,
+            is_course_private=True,
+            course=course,
+            format_name=format_name,
+        )
+        if hasattr(request.user, 'profile'):
+            contest.authors.add(request.user.profile)
+
+        if problems:
+            from judge.models import ContestProblem, Problem
+            for idx, p_item in enumerate(problems, 1):
+                p_code = p_item.get('code', '').strip() if isinstance(p_item, dict) else str(p_item).strip()
+                p_pts = p_item.get('points', 100) if isinstance(p_item, dict) else 100
+                prob = Problem.objects.filter(code=p_code).first()
+                if prob:
+                    ContestProblem.objects.create(
+                        contest=contest,
+                        problem=prob,
+                        points=p_pts,
+                        order=idx
+                    )
+
+        cc = CourseContest.objects.create(
+            course=course,
+            chapter=chapter,
+            contest=contest,
+            scope_type=scope_type,
+            weight=weight,
+            passing_grade=passing_grade,
+            is_required=is_required,
+        )
+
+        return JsonResponse({
+            'success': True,
+            'course_contest': {
+                'id': cc.id,
+                'contest_id': contest.id,
+                'contest_name': contest.name,
+                'contest_key': contest.key,
+                'scope_type': cc.scope_type,
+                'weight': cc.weight,
+                'passing_grade': cc.passing_grade,
+                'is_required': cc.is_required,
+            }
+        })
+
+
+class CourseContestSearchAjax(LoginRequiredMixin, View):
+    def get(self, request, slug):
+        course = get_object_or_404(Course, key=slug)
+        if not course.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        q = request.GET.get('q', '').strip()
+        contests = Contest.objects.all()
+        if q:
+            contests = contests.filter(Q(name__icontains=q) | Q(key__icontains=q))
+        
+        results = []
+        for c in contests[:20]:
+            results.append({
+                'id': c.id,
+                'key': c.key,
+                'name': c.name,
+                'is_visible': c.is_visible,
+            })
+        return JsonResponse({'results': results})
+
+
+class ContestCreateCourse(CreateContest):
+    permission_required = 'judge.create_private_contest'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.course = get_object_or_404(Course, key=self.kwargs['slug'])
+        if not self.course.is_editable_by(request.user):
+            raise PermissionDenied()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial = initial.copy()
+        prefix = ''.join(x for x in self.course.key.lower() if x.isalnum()) + '_'
+        initial['key'] = f"{prefix}{timezone.now().strftime('%Y%m%d%H%M')}"
+        return initial
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['course_pk'] = self.course.pk
+        return kwargs
+
+    def save_contest_form(self, form):
+        self.object = form.save()
+        self.object.authors.add(self.request.profile)
+        self.object.is_course_private = True
+        self.object.is_course_only = True
+        self.object.course = self.course
+        self.object.save()
+
+        CourseContest.objects.get_or_create(
+            course=self.course,
+            contest=self.object,
+            defaults={'scope_type': CourseContest.SCOPE_COURSE}
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        data = build_chapter_ranking_data(self.course, self.chapter, self.request)
+        context['contest_course'] = self.course
         context['course'] = self.course
-        context['chapter'] = self.chapter
-        context['ranking_data'] = data
-        context['ranking_json'] = json.dumps(data).translate(_json_script_escapes)
-        context['contest_key'] = f'chapter_{self.chapter.id}'
-        context['data_url'] = reverse('course_chapter_ranking_data', args=[self.course.key, self.chapter.id])
         return context
 
 
-class CourseChapterRankingDataAjax(LoginRequiredMixin, View):
-    def get(self, request, slug, chapter_id):
-        course = get_object_or_404(Course, key=slug)
-        chapter = get_object_or_404(Chapter, id=chapter_id, course=course)
-
-        if not course.is_accessible_by(request.user):
+class ContestEditCourse(EditContest):
+    def dispatch(self, request, *args, **kwargs):
+        self.course = get_object_or_404(Course, key=self.kwargs['slug'])
+        if not self.course.is_editable_by(request.user):
             raise PermissionDenied()
+        return super().dispatch(request, *args, **kwargs)
 
-        data = build_chapter_ranking_data(course, chapter, request)
-        return JsonResponse(data)
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['course_pk'] = self.course.pk
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['contest_course'] = self.course
+        context['course'] = self.course
+        return context
+
 

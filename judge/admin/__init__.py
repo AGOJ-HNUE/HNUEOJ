@@ -17,10 +17,11 @@ from judge.admin.taxon import ProblemGroupAdmin, ProblemTypeAdmin
 from judge.admin.ticket import TicketAdmin
 from judge.admin.course import CertificateAdmin, ChapterAdmin, CourseAdmin, EnrollmentAdmin, ExamAdmin, \
     LessonAdmin, LessonProgressAdmin
+from judge.admin.province_exam import ProvinceExamAdmin
 from judge.models import Badge, BlogPost, BlogPostTag, Certificate, Chapter, Comment, CommentLock, Contest, \
     ContestParticipation, ContestTag, Course, Enrollment, Exam, Judge, Language, Lesson, LessonProgress, \
     License, MiscConfig, NavigationBar, Organization, OrganizationRequest, Problem, ProblemGroup, ProblemType, \
-    Profile, Submission, Tag, TagGroup, TagProblem, Ticket
+    Profile, ProvinceExam, Submission, Tag, TagGroup, TagProblem, Ticket
 
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Chapter, ChapterAdmin)
@@ -56,5 +57,6 @@ admin.site.register(Ticket, TicketAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(TagGroup, TagGroupAdmin)
 admin.site.register(TagProblem, TagProblemAdmin)
+admin.site.register(ProvinceExam, ProvinceExamAdmin)
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)

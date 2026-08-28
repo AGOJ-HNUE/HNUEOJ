@@ -113,10 +113,12 @@ body {
     font-size: $base_font_size;
     line-height: 1.5;
     background: var(--bg-page, $color_primary5);
-    font-family: "Inter", "Be Vietnam Pro", "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "Be Vietnam Pro", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color: var(--text-main, $color_primary100);
     height: 100%;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 .unselectable {

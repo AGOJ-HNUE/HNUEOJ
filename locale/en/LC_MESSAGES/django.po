@@ -4265,6 +4265,10 @@ msgstr ""
 msgid "Edit profile"
 msgstr ""
 
+#: templates/base.html:372
+msgid "Student profile"
+msgstr ""
+
 #: judge/views/user.py:484
 msgid "Generated API token for user"
 msgstr ""

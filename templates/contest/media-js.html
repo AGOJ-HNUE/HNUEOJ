@@ -22,5 +22,11 @@
         $('.register-warning').click(function () {
             return confirm({{ _('Are you sure you want to register?')|htmltojs }});
         });
+
+        $(document).on('click', 'form.contest-join-pseudotab', function(e) {
+            if (e.target.tagName !== 'INPUT') {
+                $(this).find('input[type="submit"]').trigger('click');
+            }
+        });
     });
 </script>

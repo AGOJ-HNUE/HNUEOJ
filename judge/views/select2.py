@@ -7,7 +7,7 @@ from django.utils.encoding import smart_str
 from django.views.generic.list import BaseListView
 
 from judge.jinja2.gravatar import gravatar
-from judge.models import Comment, Contest, Organization, Problem, Profile, Tag, TagGroup
+from judge.models import Comment, Contest, Course, Enrollment, Organization, Problem, Profile, Tag, TagGroup
 
 
 def _get_user_queryset(term):
@@ -112,6 +112,62 @@ class OrganizationUserSelect2View(Select2View):
 
     def get_name(self, obj):
         return obj.username + (f' | {obj.name}' if obj.name else '')
+
+
+class CourseUserSelect2View(Select2View):
+    def get(self, request, *args, **kwargs):
+        if 'multiple_terms[]' not in request.GET:
+            return super().get(request, args, kwargs)
+
+        terms = request.GET.getlist('multiple_terms[]')
+        course = get_object_or_404(Course, pk=self.course_pk)
+        qs = Profile.objects.filter(
+            course_enrollments__course=course,
+            course_enrollments__status=Enrollment.STATUS_ACTIVE,
+            user__username__in=terms
+        ).filter(
+            Q(course_enrollments__expiry_date__isnull=True) | Q(course_enrollments__expiry_date__gt=timezone.now())
+        ).annotate(username=F('user__username'), name=F('user__first_name')).only('id')
+
+        return JsonResponse({
+            'results': [
+                {
+                    'text': smart_str(self.get_name(obj)),
+                    'id': obj.pk,
+                } for obj in qs],
+        })
+
+    def dispatch(self, request, *args, **kwargs):
+        if 'pk' not in kwargs:
+            raise ImproperlyConfigured('Must pass a pk')
+        self.course_pk = kwargs['pk']
+        return super(CourseUserSelect2View, self).dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        course = get_object_or_404(Course, pk=self.course_pk)
+        qs = Profile.objects.filter(
+            course_enrollments__course=course,
+            course_enrollments__status=Enrollment.STATUS_ACTIVE
+        ).filter(
+            Q(course_enrollments__expiry_date__isnull=True) | Q(course_enrollments__expiry_date__gt=timezone.now())
+        )
+        if self.term:
+            qs = qs.filter(Q(user__username__icontains=self.term) | Q(user__first_name__icontains=self.term))
+        return qs.annotate(username=F('user__username'), name=F('user__first_name')).only('id').distinct()
+
+    def get_name(self, obj):
+        return obj.username + (f' | {obj.name}' if obj.name else '')
+
+
+class CourseSelect2View(Select2View):
+    def get_queryset(self):
+        qs = Course.objects.all()
+        if self.term:
+            qs = qs.filter(Q(title__icontains=self.term) | Q(key__icontains=self.term))
+        return qs
+
+    def get_name(self, obj):
+        return f"{obj.title} ({obj.key})"
 
 
 class TagGroupSelect2View(Select2View):

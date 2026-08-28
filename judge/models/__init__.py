@@ -4,7 +4,9 @@ from judge.models.choices import ACE_THEMES, EFFECTIVE_MATH_ENGINES, MATH_ENGINE
 from judge.models.comment import Comment, CommentLock, CommentVote
 from judge.models.contest import Contest, ContestAnnouncement, ContestMoss, ContestParticipation, ContestProblem, \
     ContestSubmission, ContestTag, Rating
-from judge.models.course import Certificate, Chapter, Course, Enrollment, Exam, ExamProblem, Lesson, LessonProblem, LessonProgress
+from judge.models.course import Certificate, Chapter, Course, CourseContest, Enrollment, Exam, ExamProblem, Lesson, LessonProblem, LessonProgress
+from judge.models.province_exam import ProvinceExam, PROVINCE_CHOICES, PROVINCE_DICT, \
+    PROVINCE_EXAM_CATEGORY_CHOICES, PROVINCE_EXAM_CATEGORY_DICT
 from judge.models.interface import BlogPost, BlogPostTag, BlogVote, MiscConfig, NavigationBar, validate_regex
 from judge.models.notification import Notification, make_notification
 from judge.models.problem import LanguageLimit, License, Problem, ProblemClarification, ProblemGroup, \
@@ -25,6 +27,7 @@ revisions.register(Contest, follow=['contest_problems'])
 revisions.register(ContestProblem)
 revisions.register(Organization)
 revisions.register(BlogPost)
+revisions.register(ProvinceExam)
 revisions.register(Solution)
 revisions.register(Judge, fields=['name', 'created', 'auth_key', 'description'])
 revisions.register(Language)

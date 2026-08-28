@@ -186,19 +186,20 @@
 .course-card {
     background: var(--bg-surface, #ffffff);
     border: 1px solid var(--border-color, #e4e4e7);
-    border-radius: 14px;
-    padding: 20px;
+    border-radius: 16px;
+    padding: 22px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-    transition: all 0.25 cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.04);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    height: 100%;
 
     &:hover {
         transform: translateY(-4px);
-        box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08);
-        border-color: var(--border-focus, #a1a1aa);
+        box-shadow: 0 14px 32px -6px rgba(99, 102, 241, 0.12);
+        border-color: #6366f1;
     }
 }
 
@@ -325,14 +326,36 @@ body.dark, body.dark-mode, [data-theme="dark"] {
 
 .course-card__desc {
     font-size: 0.88rem;
-    line-height: 1.5;
+    line-height: 1.55;
     color: var(--text-muted, #71717a);
     margin: 0 0 16px 0;
+    height: 4.65em;
+    overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     line-clamp: 3;
     -webkit-box-orient: vertical;
-    overflow: hidden;
+    text-overflow: ellipsis;
+
+    p, div, span {
+        margin: 0;
+        padding: 0;
+        display: inline;
+    }
+
+    ul, ol {
+        margin: 0;
+        padding-left: 16px;
+        display: inline-block;
+    }
+
+    code {
+        background: rgba(99, 102, 241, 0.1);
+        color: #4f46e5;
+        padding: 1px 4px;
+        border-radius: 4px;
+        font-size: 0.82rem;
+    }
 }
 
 // Meta Chips List

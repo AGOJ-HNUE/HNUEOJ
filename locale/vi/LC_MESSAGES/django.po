@@ -5137,6 +5137,10 @@ msgstr "Cập Nhật trên trang web"
 msgid "Edit profile"
 msgstr "Chỉnh sửa hồ sơ"
 
+#: templates/base.html:372
+msgid "Student profile"
+msgstr "Hồ sơ học tập"
+
 #: judge/views/user.py:540
 msgid "Generated API token for user"
 msgstr "Đã tạo token API cho người dùng"

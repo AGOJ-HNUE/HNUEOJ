@@ -97,8 +97,10 @@ class JudgeHandler(ZlibPacketHandler):
 
         json_log.info(self._make_json_log(action='disconnect', info='judge disconnected'))
         if self._working:
-            Submission.objects.filter(id=self._working).update(status='IE', result='IE', error='')
-            json_log.error(self._make_json_log(sub=self._working, action='close', info='IE due to shutdown on grading'))
+            sub_id = self._working
+            self._working = False
+            self._set_submission_error_status(sub_id, status='IE', result='IE', error='')
+            json_log.error(self._make_json_log(sub=sub_id, action='close', info='IE due to shutdown on grading'))
 
     def _authenticate(self, id, key):
         try:
@@ -278,8 +280,10 @@ class JudgeHandler(ZlibPacketHandler):
 
     def on_submission_wrong_acknowledge(self, packet, expected, got):
         json_log.error(self._make_json_log(packet, action='processing', info='wrong-acknowledge', expected=expected))
-        Submission.objects.filter(id=expected).update(status='IE', result='IE', error=None)
-        Submission.objects.filter(id=got, status='QU').update(status='IE', result='IE', error=None)
+        if expected:
+            self._set_submission_error_status(expected, status='IE', result='IE', error='')
+        if got:
+            self._set_submission_error_status(got, status='IE', result='IE', error='')
 
     def on_submission_acknowledged(self, packet):
         if not packet.get('submission-id', None) == self._working:
@@ -543,13 +547,92 @@ class JudgeHandler(ZlibPacketHandler):
                 logger.warning('Failed to post course monitor event for lesson: %s', e)
         self._post_update_submission(submission.id, 'grading-end', done=True)
 
+    def _set_submission_error_status(self, submission_id, status='IE', result='IE', error='', event_type='internal-error'):
+        if not Submission.objects.filter(id=submission_id).update(status=status, result=result, error=error):
+            return False
+
+        self._submission_cache_id = None
+        try:
+            submission = Submission.objects.get(id=submission_id)
+            problem = submission.problem
+            problem._updating_stats_only = True
+            problem.update_stats()
+            submission.update_contest()
+            finished_submission(submission)
+
+            event.post('sub_%s' % submission.id_secret, {'type': event_type})
+            if hasattr(submission, 'contest'):
+                participation = submission.contest.participation
+                event.post('contest_%d' % participation.contest_id, {'type': 'update'})
+
+            if submission.exam_id:
+                try:
+                    from judge.models.course import Enrollment, Exam
+                    exam = Exam.objects.select_related('course').get(id=submission.exam_id)
+                    event.post('course_monitor_%d' % exam.course_id, {
+                        'type': 'submission_update',
+                        'course_id': exam.course_id,
+                        'exam_id': exam.id,
+                        'submission_id': submission.id,
+                        'username': submission.user.user.username,
+                        'full_name': getattr(submission.user, 'display_name', '') or submission.user.user.get_full_name() or submission.user.user.username,
+                        'problem_code': submission.problem.code,
+                        'problem_name': submission.problem.name,
+                        'language': str(submission.language),
+                        'status': submission.status,
+                        'result': submission.result,
+                        'points': submission.points,
+                        'time': submission.time,
+                        'memory': submission.memory,
+                        'timestamp': timezone.now().isoformat(),
+                    })
+                    enrollment = Enrollment.objects.filter(course_id=exam.course_id, user_id=submission.user_id).first()
+                    if enrollment:
+                        enrollment.recalculate_progress()
+                except Exception as e:
+                    logger.warning('Failed to post course monitor event for exam: %s', e)
+
+            if submission.lesson_id:
+                try:
+                    from judge.models.course import Enrollment, Lesson
+                    lesson = Lesson.objects.select_related('chapter__course').get(id=submission.lesson_id)
+                    course_id = lesson.chapter.course_id
+                    enrollment = Enrollment.objects.filter(course_id=course_id, user_id=submission.user_id).first()
+                    if enrollment:
+                        enrollment.recalculate_progress()
+
+                    event.post('course_monitor_%d' % course_id, {
+                        'type': 'submission_update',
+                        'course_id': course_id,
+                        'lesson_id': lesson.id,
+                        'is_lesson_completed': False,
+                        'submission_id': submission.id,
+                        'username': submission.user.user.username,
+                        'full_name': getattr(submission.user, 'display_name', '') or submission.user.user.get_full_name() or submission.user.user.username,
+                        'problem_code': submission.problem.code,
+                        'problem_name': submission.problem.name,
+                        'language': str(submission.language),
+                        'status': submission.status,
+                        'result': submission.result,
+                        'points': submission.points,
+                        'time': submission.time,
+                        'memory': submission.memory,
+                        'timestamp': timezone.now().isoformat(),
+                    })
+                except Exception as e:
+                    logger.warning('Failed to post course monitor event for lesson: %s', e)
+
+        except Exception as e:
+            logger.exception('Error updating error status for submission %s: %s', submission_id, e)
+
+        self._post_update_submission(submission_id, event_type, done=True)
+        return True
+
     def on_compile_error(self, packet):
         logger.info('%s: Submission failed to compile: %s', self.name, packet['submission-id'])
         self._free_self(packet)
 
-        if Submission.objects.filter(id=packet['submission-id']).update(status='CE', result='CE', error=packet['log']):
-            event.post('sub_%s' % Submission.get_id_secret(packet['submission-id']), {'type': 'compile-error'})
-            self._post_update_submission(packet['submission-id'], 'compile-error', done=True)
+        if self._set_submission_error_status(packet['submission-id'], status='CE', result='CE', error=packet['log'], event_type='compile-error'):
             json_log.info(self._make_json_log(packet, action='compile-error', log=packet['log'],
                                               finish=True, result='CE'))
         else:
@@ -576,9 +659,7 @@ class JudgeHandler(ZlibPacketHandler):
         self._free_self(packet)
 
         id = packet['submission-id']
-        if Submission.objects.filter(id=id).update(status='IE', result='IE', error=packet['message']):
-            event.post('sub_%s' % Submission.get_id_secret(id), {'type': 'internal-error'})
-            self._post_update_submission(id, 'internal-error', done=True)
+        if self._set_submission_error_status(id, status='IE', result='IE', error=packet['message'], event_type='internal-error'):
             json_log.info(self._make_json_log(packet, action='internal-error', message=packet['message'],
                                               finish=True, result='IE'))
         else:
@@ -590,9 +671,7 @@ class JudgeHandler(ZlibPacketHandler):
         logger.info('%s: Submission aborted: %s', self.name, packet['submission-id'])
         self._free_self(packet)
 
-        if Submission.objects.filter(id=packet['submission-id']).update(status='AB', result='AB', points=0):
-            event.post('sub_%s' % Submission.get_id_secret(packet['submission-id']), {'type': 'aborted'})
-            self._post_update_submission(packet['submission-id'], 'aborted', done=True)
+        if self._set_submission_error_status(packet['submission-id'], status='AB', result='AB', error='', event_type='aborted'):
             json_log.info(self._make_json_log(packet, action='aborted', finish=True, result='AB'))
         else:
             logger.warning('Unknown submission: %s', packet['submission-id'])
@@ -739,6 +818,8 @@ class JudgeHandler(ZlibPacketHandler):
                 'user_id', 'problem_id', 'status', 'language__key',
             ).get()
             self._submission_cache_id = id
+        else:
+            self._submission_cache['status'] = Submission.objects.filter(id=id).values_list('status', flat=True).get()
 
         return self._submission_cache
 

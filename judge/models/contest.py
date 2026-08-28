@@ -103,6 +103,8 @@ class Contest(models.Model):
                                      help_text=_('Should be set even for organization-private contests, where it '
                                                  'determines whether the contest is visible to members of the '
                                                  'specified organizations.'))
+    is_course_only = models.BooleanField(verbose_name=_('is course only'), default=False,
+                                         help_text=_('If set, this contest is embedded in a course.'))
     is_rated = models.BooleanField(verbose_name=_('contest rated'), help_text=_('Whether this contest can be rated.'),
                                    default=False)
     view_contest_scoreboard = models.ManyToManyField(Profile, verbose_name=_('view contest scoreboard'), blank=True,
@@ -154,10 +156,15 @@ class Contest(models.Model):
                                              help_text=_('Whether to show a section containing contest settings '
                                                          'on the contest page or not.'),
                                              default=False)
-    is_organization_private = models.BooleanField(verbose_name=_('private to organizations'), default=False)
+    is_organization_private = models.BooleanField(verbose_name=_('private to organizations'), default=False, db_index=True)
     organization = models.ForeignKey(Organization, blank=True, null=True, verbose_name=_('organization'),
                                      on_delete=models.SET_NULL,
                                      help_text=_('If private, only this organization may see the contest'))
+    is_course_private = models.BooleanField(verbose_name=_('private to course'), default=False, db_index=True,
+                                            help_text=_('If private, only members of the specified course may see the contest'))
+    course = models.ForeignKey('judge.Course', blank=True, null=True, verbose_name=_('course'),
+                               on_delete=models.SET_NULL, related_name='contests',
+                               help_text=_('If private, only this course may see the contest'))
     og_image = models.CharField(verbose_name=_('OpenGraph image'), default='', max_length=150, blank=True)
     logo_override_image = models.CharField(verbose_name=_('logo override image'), default='', max_length=150,
                                            blank=True,
@@ -460,7 +467,7 @@ class Contest(models.Model):
             # Unauthenticated users can only see visible, non-private contests
             if not self.is_visible:
                 raise self.Inaccessible()
-            if self.is_private or self.is_organization_private:
+            if self.is_private or self.is_organization_private or self.is_course_private or self.is_course_only:
                 raise self.PrivateContest()
             return
 
@@ -476,34 +483,41 @@ class Contest(models.Model):
         if user.profile.id in self.tester_ids:
             return
 
-        # Contest is not publicly visible
+        # Contest is not publicly visible -> NO REGULAR USER (even org or course member) CAN ACCESS!
         if not self.is_visible:
             raise self.Inaccessible()
 
-        # Contest is not private
-        if not self.is_private and not self.is_organization_private:
-            return
+        # Check course membership for course-linked or course-private contests
+        courses_to_check = []
+        if self.course_id:
+            courses_to_check.append(self.course)
+        for cm in self.course_mappings.select_related('course').all():
+            if cm.course_id and cm.course not in courses_to_check:
+                courses_to_check.append(cm.course)
+
+        is_course_member = False
+        if courses_to_check:
+            for c in courses_to_check:
+                if c.is_editable_by(user) or c.is_enrolled(user):
+                    is_course_member = True
+                    break
+
+        if (self.is_course_private or self.is_course_only or self.course_id or self.course_mappings.exists()) and not is_course_member:
+            raise self.PrivateContest()
+
+        in_org = self.organization and user.profile.organizations.filter(id=self.organization.id).exists()
+        if self.is_organization_private and not in_org:
+            raise self.PrivateContest()
 
         if self.view_contest_scoreboard.filter(id=user.profile.id).exists():
             return
 
-        in_org = self.organization and user.profile.organizations.filter(id=self.organization.id).exists()
         in_users = self.private_contestants.filter(id=user.profile.id).exists()
 
-        if not self.is_private and self.is_organization_private:
-            if in_org:
-                return
-            raise self.PrivateContest()
-
-        if self.is_private and not self.is_organization_private:
-            if in_users:
-                return
-            raise self.PrivateContest()
-
-        if self.is_private and self.is_organization_private:
-            if in_org and in_users:
-                return
-            raise self.PrivateContest()
+        if self.is_private:
+            if not in_users:
+                raise self.PrivateContest()
+            return
 
     def is_accessible_by(self, user):
         try:
@@ -526,7 +540,7 @@ class Contest(models.Model):
 
     @classmethod
     def get_public_contests(cls):
-        return cls.objects.filter(is_visible=True, is_organization_private=False, is_private=False) \
+        return cls.objects.filter(is_visible=True, is_organization_private=False, is_course_private=False, is_course_only=False, is_private=False) \
                           .defer('description').distinct()
 
     @classmethod

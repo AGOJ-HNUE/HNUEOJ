@@ -51,17 +51,6 @@
                 <i class="fa fa-arrow-left"></i> {{ _('Quay lại khóa học') }}
             </a>
             <h2 class="lms-sidebar-title" title="{{ course.title }}">{{ course.title }}</h2>
-
-            <div class="lms-progress-wrap" style="margin-top: 8px;">
-                <div class="lms-progress-bar">
-                    <div id="sidebarProgressBar" class="lms-progress-fill"
-                        style="width: {{ enrollment.progress_percentage }}%;"></div>
-                </div>
-                <div class="lms-progress-label">
-                    <span>{{ _('Tiến độ') }}</span>
-                    <span id="sidebarProgressPct">{{ enrollment.progress_percentage }}%</span>
-                </div>
-            </div>
         </div>
 
         <div class="lms-sidebar-content">
@@ -100,31 +89,13 @@
                 {% endif %}
                 {% endfor %}
 
-                {% for exam in chapter.exams.all() %}
-                {% if exam.is_published or is_instructor %}
-                {% set is_locked = exam.is_locked and not is_instructor %}
-                {% if is_locked %}
-                <div class="lms-sidebar-item is-locked"
-                    style="opacity: 0.6; cursor: not-allowed; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa fa-lock lms-nav-icon" style="color: var(--lms-text-muted);"></i>
-                    <span class="lms-sidebar-item-title" style="color: var(--lms-text-muted);"><strong>{{ _('Kiểm tra:')
-                            }}</strong> {{ exam.title }}</span>
-                    <span class="lms-sidebar-item-time">{{ exam.exam_problems.count() }} bài</span>
-                </div>
-                {% else %}
-                <a href="{{ exam.get_absolute_url() }}" class="lms-sidebar-item"
-                    style="color: #b45309; background: var(--lms-warning-light);">
-                    <i class="fa fa-flag-checkered lms-nav-icon" style="color: var(--lms-warning);"></i>
-                    <span class="lms-sidebar-item-title"><strong>{{ _('Kiểm tra:') }}</strong> {{ exam.title }}</span>
-                    {% if exam.is_locked %}
-                    <span class="lms-badge"
-                        style="background: rgba(239, 68, 68, 0.15); color: #dc2626; padding: 2px 4px; font-size: 0.65rem; margin-right: 4px;"><i
-                            class="fa fa-lock"></i></span>
-                    {% endif %}
-                    <span class="lms-sidebar-item-time">{{ exam.exam_problems.count() }} bài</span>
+                {% for cc in chapter.chapter_contests.all() %}
+                <a href="{{ url('course_contest_detail', course.key, cc.id) }}" class="lms-sidebar-item"
+                    style="color: #b45309; background: rgba(245, 158, 11, 0.08);">
+                    <i class="fa fa-trophy lms-nav-icon" style="color: var(--lms-warning, #f59e0b);"></i>
+                    <span class="lms-sidebar-item-title"><strong>Contest:</strong> {{ cc.contest.name }}</span>
+                    <span class="lms-sidebar-item-time">{{ cc.contest.problems.count() }} bài</span>
                 </a>
-                {% endif %}
-                {% endif %}
                 {% endfor %}
             </div>
             {% endfor %}

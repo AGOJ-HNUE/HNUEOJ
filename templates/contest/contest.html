@@ -13,6 +13,19 @@
                 </a>
             </span>
         </span>
+    {% elif contest.course or contest.is_course_private or contest.is_course_only %}
+        {% set c_obj = contest.course or (contest.course_mappings.first().course if contest.course_mappings.exists() else None) %}
+        <span class="organization-tags">
+            <span class="organization-tag contest-tag" style="background-color: #2563eb; color: #ffffff">
+                {% if c_obj %}
+                    <a href="{{ c_obj.get_absolute_url() }}" style="color: #ffffff">
+                        <i class="fa fa-book"></i> {{ c_obj.title }}
+                    </a>
+                {% else %}
+                    <i class="fa fa-book"></i> {{ _('Khóa học') }}
+                {% endif %}
+            </span>
+        </span>
     {% endif %}
 {% endblock %}
 

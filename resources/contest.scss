@@ -179,18 +179,40 @@
 }
 
 form.contest-join-pseudotab {
-    display: inline;
-    padding: 6px 12px !important;
-    line-height: 1.7em;
+    display: inline-block;
+    padding: 0 !important;
     margin-left: 0.5em;
+    vertical-align: middle;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
 
-    input {
-        display: inline;
-        border: none;
-        padding: 0;
-        background: none;
+    input[type="submit"] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 18px !important;
         font-weight: 700;
-        color: var(--primary, #6366f1);
+        font-size: 0.9rem;
+        cursor: pointer;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff !important;
+        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        transition: all 0.15s ease-in-out;
+        outline: none;
+
+        &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            filter: brightness(1.1);
+        }
+
+        &:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
     }
 }
 

@@ -8,6 +8,22 @@
 {% endif %}
 {% endblock %}
 
+{% block title_row %}
+<div class="prov-page-header">
+    <div class="prov-header-info">
+        <h2><i class="fa fa-folder-open"></i> {{ _('Kho lưu trữ Đề thi Các Tỉnh / Thành phố') }}</h2>
+        <p>{{ _('Tổng hợp đề thi HSG THPT, THCS, thi Chuyên, Olympic và Đội tuyển HSGQG từ các tỉnh thành.') }}</p>
+    </div>
+    {% if request.user.is_authenticated and (request.user.is_staff or perms.judge.add_provinceexam) %}
+    <div class="prov-header-actions">
+        <a href="{{ url('admin:judge_provinceexam_add') }}" class="prov-btn-add">
+            <i class="fa fa-plus-circle"></i> {{ _('Thêm đề thi mới') }}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
 {% block body %}
 <div id="common-content">
     <!-- Right Sidebar Filter Box (Standard DMOJ Sidebox) -->
@@ -25,14 +41,14 @@
                         <div class="filter-form-group">
                             <label for="prov-search"><i>{{ _('Từ khóa') }}</i></label>
                             <input type="text" id="prov-search" name="search" class="prov-sidebox-input"
-                                placeholder="{{ _('Tên đề thi...') }}" value="{{ search_query or '' }}">
+                                placeholder="{{ _('Tên đề thi, năm học...') }}" value="{{ search_query or '' }}">
                         </div>
 
                         <!-- Province Dropdown -->
                         <div class="filter-form-group">
                             <label for="prov-select"><i>{{ _('Tỉnh / Thành phố') }}</i></label>
                             <select id="prov-select" name="province" class="prov-sidebox-select">
-                                <option value="">Tất cả (34 Tỉnh/Thành)</option>
+                                <option value="">Tất cả</option>
                                 {% for code, name in provinces %}
                                 <option value="{{ code }}" {% if selected_province==code %}selected{% endif %}>
                                     {{ name }}
@@ -41,21 +57,34 @@
                             </select>
                         </div>
 
-                        <!-- Year Dropdown -->
+                        <!-- Category Dropdown -->
                         <div class="filter-form-group">
-                            <label for="year-select"><i>{{ _('Năm tổ chức') }}</i></label>
+                            <label for="cat-select"><i>{{ _('Cấp học / Loại đề') }}</i></label>
+                            <select id="cat-select" name="category" class="prov-sidebox-select">
+                                <option value="">Tất cả</option>
+                                {% for code, name in categories %}
+                                <option value="{{ code }}" {% if selected_category==code %}selected{% endif %}>
+                                    {{ name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Academic Year Dropdown -->
+                        <div class="filter-form-group">
+                            <label for="year-select"><i>{{ _('Năm học') }}</i></label>
                             <select id="year-select" name="year" class="prov-sidebox-select">
                                 <option value="">Tất cả các năm</option>
                                 {% for yr in years %}
                                 <option value="{{ yr }}" {% if selected_year==yr|string %}selected{% endif %}>
-                                    Năm {{ yr }}
+                                    {{ yr }}
                                 </option>
                                 {% endfor %}
                             </select>
                         </div>
 
                         <!-- Buttons -->
-                        <div class="form-submit-group" style="margin-top: 10px;">
+                        <div class="form-submit-group" style="margin-top: 12px;">
                             <button type="submit" class="button full primary"
                                 style="margin: 0; background: #2563eb; color: #fff;">
                                 <i class="fa fa-search"></i> Lọc dữ liệu
@@ -70,14 +99,14 @@
                     </form>
 
                     <!-- Compact Province Quick Chips -->
-                    <hr
-                        style="margin: 12px 0 8px 0; border: 0; border-top: 1px dashed var(--lms-card-border, #cbd5e1);">
-                    <div style="font-size: 0.78rem; font-weight: bold; margin-bottom: 6px; color: #64748b;">
-                        Chọn nhanh tỉnh:
+                    <hr style="margin: 14px 0 10px 0; border: 0; border-top: 1px dashed var(--border-color, #cbd5e1);">
+                    <div
+                        style="font-size: 0.78rem; font-weight: bold; margin-bottom: 8px; color: var(--text-muted, #64748b);">
+                        Chọn nhanh tỉnh / thành:
                     </div>
                     <div class="prov-chips-compact">
                         <a href="{{ url('province_contest_list') }}?{% if selected_year %}year={{ selected_year }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}"
-                            class="prov-chip-sm all-chip {% if not selected_province %}active{% endif %}">
+                            class="prov-chip-sm {% if not selected_province %}active{% endif %}">
                             Tất cả
                         </a>
                         {% for code, name in provinces %}
@@ -94,83 +123,114 @@
 
     <!-- Main Content Left Side -->
     <div id="content-left" class="problems">
-        <!-- Category Tabs -->
+        <!-- Exact 5 Category Tabs -->
         <div class="prov-tabs-wrapper">
             <a href="{{ url('province_contest_list') }}?{% if selected_province %}province={{ selected_province }}&{% endif %}{% if selected_year %}year={{ selected_year }}&{% endif %}"
                 class="prov-tab {% if not selected_category %}active{% endif %}">
-                <i class="fa fa-list"></i> Tất cả đề thi
+                <i class="fa fa-list"></i> Tất cả
             </a>
             <a href="{{ url('province_contest_list') }}?category=thpt{% if selected_province %}&province={{ selected_province }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
                 class="prov-tab {% if selected_category == 'thpt' %}active{% endif %}">
-                <i class="fa fa-graduation-cap"></i> Đề thi HSG THPT
+                <i class="fa fa-graduation-cap"></i> THPT
             </a>
             <a href="{{ url('province_contest_list') }}?category=thcs{% if selected_province %}&province={{ selected_province }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
                 class="prov-tab {% if selected_category == 'thcs' %}active{% endif %}">
-                <i class="fa fa-book"></i> Đề thi HSG THCS
+                <i class="fa fa-book"></i> THCS
             </a>
-            <a href="{{ url('province_contest_list') }}?category=other{% if selected_province %}&province={{ selected_province }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
-                class="prov-tab {% if selected_category == 'other' %}active{% endif %}">
-                <i class="fa fa-trophy"></i> Đề thi Khác
+            <a href="{{ url('province_contest_list') }}?category=chuyen{% if selected_province %}&province={{ selected_province }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
+                class="prov-tab {% if selected_category == 'chuyen' %}active{% endif %}">
+                <i class="fa fa-star"></i> Thi Chuyên
+            </a>
+            <a href="{{ url('province_contest_list') }}?category=olympic{% if selected_province %}&province={{ selected_province }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
+                class="prov-tab {% if selected_category == 'olympic' %}active{% endif %}">
+                <i class="fa fa-trophy"></i> Olympic / Trại hè
+            </a>
+            <a href="{{ url('province_contest_list') }}?category=hsgqg{% if selected_province %}&province={{ selected_province }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
+                class="prov-tab {% if selected_category == 'hsgqg' %}active{% endif %}">
+                <i class="fa fa-flag"></i> Đội tuyển HSGQG
             </a>
         </div>
 
-        <!-- Repository Contest Cards Grid -->
-        {% if past_contests %}
+        <!-- Repository Exam Cards Grid -->
+        {% if exam_list %}
         <div class="prov-cards-grid">
-            {% for contest in past_contests %}
+            {% for exam in exam_list %}
             <div class="prov-card">
                 <div>
                     <div class="prov-card-header">
-                        {% set name_lower = contest.name|lower %}
-                        {% if contest.province_category == 'thpt' or (contest.province_category != 'thcs' and
-                        contest.province_category != 'other' and ('thpt' in name_lower or '12' in name_lower or '11' in
-                        name_lower or '10' in name_lower)) %}
-                        <span class="prov-card-tag thpt">
-                            <i class="fa fa-graduation-cap"></i> HSG THPT
-                        </span>
-                        {% elif contest.province_category == 'thcs' or (contest.province_category != 'thpt' and
-                        contest.province_category != 'other' and ('thcs' in name_lower or '9' in name_lower or '8' in
-                        name_lower or '7' in name_lower or '6' in name_lower)) %}
-                        <span class="prov-card-tag thcs">
-                            <i class="fa fa-book"></i> HSG THCS
-                        </span>
-                        {% else %}
-                        <span class="prov-card-tag other">
-                            <i class="fa fa-trophy"></i> Olympic / Khác
-                        </span>
-                        {% endif %}
+                        <div class="prov-card-badges">
+                            {% if exam.category == 'thpt' %}
+                            <span class="prov-card-tag thpt">
+                                <i class="fa fa-graduation-cap"></i> THPT
+                            </span>
+                            {% elif exam.category == 'thcs' %}
+                            <span class="prov-card-tag thcs">
+                                <i class="fa fa-book"></i> THCS
+                            </span>
+                            {% elif exam.category == 'chuyen' %}
+                            <span class="prov-card-tag chuyen">
+                                <i class="fa fa-star"></i> Thi Chuyên
+                            </span>
+                            {% elif exam.category == 'olympic' %}
+                            <span class="prov-card-tag olympic">
+                                <i class="fa fa-trophy"></i> Olympic / Trại hè
+                            </span>
+                            {% elif exam.category == 'hsgqg' %}
+                            <span class="prov-card-tag hsgqg">
+                                <i class="fa fa-flag"></i> Đội tuyển HSGQG
+                            </span>
+                            {% endif %}
 
-                        {% if contest.province %}
-                        <span class="prov-card-province">
-                            <i class="fa fa-map-marker"></i> {{ contest.get_province_display() }}
+                            <span class="prov-card-province">
+                                <i class="fa fa-map-marker"></i> {{ exam.get_province_display() or 'Toàn quốc' }}
+                            </span>
+                        </div>
+
+                        <span class="prov-card-year">
+                            <i class="fa fa-calendar-o"></i> {{ exam.academic_year }}
                         </span>
-                        {% endif %}
                     </div>
 
-                    <a href="{{ url('contest_view', contest.key) }}" class="prov-card-title" title="{{ contest.name }}">
-                        {{ contest.name }}
-                    </a>
+                    <h3 class="prov-card-title" title="{{ exam.name }}">
+                        {{ exam.name }}
+                    </h3>
+
+                    {% if exam.description %}
+                    <p class="prov-card-desc" title="{{ exam.description }}">
+                        {{ exam.description }}
+                    </p>
+                    {% endif %}
                 </div>
 
-                <div>
-                    <div class="prov-card-meta">
-                        <div class="prov-meta-item">
-                            <i class="fa fa-calendar" style="color: #2563eb;"></i>
-                            {% if contest.start_time %}
-                            Năm {{ contest.start_time|date("Y") }}
-                            {% else %}
-                            Kho đề thi
-                            {% endif %}
-                        </div>
-                        <div class="prov-meta-item">
-                            <i class="fa fa-code" style="color: #059669;"></i>
-                            {{ contest.problem_count or 0 }} bài tập
-                        </div>
-                    </div>
-
-                    <a href="{{ url('contest_view', contest.key) }}" class="prov-card-cta">
-                        <i class="fa fa-play-circle"></i> Vào luyện tập
+                <!-- Action Links (Display if available, hide if not) -->
+                <div class="prov-card-actions">
+                    {% if exam.exam_url %}
+                    <a href="{{ exam.exam_url }}" target="_blank" rel="noopener noreferrer"
+                        class="prov-action-btn btn-exam" title="Xem / Tải file đề thi (PDF / Drive)">
+                        <i class="fa fa-file-pdf-o"></i> <span>Tải đề thi</span>
                     </a>
+                    {% endif %}
+
+                    {% if exam.solution_url %}
+                    <a href="{{ exam.solution_url }}" target="_blank" rel="noopener noreferrer"
+                        class="prov-action-btn btn-solution" title="Xem lời giải chi tiết / Tải bộ test">
+                        <i class="fa fa-check-circle-o"></i> <span>Lời giải / Test</span>
+                    </a>
+                    {% endif %}
+
+                    {% if exam.effective_practice_url %}
+                    <a href="{{ exam.effective_practice_url }}" {% if not exam.contest %}target="_blank"
+                        rel="noopener noreferrer" {% endif %} class="prov-action-btn btn-practice"
+                        title="Vào làm bài trực tiếp">
+                        <i class="fa fa-laptop"></i> <span>Luyện tập</span>
+                    </a>
+                    {% endif %}
+
+                    {% if not exam.exam_url and not exam.solution_url and not exam.effective_practice_url %}
+                    <div class="prov-no-links">
+                        <i class="fa fa-clock-o"></i> Đang cập nhật tài liệu
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -181,20 +241,18 @@
         {% endif %}
 
         {% else %}
-        <!-- Empty State -->
-        <div class="prov-empty-state">
+        <!-- <div class="prov-empty-state">
             <div class="prov-empty-icon">
                 <i class="fa fa-folder-open-o"></i>
             </div>
-            <div class="prov-empty-title">Không tìm thấy đề thi phù hợp</div>
+            <div class="prov-empty-title">Chưa tìm thấy đề thi phù hợp</div>
             <p class="prov-empty-text">
-                Hiện chưa có đề thi nào phù hợp với bộ lọc tỉnh thành, năm hoặc từ khóa bạn vừa chọn. Xin vui lòng thử
-                lại với tiêu chí khác.
+                Không có đề thi nào phù hợp với bộ lọc bạn đã chọn. Vui lòng thử lại với phân loại hoặc tiêu chí khác.
             </p>
             <a href="{{ url('province_contest_list') }}" class="button" style="background: #2563eb; color: #fff;">
                 <i class="fa fa-refresh"></i> Xem tất cả đề thi
             </a>
-        </div>
+        </div> -->
         {% endif %}
     </div>
 </div>

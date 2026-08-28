@@ -237,11 +237,6 @@ class ContestMixin(object):
     def get_object(self, queryset=None):
         contest = super(ContestMixin, self).get_object(queryset)
 
-        profile = self.request.profile
-        if (profile is not None and
-                ContestParticipation.objects.filter(id=profile.current_contest_id, contest_id=contest.id).exists()):
-            return contest
-
         try:
             contest.access_check(self.request.user)
         except Contest.PrivateContest:
@@ -1494,6 +1489,8 @@ class EditContest(ContestMixin, LoginRequiredMixin, TitleMixin, UpdateView):
         kwargs = super(EditContest, self).get_form_kwargs()
         if self.object.organization:
             kwargs['org_pk'] = self.object.organization.id
+        elif self.object.course:
+            kwargs['course_pk'] = self.object.course.id
 
         kwargs['user'] = self.request.user
         return kwargs
@@ -1516,6 +1513,7 @@ class EditContest(ContestMixin, LoginRequiredMixin, TitleMixin, UpdateView):
         data = super().get_context_data(**kwargs)
         data['contest_problem_formset'] = self.get_contest_problem_formset()
         data['contest_org'] = self.object.organization
+        data['contest_course'] = self.object.course
         return data
 
     def post(self, request, *args, **kwargs):

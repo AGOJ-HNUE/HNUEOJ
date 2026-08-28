@@ -12,7 +12,7 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from judge.feed import AtomBlogFeed, AtomCommentFeed, AtomProblemFeed, BlogFeed, CommentFeed, ProblemFeed
 from judge.sitemap import sitemaps
 from judge.views import TitledTemplateView, api, blog, comment, contests, course, language, license, mailgun, notification, \
-    organization, preview, problem, problem_download, problem_manage, ranked_submission, register, stats, status, \
+    organization, preview, problem, problem_download, problem_manage, province_exam, ranked_submission, register, stats, status, \
     submission, tag, tasks, ticket, two_factor, user, widgets
 from judge.views.magazine import MagazinePage
 from judge.views.misc_config import MiscConfigEdit
@@ -20,7 +20,7 @@ from judge.views.problem_data import ProblemDataView, ProblemSubmissionDiff, \
     problem_data_file, problem_init_view
 from judge.views.register import ActivationView, RegistrationView
 from judge.views.select2 import AssigneeSelect2View, CommentSelect2View, ContestSelect2View, \
-    OrganizationProblemSelect2View, OrganizationSelect2View, \
+    CourseSelect2View, CourseUserSelect2View, OrganizationProblemSelect2View, OrganizationSelect2View, \
     OrganizationUserSearchSelect2View, OrganizationUserSelect2View, ProblemSelect2View, \
     PublicProblemSelect2View, TagGroupSelect2View, TagSelect2View, TicketUserSelect2View, \
     UserSearchSelect2View, UserSelect2View
@@ -234,7 +234,7 @@ urlpatterns = [
     ])),
 
     path('contests/', paged_list_view(contests.ContestList, 'contest_list')),
-    path('provinces/', paged_list_view(contests.ProvincialContestList, 'province_contest_list')),
+    path('exambank/', paged_list_view(province_exam.ProvinceExamList, 'province_contest_list')),
     path('contests.ics', contests.ContestICal.as_view(), name='contest_ical'),
     path('contests/<int:year>/<int:month>/', contests.ContestCalendar.as_view(), name='contest_calendar'),
     path('contests/new', contests.CreateContest.as_view(), name='contest_new'),
@@ -286,33 +286,32 @@ urlpatterns = [
         path('', course.CourseDetailView.as_view(), name='course_detail'),
         path('/enroll/', course.CourseEnrollView.as_view(), name='course_enroll'),
         path('/learn/<int:lesson_id>/', course.LessonLearnView.as_view(), name='course_lesson'),
-        path('/exam/<int:exam_id>/', course.ExamDetailView.as_view(), name='course_exam'),
-        path('/exam/<int:exam_id>/submit/', course.ExamSubmitView.as_view(), name='course_exam_submit'),
+        path('/contest/add', course.ContestCreateCourse.as_view(), name='contest_create_course'),
+        path('/contest/<slug:key>/edit', course.ContestEditCourse.as_view(), name='contest_edit_course'),
+        path('/contest/<int:cc_id>/', course.CourseContestDetailView.as_view(), name='course_contest_detail'),
         path('/manage/', course.CourseManageView.as_view(), name='course_manage'),
         path('/monitor/', course.CourseMonitorView.as_view(), name='course_monitor'),
         path('/api/lesson/<int:lesson_id>/toggle/', course.ToggleLessonProgressAjax.as_view(), name='course_lesson_toggle'),
         path('/api/lesson/<int:lesson_id>/submit/', course.LessonSubmitAjax.as_view(), name='course_lesson_submit'),
         path('/api/lesson/<int:lesson_id>/problems/batch-save/', course.BatchSaveLessonProblemsAjax.as_view(), name='course_lesson_problems_batch_save'),
-        path('/api/exam/<int:exam_id>/problems/batch-save/', course.BatchSaveExamProblemsAjax.as_view(), name='course_exam_problems_batch_save'),
         path('/api/problem-search/', course.CourseProblemSearchAjax.as_view(), name='course_problem_search'),
+        path('/api/contest-search/', course.CourseContestSearchAjax.as_view(), name='course_contest_search'),
+        path('/api/course-contest/search/', course.CourseContestSearchAjax.as_view(), name='course_contest_search_alias'),
         path('/api/course/save/', course.SaveCourseInfoAjax.as_view(), name='course_info_save'),
         path('/api/item/toggle-lock/', course.ToggleCourseItemLockAjax.as_view(), name='course_item_toggle_lock'),
         path('/api/chapter/save/', course.SaveChapterAjax.as_view(), name='course_chapter_save'),
         path('/api/lesson/save/', course.SaveLessonAjax.as_view(), name='course_lesson_save'),
         path('/api/lesson-problem/save/', course.SaveLessonProblemAjax.as_view(), name='course_lesson_problem_save'),
-        path('/api/exam/save/', course.SaveExamAjax.as_view(), name='course_exam_save'),
-        path('/api/exam-problem/save/', course.SaveExamProblemAjax.as_view(), name='course_exam_problem_save'),
+        path('/api/course-contest/save/', course.SaveCourseContestAjax.as_view(), name='course_contest_save'),
+        path('/api/course-contest/create/', course.CreateCourseContestAjax.as_view(), name='course_contest_create'),
         path('/api/item/delete/', course.DeleteCourseItemAjax.as_view(), name='course_item_delete'),
         path('/api/monitor-data/', course.CourseMonitorDataAjax.as_view(), name='course_monitor_data'),
-        path('/exam/<int:exam_id>/ranking/', course.CourseExamRankingView.as_view(), name='course_exam_ranking'),
-        path('/exam/<int:exam_id>/ranking/data/', course.CourseExamRankingDataAjax.as_view(), name='course_exam_ranking_data'),
-        path('/chapter/<int:chapter_id>/ranking/', course.CourseChapterRankingView.as_view(), name='course_chapter_ranking'),
-        path('/chapter/<int:chapter_id>/ranking/data/', course.CourseChapterRankingDataAjax.as_view(), name='course_chapter_ranking_data'),
         path('/api/add-students/', course.CourseAddStudentsAjax.as_view(), name='course_add_students'),
         path('/api/remove-student/', course.CourseRemoveStudentAjax.as_view(), name='course_remove_student'),
         path('/api/renew-enrollment/', course.CourseRenewEnrollmentAjax.as_view(), name='course_renew_enrollment'),
         path('/api/submission/<int:submission_id>/god-mode/', course.SubmissionGodModeAjax.as_view(), name='course_submission_god_mode'),
         path('/api/enrollment/<int:enrollment_id>/certify/', course.IssueCertificateAjax.as_view(), name='course_issue_certificate'),
+        path('/api/enrollment/<int:enrollment_id>/revoke-certificate/', course.RevokeCertificateAjax.as_view(), name='course_revoke_certificate'),
         path('/', lambda _, slug: HttpResponsePermanentRedirect(reverse('course_detail', args=[slug]))),
     ])),
 
@@ -471,7 +470,10 @@ urlpatterns = [
         path('profile/', UserSelect2View.as_view(), name='profile_select2'),
         path('organization_profile/<int:pk>/', OrganizationUserSelect2View.as_view(),
              name='organization_profile_select2'),
+        path('course_profile/<int:pk>/', CourseUserSelect2View.as_view(),
+             name='course_profile_select2'),
         path('organization/', OrganizationSelect2View.as_view(), name='organization_select2'),
+        path('course/', CourseSelect2View.as_view(), name='course_select2'),
         path('problem/', ProblemSelect2View.as_view(), name='problem_select2'),
         path('problem/public/', PublicProblemSelect2View.as_view(), name='public_problem_select2'),
         path('problem/org/<int:org_pk>/', OrganizationProblemSelect2View.as_view(), name='org_problem_select2'),
@@ -503,6 +505,8 @@ if 'newsletter' in settings.INSTALLED_APPS:
     urlpatterns.append(path('newsletter/', include('newsletter.urls')))
 if 'impersonate' in settings.INSTALLED_APPS:
     urlpatterns.append(path('impersonate/', include('impersonate.urls')))
+if 'student_profile' in settings.INSTALLED_APPS:
+    urlpatterns.append(path('student-profile/', include('student_profile.urls', namespace='student_profile')))
 
 if settings.VNOJ_ENABLE_SYNC_API:
     urlpatterns.append(

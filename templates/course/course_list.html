@@ -142,10 +142,9 @@
                         <span>{{ course.instructor_name }}</span>
                     </div>
 
-                    <p class="course-card__desc">
-                        {{ course.description|striptags or _('Chương trình bồi dưỡng chuyên sâu trang bị đầy đủ kiến
-                        thức thuật toán và kỹ năng lập trình thi đấu.') }}
-                    </p>
+                    <div class="course-card__desc lms-markdown-body">
+                        {{ (course.description or _('Chương trình bồi dưỡng chuyên sâu trang bị đầy đủ kiến thức thuật toán và kỹ năng lập trình thi đấu.'))|markdown('default', MATH_ENGINE)|reference|str|safe }}
+                    </div>
                 </div>
             </div>
 
@@ -189,8 +188,8 @@
                     {% endif %}
 
                     <a href="{{ course.get_absolute_url() }}" class="btn-course-outline"
-                        title="{{ _('Xem chi tiết lộ trình') }}">
-                        <i class="fa fa-list-alt"></i> {{ _('Xem lộ trình') }}
+                        title="{{ _('Xem chi tiết khóa học') }}">
+                        <i class="fa fa-arrow-right"></i> {{ _('Xem thêm') }}
                     </a>
                 </div>
             </div>

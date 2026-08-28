@@ -821,6 +821,7 @@ class ContestForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.org_pk = org_pk = kwargs.pop('org_pk', None)
+        self.course_pk = course_pk = kwargs.pop('course_pk', None)
         self.user = kwargs.pop('user', None)
         super(ContestForm, self).__init__(*args, **kwargs)
 
@@ -831,6 +832,10 @@ class ContestForm(ModelForm):
             self.fields['private_contestants'].widget.data_view = None
             self.fields['private_contestants'].widget.data_url = reverse('organization_profile_select2',
                                                                          args=(org_pk, ))
+        elif course_pk:
+            self.fields['private_contestants'].widget.data_view = None
+            self.fields['private_contestants'].widget.data_url = reverse('course_profile_select2',
+                                                                         args=(course_pk, ))
 
         self.fields['private_contestants'].help_text = \
             str(self.fields['private_contestants'].help_text) + ' ' + \
@@ -864,7 +869,7 @@ class ContestForm(ModelForm):
         model = Contest
         fields = [
             'key', 'name',
-            'start_time', 'end_time', 'province', 'is_province_contest', 'province_category', 'is_visible',
+            'start_time', 'end_time', 'is_visible',
             'use_clarifications',
             'hide_problem_tags',
             'hide_problem_authors',
@@ -883,7 +888,6 @@ class ContestForm(ModelForm):
             'description': MartorWidget(attrs={'data-markdownfy-url': reverse_lazy('contest_preview')}),
             'scoreboard_visibility': Select2Widget(),
             'format_name': Select2Widget(),
-            'province_category': Select2Widget(),
             'private_contestants': HeavySelect2MultipleWidget(
                 data_view='profile_select2',
                 attrs={'style': 'width: 100%'},

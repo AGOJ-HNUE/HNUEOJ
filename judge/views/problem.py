@@ -442,6 +442,8 @@ class ProblemSubmitMixin:
         # Save a query.
         new_submission.source = source
         new_submission.judge(force_judge=True, judge_id=form.cleaned_data['judge'])
+        from judge.caching import finished_submission
+        finished_submission(new_submission)
 
         # In contest mode, we should log the ip
         if settings.VNOJ_OFFICIAL_CONTEST_MODE:
