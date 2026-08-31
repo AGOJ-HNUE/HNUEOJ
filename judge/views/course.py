@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
 from django.db.models import Count, Max, Q
-from django.http import Http404, HttpResponse, HttpResponseForbidden, JsonResponse
+from django.http import Http404, HttpResponse, HttpResponseForbidden, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -717,6 +717,233 @@ class BatchSaveLessonProblemsAjax(LoginRequiredMixin, View):
         LessonProblem.objects.filter(lesson=lesson).exclude(problem__code__in=keep_codes).delete()
 
         return JsonResponse({'success': True})
+
+
+class SaveExamAjax(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        course = get_object_or_404(Course, key=slug)
+        if not course.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
+        exam_id = data.get('id')
+        chapter_id = data.get('chapter_id')
+        title = data.get('title', '').strip()
+        description = data.get('description', '').strip()
+        exam_type = data.get('exam_type', Exam.TYPE_PRACTICE)
+        pass_percentage = float(data.get('pass_percentage', 60.0))
+        is_published = bool(data.get('is_published', True))
+        is_locked = bool(data.get('is_locked', False))
+        order_index = int(data.get('order_index', 0))
+
+        if not title:
+            return JsonResponse({'error': 'Tiêu đề kỳ thi không được để trống.'}, status=400)
+
+        chapter = None
+        if chapter_id:
+            chapter = get_object_or_404(Chapter, id=chapter_id, course=course)
+
+        target_type = Exam.TARGET_CHAPTER if chapter else Exam.TARGET_COURSE
+
+        if exam_id:
+            exam = get_object_or_404(Exam, id=exam_id, course=course)
+            exam.chapter = chapter
+            exam.target_type = target_type
+            exam.title = title
+            exam.description = description
+            exam.exam_type = exam_type
+            exam.pass_percentage = pass_percentage
+            exam.is_published = is_published
+            exam.is_locked = is_locked
+            exam.order_index = order_index
+            exam.save()
+        else:
+            exam = Exam.objects.create(
+                course=course,
+                chapter=chapter,
+                target_type=target_type,
+                title=title,
+                description=description,
+                exam_type=exam_type,
+                pass_percentage=pass_percentage,
+                is_published=is_published,
+                is_locked=is_locked,
+                order_index=order_index,
+            )
+
+        return JsonResponse({
+            'success': True,
+            'exam': {
+                'id': exam.id,
+                'title': exam.title,
+                'description': exam.description,
+                'exam_type': exam.exam_type,
+                'pass_percentage': exam.pass_percentage,
+                'is_published': exam.is_published,
+                'is_locked': exam.is_locked,
+                'order_index': exam.order_index,
+            },
+        })
+
+
+class SaveExamProblemAjax(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        course = get_object_or_404(Course, key=slug)
+        if not course.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
+        ep_id = data.get('id')
+        exam_id = data.get('exam_id')
+        problem_code = data.get('problem_code', '').strip()
+        alias = data.get('alias', '').strip()
+        custom_score = data.get('custom_score')
+        custom_score = float(custom_score) if custom_score not in (None, '') else None
+        order_index = int(data.get('order_index', 0))
+
+        exam = get_object_or_404(Exam, id=exam_id, course=course)
+        problem = get_object_or_404(Problem, code=problem_code)
+
+        if ep_id:
+            ep = get_object_or_404(ExamProblem, id=ep_id, exam=exam)
+            ep.problem = problem
+            ep.alias = alias
+            ep.custom_score = custom_score
+            ep.order_index = order_index
+            ep.save()
+        else:
+            ep, _ = ExamProblem.objects.update_or_create(
+                exam=exam,
+                problem=problem,
+                defaults={
+                    'alias': alias,
+                    'custom_score': custom_score,
+                    'order_index': order_index,
+                }
+            )
+
+        return JsonResponse({
+            'success': True,
+            'problem': {
+                'id': ep.id,
+                'code': problem.code,
+                'name': ep.display_title,
+                'points': ep.display_points,
+                'order_index': ep.order_index,
+            },
+        })
+
+
+class BatchSaveExamProblemsAjax(LoginRequiredMixin, View):
+    def post(self, request, slug, exam_id):
+        course = get_object_or_404(Course, key=slug)
+        if not course.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        exam = get_object_or_404(Exam, id=exam_id, course=course)
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+        problems_data = data.get('problems', [])
+
+        existing_eps = {ep.problem.code: ep for ep in exam.exam_problems.select_related('problem')}
+        keep_codes = set()
+
+        for idx, item in enumerate(problems_data):
+            code = (item.get('problem_code') or '').strip()
+            if not code:
+                continue
+            order_idx = int(item.get('order', idx + 1))
+            custom_score = item.get('custom_score')
+            custom_score = float(custom_score) if custom_score not in (None, '') else None
+
+            problem = Problem.objects.filter(code=code).first()
+            if not problem:
+                return JsonResponse({'error': _('Không tìm thấy bài tập với mã "%s"') % code}, status=400)
+
+            if code in existing_eps:
+                ep = existing_eps[code]
+                ep.order_index = order_idx
+                if custom_score is not None:
+                    ep.custom_score = custom_score
+                ep.save()
+            else:
+                ExamProblem.objects.create(
+                    exam=exam,
+                    problem=problem,
+                    order_index=order_idx,
+                    custom_score=custom_score,
+                )
+            keep_codes.add(code)
+
+        for code, ep in existing_eps.items():
+            if code not in keep_codes:
+                ep.delete()
+
+        return JsonResponse({'success': True})
+
+
+class ExamDetailView(LoginRequiredMixin, TitleMixin, TemplateView):
+    template_name = 'course/exam_detail.html'
+
+    def get_title(self):
+        return f'{self.exam.title} - LMS HNUEOJ'
+
+    def dispatch(self, request, slug, exam_id, *args, **kwargs):
+        self.course = get_object_or_404(Course, key=slug)
+        self.exam = get_object_or_404(Exam, id=exam_id, course=self.course)
+        if not self.exam.can_access(request.user) and not self.course.is_editable_by(request.user):
+            raise PermissionDenied()
+        return super().dispatch(request, slug, exam_id, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['course'] = self.course
+        context['exam'] = self.exam
+        context['exam_problems'] = self.exam.exam_problems.select_related('problem').all()
+        return context
+
+
+class ExamSubmitView(LoginRequiredMixin, View):
+    def get(self, request, slug, exam_id):
+        return HttpResponseRedirect(reverse('course_exam', args=[slug, exam_id]))
+
+    def post(self, request, slug, exam_id):
+        course = get_object_or_404(Course, key=slug)
+        exam = get_object_or_404(Exam, id=exam_id, course=course)
+        if not exam.can_access(request.user) and not course.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        problem_code = request.POST.get('problem_code')
+        problem = get_object_or_404(Problem, code=problem_code)
+        ep = get_object_or_404(ExamProblem, exam=exam, problem=problem)
+
+        language_key = request.POST.get('language')
+        language = get_object_or_404(Language, key=language_key)
+        source_code = request.POST.get('source', '').strip()
+
+        if not source_code:
+            return JsonResponse({'error': _('Mã nguồn không được để trống.')}, status=400)
+
+        with transaction.atomic():
+            submission = Submission.objects.create(
+                user=request.profile,
+                problem=problem,
+                language=language,
+                exam=exam,
+                status='QU',
+            )
+            SubmissionSource.objects.create(
+                submission=submission,
+                source=source_code,
+            )
+
+        judge_submission(submission)
+
+        return JsonResponse({
+            'success': True,
+            'submission_id': submission.id,
+        })
+
+
 
 
 class CourseProblemSearchAjax(LoginRequiredMixin, View):

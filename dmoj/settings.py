@@ -507,6 +507,7 @@ INSTALLED_APPS += (
     'adminsortable2',
     'django_cleanup.apps.CleanupConfig',
     'student_profile',
+    'icpc_registration',
 )
 
 MIDDLEWARE = (
@@ -624,7 +625,6 @@ LOCALE_PATHS = [
 ]
 
 LANGUAGES = [
-    ('en', _('English')),
     ('vi', _('Vietnamese')),
 ]
 
@@ -785,9 +785,9 @@ EVENT_DAEMON_NOTIFICATION_KEY = 'm4l6v_%7j_%#abf&2#esiq@f_#2!cu54+gg%7y+g(fg--0=
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
 # Whatever you do, this better be one of the entries in `LANGUAGES`.
-LANGUAGE_CODE = 'en'
-TIME_ZONE = 'UTC'
-DEFAULT_USER_TIME_ZONE = 'America/Toronto'
+LANGUAGE_CODE = 'vi'
+TIME_ZONE = 'Asia/Ho_Chi_Minh'
+DEFAULT_USER_TIME_ZONE = 'Asia/Ho_Chi_Minh'
 USE_I18N = True
 USE_TZ = True
 

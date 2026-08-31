@@ -211,15 +211,39 @@
     <script>
         function submmit_language(lang) {
             if (lang != "{{ LANGUAGE_CODE }}") {
-                $("input[name=language]").val(lang)
-                $("#set_language").submit()
+                $("input[name=language]").val(lang);
+                $("#set_language").submit();
             }
         }
         function set_theme(theme) {
             $("input[name=theme]").val(theme);
             $("#set_theme").submit();
         }
+        $(function () {
+            $(document).on('click', '#settings-toggle-btn', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $('#settings-dropdown-menu').toggleClass('show-popup');
+            });
+
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.settings-menu-item').length) {
+                    $('#settings-dropdown-menu').removeClass('show-popup');
+                }
+            });
+        });
     </script>
+    <style>
+        .settings-popup.show-popup {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            z-index: 999999 !important;
+        }
+        .settings-menu-item:hover > .settings-popup {
+            display: block;
+        }
+    </style>
     <noscript>
         <style>
             #content {
@@ -285,42 +309,42 @@
 
             <span id="user-links">
                 <ul>
-                    <li>
-                        {% if request.user.is_superuser %}
-                        <a href="{{ url('misc_config') }}" style="margin-right: 5px;">
-                            {% else %}
-                            <a href="javascript:void(0)" style="margin-right: 5px;">
-                                {% endif %}
-                                <span title="{{ _('Settings') }}">
-                                    <i class="fa fa-gear" style="color: rgb(200,200,200); font-size: 1.15em"></i>
-                                </span>
-                            </a>
-                            <ul class="settings-popup" style="min-width: 210px; right: 0; left: auto;">
-                                <li>
-                                    <div class="nav-settings-row">
-                                        <span class="nav-settings-lbl">{{ _('Theme') }}</span>
-                                        <span class="nav-seg">
-                                            <span onclick="set_theme('light')"
-                                                class="nav-seg-btn{% if SITE_THEME_NAME != 'dark' %} active{% endif %}"><i
-                                                    class="fa fa-sun-o"></i></span>
-                                            <span onclick="set_theme('dark')"
-                                                class="nav-seg-btn{% if SITE_THEME_NAME == 'dark' %} active{% endif %}"><i
-                                                    class="fa fa-moon-o"></i></span>
+                    <li class="settings-menu-item" style="position: relative;">
+                        <a href="javascript:void(0)" id="settings-toggle-btn" style="margin-right: 5px;" title="{{ _('Settings') }}">
+                            <span>
+                                <i class="fa fa-gear" style="color: rgb(200,200,200); font-size: 1.15em"></i>
+                            </span>
+                        </a>
+                        <ul class="settings-popup" id="settings-dropdown-menu" style="min-width: 210px; right: 0; left: auto; position: absolute; top: 100%;">
+                            <li>
+                                <div class="nav-settings-row">
+                                    <span class="nav-settings-lbl">{{ _('Theme') }}</span>
+                                    <span class="nav-seg">
+                                        <span onclick="set_theme('light')" class="nav-seg-btn{% if SITE_THEME_NAME != 'dark' %} active{% endif %}">
+                                            <i class="fa fa-sun-o"></i>
                                         </span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="nav-settings-row">
-                                        <span class="nav-settings-lbl">{{ _('Language') }}</span>
-                                        <span class="nav-seg">
-                                            <span onclick="submmit_language('vi')"
-                                                class="nav-seg-btn{% if LANGUAGE_CODE == 'vi' %} active{% endif %}">VI</span>
-                                            <span aria-disabled="true" onclick="submmit_language('en')"
-                                                class="nav-seg-btn{% if LANGUAGE_CODE == 'en' %} active{% endif %}">EN</span>
+                                        <span onclick="set_theme('dark')" class="nav-seg-btn{% if SITE_THEME_NAME == 'dark' %} active{% endif %}">
+                                            <i class="fa fa-moon-o"></i>
                                         </span>
-                                    </div>
-                                </li>
-                            </ul>
+                                    </span>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="nav-settings-row">
+                                    <span class="nav-settings-lbl">{{ _('Ngôn ngữ') }}</span>
+                                    <span class="nav-seg">
+                                        <span class="nav-seg-btn active" style="cursor: default;">Tiếng Việt</span>
+                                    </span>
+                                </div>
+                            </li>
+                            {% if request.user.is_superuser %}
+                            <li style="border-top: 1px solid var(--border-color, rgba(0,0,0,0.1)); margin-top: 4px; padding-top: 4px;">
+                                <a href="{{ url('misc_config') }}" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: var(--text-main, #333); font-size: 13px; font-weight: 600; text-decoration: none;">
+                                    <i class="fa fa-cogs"></i> {{ _('Trang quản trị Admin') }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
                     </li>
                 </ul>
                 {% if request.user.is_authenticated %}
@@ -449,26 +473,16 @@
 
         {% block bodyend %}{% endblock %}
 
-        <!-- <footer>
-        <span id="footer-content">
-            <br>
-            {{_('proudly powered by %(dmoj)s', dmoj=safe('<a style="color: #808080" href="https://dmoj.ca"><b>DMOJ</b></a>'))}} |
-            {{_('follow us on %(github)s and %(facebook)s', github=safe('<a style="color: #808080" href="https://github.com/VNOI-Admin/OJ"><b>Github</b></a>'), facebook=safe('<a style="color: #808080" href="https://www.facebook.com/vnoi.wiki"><b>Facebook</b></a>'))}}
-            {% if misc_config.footer %}
-                {{ misc_config.footer|safe }} |
-            {% endif %}
-            <form id="set_language" action="{{ url('set_language') }}" method="post" style="display: inline">
-                {% csrf_token %}
-            <input name="next" type="hidden" value="{{ request.get_full_path() }}">
-            <input name="language" type="hidden" value="{{LANGUAGE_CODE}}">
-          </form>
-            <form id="set_theme" action="{{ url('set_theme') }}" method="post" style="display: inline">
-                {% csrf_token %}
-                <input name="next" type="hidden" value="{{ request.get_full_path() }}">
-                <input name="theme" type="hidden" value="{{ SITE_THEME_NAME }}">
-            </form>
-        </span>
-    </footer> -->
+    <form id="set_language" action="{{ url('set_language') }}" method="post" style="display: none">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ request.get_full_path() }}">
+        <input name="language" type="hidden" value="{{ LANGUAGE_CODE }}">
+    </form>
+    <form id="set_theme" action="{{ url('set_theme') }}" method="post" style="display: none">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ request.get_full_path() }}">
+        <input name="theme" type="hidden" value="{{ SITE_THEME_NAME }}">
+    </form>
     </div>
 </body>
 

@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ SITE_LONG_NAME }}{% endblock %}
+
+{% block media %}
+{{ super() }}
+<!-- Mermaid.js for Organigram Diagram -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
+            securityLevel: 'loose',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    });
+</script>
+
+<style>
+    :root {
+        --icpc-blue: #1e3a8a;
+        --icpc-blue-light: #2563eb;
+        --icpc-indigo: #4f46e5;
+        --icpc-emerald: #059669;
+        --icpc-amber: #d97706;
+        --icpc-rose: #e11d48;
+        --icpc-bg: #f8fafc;
+        --icpc-card-bg: #ffffff;
+        --icpc-border: #e2e8f0;
+        --icpc-text-main: #0f172a;
+        --icpc-text-muted: #64748b;
+        --icpc-radius: 14px;
+        --icpc-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+        --icpc-shadow-hover: 0 10px 25px -4px rgba(15, 23, 42, 0.12);
+        --icpc-nav-bg: rgba(255, 255, 255, 0.95);
+    }
+
+    [data-theme="dark"] {
+        --icpc-bg: #0f172a;
+        --icpc-card-bg: #1e293b;
+        --icpc-border: #334155;
+        --icpc-text-main: #f8fafc;
+        --icpc-text-muted: #94a3b8;
+        --icpc-blue: #3b82f6;
+        --icpc-blue-light: #60a5fa;
+        --icpc-nav-bg: rgba(30, 41, 59, 0.95);
+    }
+
+    .icpc-header-banner {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 40%, #3b82f6 75%, #4f46e5 100%);
+        color: #ffffff;
+        padding: 32px 30px;
+        border-radius: var(--icpc-radius);
+        margin-bottom: 24px;
+        box-shadow: 0 12px 28px -5px rgba(30, 58, 138, 0.35);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .icpc-header-banner::after {
+        content: '';
+        position: absolute;
+        right: -50px;
+        top: -50px;
+        width: 240px;
+        height: 240px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .icpc-header-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+    .icpc-logo-brand-box {
+        background: rgba(255, 255, 255, 0.96);
+        padding: 8px 18px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        backdrop-filter: blur(8px);
+    }
+
+    .icpc-banner-logo-hnue {
+        height: 46px;
+        width: auto;
+        object-fit: contain;
+    }
+
+    .icpc-logo-separator {
+        height: 32px;
+        width: 1px;
+        background: rgba(15, 23, 42, 0.15);
+    }
+
+    .icpc-banner-logo-hnueoj {
+        height: 40px;
+        width: auto;
+        object-fit: contain;
+    }
+
+    .icpc-header-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(8px);
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 0.88rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: #ffffff;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+    }
+
+    .icpc-header-title {
+        font-family: 'Be Vietnam Pro', sans-serif;
+        font-size: 2.1rem;
+        font-weight: 800;
+        margin: 0 0 12px 0;
+        line-height: 1.25;
+        color: #ffffff !important;
+        letter-spacing: -0.5px;
+    }
+
+    .icpc-header-desc {
+        font-size: 0.98rem;
+        opacity: 0.95;
+        max-width: 1000px;
+        margin: 0;
+        line-height: 1.7;
+        text-align: justify;
+    }
+
+    /* Sub-nav Tabs */
+    .icpc-nav-tabs {
+        display: flex;
+        gap: 10px;
+        background: var(--icpc-nav-bg);
+        padding: 8px;
+        border-radius: 12px;
+        border: 1px solid var(--icpc-border);
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        backdrop-filter: blur(10px);
+    }
+
+    .icpc-tab-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--icpc-text-muted) !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .icpc-tab-link:hover {
+        color: var(--icpc-blue-light) !important;
+        background: rgba(59, 130, 246, 0.08);
+    }
+
+    .icpc-tab-link.active {
+        color: #ffffff !important;
+        background: var(--icpc-blue);
+        box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+    }
+
+    /* General Cards */
+    .icpc-card {
+        background: var(--icpc-card-bg);
+        border: 1px solid var(--icpc-border);
+        border-radius: var(--icpc-radius);
+        padding: 28px;
+        margin-bottom: 28px;
+        box-shadow: var(--icpc-shadow);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .icpc-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 14px;
+        border-bottom: 2px solid var(--icpc-border);
+    }
+
+    .icpc-card-header i {
+        font-size: 1.4rem;
+        color: var(--icpc-blue);
+    }
+
+    .icpc-card-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--icpc-text-main);
+    }
+
+    /* Custom Form Control styling */
+    .form-control, .form-select, select {
+        background-color: var(--icpc-card-bg) !important;
+        color: var(--icpc-text-main) !important;
+        border: 1px solid var(--icpc-border) !important;
+        border-radius: 8px !important;
+        padding: 10px 14px !important;
+        font-size: 0.95rem !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    .form-select option, select option {
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        padding: 6px 10px !important;
+        background-color: var(--icpc-card-bg) !important;
+        color: var(--icpc-text-main) !important;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--icpc-blue) !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+        outline: none !important;
+    }
+
+    .form-label {
+        font-weight: 600;
+        font-size: 0.92rem;
+        margin-bottom: 6px;
+        color: var(--icpc-text-main);
+    }
+
+    .btn-icpc-primary {
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+        color: #ffffff !important;
+        font-weight: 700;
+        padding: 12px 28px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-icpc-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+    }
+
+    /* Distinct Status Badges - Đã duyệt Prominently Highlighted */
+    .icpc-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        letter-spacing: 0.3px;
+        transition: all 0.2s ease;
+    }
+
+    .icpc-status-approved {
+        background: linear-gradient(135deg, #047857 0%, #059669 40%, #10b981 100%) !important;
+        color: #ffffff !important;
+        font-size: 0.95rem !important;
+        font-weight: 800 !important;
+        padding: 8px 20px !important;
+        border-radius: 24px !important;
+        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.45), 0 0 0 2px #34d399 !important;
+        letter-spacing: 0.5px;
+        animation: approvedPulse 3s infinite ease-in-out;
+    }
+
+    @keyframes approvedPulse {
+        0% { box-shadow: 0 4px 16px rgba(16, 185, 129, 0.45), 0 0 0 2px #34d399; }
+        50% { box-shadow: 0 6px 22px rgba(16, 185, 129, 0.7), 0 0 0 4px #6ee7b7; }
+        100% { box-shadow: 0 4px 16px rgba(16, 185, 129, 0.45), 0 0 0 2px #34d399; }
+    }
+
+    .icpc-status-pending {
+        background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #f59e0b 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 3px 10px rgba(217, 119, 6, 0.35) !important;
+    }
+
+    .icpc-status-rejected {
+        background: linear-gradient(135deg, #9f1239 0%, #dc2626 50%, #ef4444 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 3px 10px rgba(220, 38, 38, 0.35) !important;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid" style="max-width: 1140px; margin: 20px auto; padding: 0 16px;">
+    <!-- Top Header Banner -->
+    <div class="icpc-header-banner">
+        <!-- Brand Logos & Badge Header Bar -->
+        <div class="icpc-header-top-bar">
+            <div class="icpc-logo-brand-box">
+                <!-- Logo Trường Đại học Sư phạm Hà Nội (HNUE) -->
+                <img src="{{ static('icpc/logo-hnue.png') }}" alt="Trường Đại học Sư phạm Hà Nội (HNUE)" class="icpc-banner-logo-hnue" />
+                <span class="icpc-logo-separator"></span>
+                <!-- Logo Hệ thống HNUEOJ -->
+                {% with logo_url=misc_config.site_logo|default(static('icons/logo.svg'), true) %}
+                <img src="{{ logo_url }}" alt="HNUEOJ Platform Logo" class="icpc-banner-logo-hnueoj" />
+                {% endwith %}
+            </div>
+
+            <div class="icpc-header-badge">
+                <i class="fa fa-graduation-cap"></i> CLB Nghiệp vụ sư phạm - Khoa CNTT
+            </div>
+        </div>
+
+        <h1 class="icpc-header-title">TIỂU BAN ICPC & OLYMPIC TIN HỌC</h1>
+        <p class="icpc-header-desc">
+            Năm học này đánh dấu lần đầu tiên CLB Nghiệp vụ sư phạm - Khoa CNTT triển khai mô hình <b>phân ban chuyên môn</b>, với 03 tiểu ban được hình thành theo những định hướng hoạt động khác nhau. Trong đó, <b>Tiểu ban ICPC</b> được thành lập với mục tiêu xây dựng một môi trường học tập và rèn luyện dành cho sinh viên có định hướng phát triển về <b>thuật toán, lập trình thi đấu và các kỳ thi lập trình</b>.
+            <br><br>
+            Tiểu ban ICPC tập trung vào việc rèn luyện <b>tư duy thuật toán, kỹ năng lập trình, khả năng giải quyết vấn đề và kỹ năng thi đấu</b>, thông qua các hoạt động training, thi thử, luyện tập, sinh hoạt chuyên đề và nghiên cứu các bài toán lập trình.
+            Về lâu dài, Tiểu ban hướng tới việc hình thành một cộng đồng lập trình thi đấu có tính tổ chức, duy trì hoạt động thường xuyên và từng bước <b>phát triển thành một lực lượng nòng cốt về Competitive Programming của sinh viên Trường Đại học Sư phạm Hà Nội</b>, tạo nền tảng cho việc xây dựng các đội tuyển tham gia các kỳ thi lập trình trong và ngoài trường.
+        </p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="icpc-nav-tabs">
+        <a href="{{ url('icpc_registration:index') }}" class="icpc-tab-link {% if active_tab == 'index' %}active{% endif %}">
+            <i class="fa fa-info-circle"></i> Giới thiệu, Kế hoạch & Form Đăng ký
+        </a>
+
+        {# Tab Quản trị viên CHỈ HIỆN KHI NGƯỜI DÙNG LÀ QUẢN TRỊ VIÊN (Staff/Superuser) #}
+        {% if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser) %}
+        <a href="{{ url('icpc_registration:stats') }}" class="icpc-tab-link {% if active_tab == 'stats' %}active{% endif %}" style="margin-left: auto; background: rgba(16, 185, 129, 0.1); color: #059669 !important;">
+            <i class="fa fa-user-shield"></i> Trang Quản trị viên (Thống kê & Xuất Excel)
+        </a>
+        {% endif %}
+    </div>
+
+    {% if messages %}
+    <div style="margin-bottom: 20px;">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags if message.tags != 'error' else 'danger' }}" style="border-radius: 10px; padding: 14px 18px; font-weight: 500;">
+            <i class="fa {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}" style="margin-right: 8px;"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block icpc_content %}{% endblock %}
+</div>
+{% endblock %}

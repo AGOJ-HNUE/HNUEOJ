@@ -1,0 +1,1317 @@
+{% extends "icpc_registration/base_club.html" %}
+
+{% block icpc_content %}
+<style>
+    /* Section Headers */
+    .section-title-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--icpc-border);
+    }
+
+    .section-title-wrapper i {
+        font-size: 1.5rem;
+        color: var(--icpc-blue);
+    }
+
+    .section-title {
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin: 0;
+        color: var(--icpc-text-main);
+    }
+
+    /* Image Diagram Styling */
+    .organigram-img-container {
+        background: rgba(248, 250, 252, 0.7);
+        border: 1px dashed var(--icpc-border);
+        border-radius: 16px;
+        padding: 24px;
+        text-align: center;
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.02);
+    }
+
+    [data-theme="dark"] .organigram-img-container {
+        background: rgba(15, 23, 42, 0.6);
+    }
+
+    .organigram-img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: var(--icpc-shadow);
+        border: 1px solid var(--icpc-border);
+        background: #ffffff;
+        padding: 8px;
+    }
+
+    /* =========================================================
+       TIMELINE KẾ HOẠCH HOẠT ĐỘNG
+       ========================================================= */
+
+    .plan-intro {
+        max-width: 920px;
+        margin: 0 auto 34px;
+        text-align: center;
+        color: var(--icpc-text-muted);
+        font-size: 0.96rem;
+        line-height: 1.75;
+    }
+
+    .plan-intro strong {
+        color: var(--icpc-text-main);
+    }
+
+    .plan-timeline {
+        position: relative;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 12px 0 30px;
+    }
+
+    .plan-timeline::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 4px;
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: linear-gradient(to bottom,
+                #1e3a8a 0%,
+                #2563eb 22%,
+                #4f46e5 45%,
+                #d97706 68%,
+                #e11d48 84%,
+                #0891b2 100%);
+        opacity: 0.9;
+    }
+
+    .plan-item {
+        position: relative;
+        width: 50%;
+        box-sizing: border-box;
+        margin-bottom: 48px;
+    }
+
+    .plan-item:nth-child(odd) {
+        left: 0;
+        padding-right: 58px;
+    }
+
+    .plan-item:nth-child(even) {
+        left: 50%;
+        padding-left: 58px;
+    }
+
+    .plan-marker {
+        position: absolute;
+        top: 20px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--icpc-card-bg);
+        border: 4px solid var(--plan-color, var(--icpc-blue));
+        color: var(--plan-color, var(--icpc-blue));
+        font-size: 0.95rem;
+        font-weight: 900;
+        box-shadow:
+            0 0 0 7px rgba(59, 130, 246, 0.08),
+            0 8px 24px rgba(15, 23, 42, 0.14);
+        z-index: 5;
+    }
+
+    .plan-item:nth-child(odd) .plan-marker {
+        right: -26px;
+    }
+
+    .plan-item:nth-child(even) .plan-marker {
+        left: -26px;
+    }
+
+    .plan-card {
+        position: relative;
+        overflow: hidden;
+        background: var(--icpc-card-bg);
+        border: 1px solid var(--icpc-border);
+        border-radius: 18px;
+        padding: 26px 28px;
+        box-shadow: var(--icpc-shadow);
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .plan-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--plan-color, var(--icpc-blue));
+    }
+
+    .plan-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--plan-color, var(--icpc-blue));
+        box-shadow: var(--icpc-shadow-hover);
+    }
+
+    .plan-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    .plan-heading {
+        min-width: 0;
+    }
+
+    .plan-stage {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 6px 11px;
+        border-radius: 999px;
+        background: var(--plan-bg, rgba(59, 130, 246, 0.1));
+        color: var(--plan-color, var(--icpc-blue));
+        font-size: 0.73rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.035em;
+        margin-bottom: 10px;
+    }
+
+    .plan-title {
+        margin: 0;
+        color: var(--icpc-text-main);
+        font-size: 1.25rem;
+        line-height: 1.4;
+        font-weight: 850;
+    }
+
+    .plan-purpose {
+        margin: 5px 0 0;
+        color: var(--plan-color, var(--icpc-blue));
+        font-size: 0.86rem;
+        font-weight: 700;
+    }
+
+    .plan-description {
+        margin: 0;
+        color: var(--icpc-text-muted);
+        font-size: 0.93rem;
+        line-height: 1.72;
+    }
+
+    .plan-block {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px dashed var(--icpc-border);
+    }
+
+    .plan-block-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        color: var(--icpc-text-main);
+        font-size: 0.88rem;
+        font-weight: 800;
+    }
+
+    .plan-block-title i {
+        color: var(--plan-color, var(--icpc-blue));
+    }
+
+    .plan-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .plan-list li {
+        position: relative;
+        padding-left: 22px;
+        color: var(--icpc-text-muted);
+        font-size: 0.88rem;
+        line-height: 1.6;
+    }
+
+    .plan-list li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        top: 1px;
+        color: var(--plan-color, var(--icpc-blue));
+        font-weight: 900;
+    }
+
+    .plan-topics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .plan-topic {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 8px;
+        background: rgba(248, 250, 252, 0.75);
+        border: 1px solid var(--icpc-border);
+        color: var(--icpc-text-muted);
+        font-size: 0.8rem;
+        line-height: 1.3;
+    }
+
+    [data-theme="dark"] .plan-topic {
+        background: rgba(30, 41, 59, 0.65);
+    }
+
+    .plan-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+        margin-top: 18px;
+    }
+
+    .plan-meta-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        padding: 11px 12px;
+        border-radius: 10px;
+        background: rgba(248, 250, 252, 0.55);
+        border: 1px solid var(--icpc-border);
+        color: var(--icpc-text-muted);
+        font-size: 0.8rem;
+        line-height: 1.45;
+    }
+
+    [data-theme="dark"] .plan-meta-item {
+        background: rgba(15, 23, 42, 0.45);
+    }
+
+    .plan-meta-item i {
+        flex-shrink: 0;
+        margin-top: 2px;
+        color: var(--plan-color, var(--icpc-blue));
+    }
+
+    .plan-meta-item strong {
+        display: block;
+        margin-bottom: 2px;
+        color: var(--icpc-text-main);
+        font-size: 0.77rem;
+    }
+
+    .plan-end {
+        position: relative;
+        z-index: 6;
+        width: max-content;
+        max-width: calc(100% - 30px);
+        margin: -3px auto 0;
+        padding: 9px 16px;
+        border-radius: 999px;
+        background: var(--icpc-card-bg);
+        border: 1px solid var(--icpc-border);
+        color: var(--icpc-text-muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+        box-shadow: var(--icpc-shadow);
+        margin-bottom: 10px;
+    }
+
+    .plan-end i {
+        margin-right: 6px;
+        color: var(--icpc-blue);
+    }
+
+    @media (max-width: 768px) {
+        .plan-timeline {
+            padding-left: 7px;
+        }
+
+        .plan-timeline::before {
+            left: 31px;
+        }
+
+        .plan-item,
+        .plan-item:nth-child(odd),
+        .plan-item:nth-child(even) {
+            width: 100%;
+            left: 0;
+            padding-left: 72px;
+            padding-right: 8px;
+            margin-bottom: 30px;
+        }
+
+        .plan-item:nth-child(odd) .plan-marker,
+        .plan-item:nth-child(even) .plan-marker {
+            left: 5px;
+            right: auto;
+        }
+
+        .plan-card {
+            padding: 21px 19px;
+            border-radius: 15px;
+        }
+
+        .plan-header {
+            display: block;
+        }
+
+        .plan-title {
+            font-size: 1.08rem;
+        }
+
+        .plan-meta {
+            grid-template-columns: 1fr;
+        }
+
+        .plan-description,
+        .plan-list li {
+            font-size: 0.88rem;
+        }
+    }
+
+    /* MODERN SCIENTIFIC FORM STYLING */
+    .form-steps-bar {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 28px;
+    }
+
+    @media (max-width: 640px) {
+        .form-steps-bar {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .form-step-pill {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--icpc-card-bg);
+        border: 1px solid var(--icpc-border);
+        padding: 12px 16px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        transition: all 0.25 ease;
+    }
+
+    .form-step-num {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--icpc-blue) 0%, var(--icpc-blue-light) 100%);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    }
+
+    .form-step-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-step-lbl {
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--icpc-text-muted);
+        letter-spacing: 0.5px;
+    }
+
+    .form-step-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--icpc-text-main);
+    }
+
+    .form-group-section {
+        background: var(--icpc-card-bg);
+        border: 1px solid var(--icpc-border);
+        border-top: 4px solid var(--icpc-blue-light);
+        border-radius: 16px;
+        padding: 24px 26px;
+        margin-bottom: 26px;
+        box-shadow: 0 6px 20px -4px rgba(15, 23, 42, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-group-section:hover {
+        box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.09);
+    }
+
+    [data-theme="dark"] .form-group-section {
+        background: #1e293b;
+    }
+
+    .form-section-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--icpc-text-main);
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--icpc-border);
+    }
+
+    .form-section-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: #ffffff !important;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    .form-section-badge i {
+        color: #ffffff !important;
+    }
+
+    .input-field-group {
+        position: relative;
+        margin-bottom: 18px;
+    }
+
+    .input-with-icon {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-with-icon i.field-icon {
+        position: absolute;
+        left: 14px;
+        color: var(--icpc-text-muted);
+        font-size: 0.95rem;
+        pointer-events: none;
+        transition: color 0.2s ease;
+    }
+
+    .input-with-icon .form-control,
+    .input-with-icon .form-select {
+        padding-left: 42px !important;
+    }
+
+    .input-with-icon .form-control:focus+i.field-icon,
+    .input-with-icon .form-select:focus+i.field-icon {
+        color: var(--icpc-blue-light);
+    }
+
+    .req-star {
+        color: var(--icpc-rose);
+        font-weight: 800;
+        margin-left: 2px;
+    }
+</style>
+
+<!-- ========================================== -->
+<!-- SECTION 1: CƠ CẤU TIỂU BAN -->
+<!-- ========================================== -->
+<div class="icpc-card">
+    <div class="section-title-wrapper">
+        <i class="fa fa-sitemap"></i>
+        <h2 class="section-title">I. Cơ cấu Tiểu ban</h2>
+    </div>
+
+    <p style="color: var(--icpc-text-muted); font-size: 0.96rem; margin-bottom: 20px;">
+        Tiểu ban ICPC được tổ chức theo mô hình
+        <strong>quản lý tập trung, phân công theo chức năng</strong>,
+        trong đó trách nhiệm được phân định rõ giữa công tác điều hành chung,
+        quản lý hoạt động học thuật và triển khai chuyên môn.
+    </p>
+
+    <!-- ORGANIGRAM IMAGE -->
+    <div class="organigram-img-container">
+        <img src="{{ static('icpc/co_cau_icpc.png') }}" alt="Sơ đồ cơ cấu tổ chức Tiểu ban ICPC"
+            class="organigram-img" />
+    </div>
+
+    <!-- ROLES -->
+    <div style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+    ">
+
+        <!-- Trưởng ban -->
+        <div style="
+            background: var(--icpc-card-bg);
+            border: 1px solid var(--icpc-border);
+            border-radius: 12px;
+            padding: 18px 20px;
+        ">
+            <div style="
+                color: var(--icpc-blue);
+                font-weight: 800;
+                font-size: 1.05rem;
+                margin-bottom: 8px;
+            ">
+                <i class="fa fa-user"></i> Trưởng ban
+            </div>
+
+            <div style="
+                color: var(--icpc-text-muted);
+                font-size: 0.92rem;
+                line-height: 1.6;
+            ">
+                Phụ trách quản lý và điều hành toàn bộ hoạt động của Tiểu ban,
+                chịu trách nhiệm chung về tổ chức, nhân sự và định hướng phát triển.
+            </div>
+        </div>
+
+        <!-- Phó ban -->
+        <div style="
+            background: var(--icpc-card-bg);
+            border: 1px solid var(--icpc-border);
+            border-radius: 12px;
+            padding: 18px 20px;
+        ">
+            <div style="
+                color: var(--icpc-blue);
+                font-weight: 800;
+                font-size: 1.05rem;
+                margin-bottom: 8px;
+            ">
+                <i class="fa fa-graduation-cap"></i> Phó ban
+            </div>
+
+            <div style="
+                color: var(--icpc-text-muted);
+                font-size: 0.92rem;
+                line-height: 1.6;
+            ">
+                Hỗ trợ Trưởng ban và trực tiếp phụ trách các hoạt động học thuật,
+                bao gồm đào tạo, sinh hoạt chuyên môn, thi thử và theo dõi
+                quá trình học tập của thành viên.
+            </div>
+        </div>
+
+        <!-- Nhóm chuyên môn -->
+        <div style="
+            background: var(--icpc-card-bg);
+            border: 1px solid var(--icpc-border);
+            border-radius: 12px;
+            padding: 18px 20px;
+        ">
+            <div style="
+                color: var(--icpc-blue);
+                font-weight: 800;
+                font-size: 1.05rem;
+                margin-bottom: 8px;
+            ">
+                <i class="fa fa-users"></i> Nhóm chuyên môn
+            </div>
+
+            <div style="
+                color: var(--icpc-text-muted);
+                font-size: 0.92rem;
+                line-height: 1.6;
+            ">
+                Gồm <strong>03 thành viên</strong>, trong đó Phó ban giữ vai trò
+                điều phối cùng 02 thành viên chuyên môn. Đây là lực lượng nòng cốt
+                trong việc xây dựng và triển khai các nội dung học thuật.
+            </div>
+        </div>
+
+        <!-- Thành viên -->
+        <div style="
+            background: var(--icpc-card-bg);
+            border: 1px solid var(--icpc-border);
+            border-radius: 12px;
+            padding: 18px 20px;
+        ">
+            <div style="
+                color: var(--icpc-blue);
+                font-weight: 800;
+                font-size: 1.05rem;
+                margin-bottom: 8px;
+            ">
+                <i class="fa fa-user-plus"></i> Thành viên
+            </div>
+
+            <div style="
+                color: var(--icpc-text-muted);
+                font-size: 0.92rem;
+                line-height: 1.6;
+            ">
+                Tham gia các hoạt động của Tiểu ban, thực hiện nhiệm vụ được
+                phân công và phối hợp với Ban quản lý trong quá trình triển khai
+                các hoạt động chung.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- NGUYÊN TẮC VẬN HÀNH -->
+    <div style="
+        margin-top: 20px;
+        padding: 16px 18px;
+        border-radius: 10px;
+        background: rgba(59, 130, 246, 0.08);
+        border-left: 4px solid var(--icpc-blue);
+        color: var(--icpc-text-muted);
+        font-size: 0.92rem;
+        line-height: 1.6;
+    ">
+        <strong style="color: var(--icpc-text-main);">
+            <i class="fa fa-cogs"></i> Nguyên tắc vận hành:
+        </strong>
+        Trưởng ban quản lý tổng thể;
+        Phó ban điều phối hoạt động học thuật;
+        nhóm chuyên môn trực tiếp triển khai nội dung chuyên môn;
+        các thành viên tham gia và phối hợp theo kế hoạch chung.
+    </div>
+</div>
+<!-- ========================================== -->
+<!-- SECTION 2: KẾ HOẠCH HOẠT ĐỘNG (VERTICAL TIMELINE) -->
+<!-- ========================================== -->
+<div class="icpc-card">
+    <div class="section-title-wrapper">
+        <i class="fa fa-calendar"></i>
+        <h2 class="section-title">II. Kế hoạch hoạt động (Lộ trình Timeline)</h2>
+    </div>
+
+    <p class="plan-intro">
+        Các hoạt động của Tiểu ban được triển khai theo từng giai đoạn trong năm học,
+        từ <strong>củng cố kiến thức nền tảng</strong>, <strong>rèn luyện kỹ năng thi đấu</strong>
+        đến <strong>luyện tập theo thể thức ICPC</strong> và duy trì
+        <strong>sinh hoạt chuyên môn</strong>.
+    </p>
+
+    <div class="plan-timeline">
+
+        <div class="plan-item">
+            <div class="plan-marker" style="--plan-color:#1e3a8a;">01</div>
+            <div class="plan-card" style="--plan-color:#1e3a8a; --plan-bg:rgba(30,58,138,0.10);">
+                <div class="plan-header">
+                    <div class="plan-heading">
+                        <div class="plan-stage"><i class="fa fa-book"></i> Giai đoạn 1 · Nền tảng</div>
+                        <h3 class="plan-title">Training đợt 1</h3>
+                        <p class="plan-purpose">Chuẩn bị cho Kỳ thi Olympic Tin học cấp trường</p>
+                    </div>
+                </div>
+                <p class="plan-description">
+                    Sau khi hoàn thành việc tiếp nhận thành viên, Tiểu ban tổ chức đợt training đầu tiên
+                    nhằm củng cố các kiến thức và kỹ năng cần thiết trước Kỳ thi Olympic Tin học cấp trường.
+                    Nội dung tập trung vào những dạng bài nền tảng, thường xuyên xuất hiện trong các kỳ thi lập trình.
+                </p>
+                <div class="plan-block">
+                    <div class="plan-block-title"><i class="fa fa-list"></i> Nội dung đào tạo</div>
+                    <div class="plan-topics">
+                        <span class="plan-topic">Mảng cộng dồn</span>
+                        <span class="plan-topic">Tìm kiếm nhị phân</span>
+                        <span class="plan-topic">Quy hoạch động điển hình</span>
+                        <span class="plan-topic">Đồ thị cơ bản</span>
+                        <span class="plan-topic">Ứng dụng của đồ thị</span>
+                    </div>
+                </div>
+                <div class="plan-block">
+                    <div class="plan-block-title"><i class="fa fa-tasks"></i> Nội dung thực hiện</div>
+                    <ul class="plan-list">
+                        <li>Giới thiệu kiến thức và phương pháp giải quyết từng nhóm bài toán.</li>
+                        <li>Phân tích các bài toán mẫu và hướng tiếp cận.</li>
+                        <li>Hướng dẫn cài đặt thuật toán và kiểm thử chương trình.</li>
+                        <li>Giao bài tập để thành viên tự luyện sau mỗi buổi.</li>
+                    </ul>
+                </div>
+                <div class="plan-meta">
+                    <div class="plan-meta-item"><i class="fa fa-clock-o"></i>
+                        <div><strong>Thời lượng</strong>3 giờ / buổi · 1 buổi / tuần</div>
+                    </div>
+                    <div class="plan-meta-item"><i class="fa fa-hourglass-half"></i>
+                        <div><strong>Thời gian</strong>Không quá 6 tuần</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="plan-item">
+            <div class="plan-marker" style="--plan-color:#059669;">02</div>
+            <div class="plan-card" style="--plan-color:#059669; --plan-bg:rgba(5,150,105,0.10);">
+                <div class="plan-header">
+                    <div class="plan-heading">
+                        <div class="plan-stage"><i class="fa fa-trophy"></i> Giai đoạn 2 · Thi thử</div>
+                        <h3 class="plan-title">Thi thử Olympic Tin học cấp trường</h3>
+                        <p class="plan-purpose">Kiểm tra mức độ sẵn sàng trước kỳ thi chính thức</p>
+                    </div>
+                </div>
+                <p class="plan-description">
+                    Tiểu ban tổ chức một kỳ thi thử dành cho thành viên nhằm đánh giá khả năng vận dụng kiến thức
+                    đã học trong điều kiện gần với kỳ thi thực tế. Kỳ thi giúp thành viên làm quen với thời gian làm
+                    bài,
+                    cách phân bổ thời gian và áp lực khi thi.
+                </p>
+                <div class="plan-block">
+                    <div class="plan-block-title"><i class="fa fa-file-text-o"></i> Cấu trúc dự kiến</div>
+                    <ul class="plan-list">
+                        <li>Phần thi Kỹ năng lập trình.</li>
+                        <li>Đề thi dự kiến gồm 04 bài toán.</li>
+                        <li>Nội dung bám sát phạm vi kiến thức đã được triển khai trong đợt training.</li>
+                    </ul>
+                </div>
+                <div class="plan-block">
+                    <div class="plan-block-title"><i class="fa fa-bullseye"></i> Mục tiêu</div>
+                    <ul class="plan-list">
+                        <li>Kiểm tra khả năng vận dụng thuật toán vào bài toán cụ thể.</li>
+                        <li>Rèn luyện kỹ năng quản lý thời gian khi làm bài.</li>
+                        <li>Phát hiện những nội dung còn yếu để tiếp tục bổ sung.</li>
+                    </ul>
+                </div>
+                <div class="plan-meta">
+                    <div class="plan-meta-item"><i class="fa fa-desktop"></i>
+                        <div><strong>Hình thức</strong>Thi trực tiếp (Offline)</div>
+                    </div>
+                    <div class="plan-meta-item"><i class="fa fa-flag"></i>
+                        <div><strong>Mục đích</strong>Mô phỏng kỳ thi chính thức</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="plan-item">
+            <div class="plan-marker" style="--plan-color:#4f46e5;">03</div>
+            <div class="plan-card" style="--plan-color:#4f46e5; --plan-bg:rgba(79,70,229,0.10);">
+                <div class="plan-header">
+                    <div class="plan-heading">
+                        <div class="plan-stage"><i class="fa fa-rocket"></i> Giai đoạn 3 · Tăng tốc</div>
+                        <h3 class="plan-title">Training đợt 2</h3>
+                        <p class="plan-purpose">Làm quen với bài toán và thể thức thi ICPC</p>
+                    </div>
+                </div>
+                <p class="plan-description">
+                    Sau giai đoạn thi cấp trường, nội dung training được chuyển sang các bài toán có mức độ phù hợp
+                    với định hướng thi ICPC. Thành viên được tiếp cận đề thi các năm trước, rèn luyện khả năng nhận diện
+                    dạng bài và triển khai lời giải trong thời gian giới hạn.
+                </p>
+                <div class="plan-block">
+                    <div class="plan-block-title"><i class="fa fa-code"></i> Nội dung luyện tập</div>
+                    <ul class="plan-list">
+                        <li>Giải các bài toán ICPC của những năm trước.</li>
+                        <li>Phân tích ý tưởng và hướng giải quyết của từng bài.</li>
+                        <li>Nhận diện các dạng bài thường gặp trong kỳ thi ICPC vòng miền.</li>
+                        <li>Rèn luyện kỹ năng triển khai lời giải trong thời gian giới hạn.</li>
+                    </ul>
+                </div>
+                <div class="plan-meta">
+                    <div class="plan-meta-item"><i class="fa fa-clock-o"></i>
+                        <div><strong>Thời lượng</strong>3 giờ / buổi · 1 buổi / tuần</div>
+                    </div>
+                    <div class="plan-meta-item"><i class="fa fa-hourglass-half"></i>
+                        <div><strong>Thời gian</strong>Không quá 3 tuần</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="plan-item">
+            <div class="plan-marker" style="--plan-color:#d97706;">04</div>
+            <div class="plan-card" style="--plan-color:#d97706; --plan-bg:rgba(217,119,6,0.10);">
+                <div class="plan-header">
+                    <div class="plan-heading">
+                        <div class="plan-stage"><i class="fa fa-users"></i> Giai đoạn 4 · ICPC Regional</div>
+                        <h3 class="plan-title">Thi thử ICPC miền Bắc</h3>
+                        <p class="plan-purpose">Mô phỏng môi trường thi ICPC theo đội</p>
+                    </div>
+                </div>
+                <p class="plan-description">
+                    Tổ chức một kỳ thi thử theo format ICPC để các thành viên làm quen với cách thi theo đội,
+                    phân chia công việc và xử lý bài toán trong điều kiện thời gian giới hạn.
+                    Kỳ thi dự kiến được tổ chức trực tiếp để mô phỏng sát hơn môi trường thi thật.
+                </p>
+                <div class="plan-block">
+                    <div class="plan-block-title"><i class="fa fa-users"></i> Nội dung mô phỏng</div>
+                    <ul class="plan-list">
+                        <li>Làm bài theo đội tuyển ICPC.</li>
+                        <li>Sử dụng format đề thi tương tự kỳ thi ICPC.</li>
+                        <li>Rèn luyện khả năng phối hợp và trao đổi trong đội.</li>
+                        <li>Làm quen với áp lực và nhịp độ của một kỳ thi thực tế.</li>
+                    </ul>
+                </div>
+                <div class="plan-meta">
+                    <div class="plan-meta-item"><i class="fa fa-users"></i>
+                        <div><strong>Hình thức</strong>Thi theo đội</div>
+                    </div>
+                    <div class="plan-meta-item"><i class="fa fa-laptop"></i>
+                        <div><strong>Tổ chức</strong>Offline · Mô phỏng thi thật</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="plan-item">
+            <div class="plan-marker" style="--plan-color:#e11d48;">05</div>
+            <div class="plan-card" style="--plan-color:#e11d48; --plan-bg:rgba(225,29,72,0.10);">
+                <div class="plan-header">
+                    <div class="plan-heading">
+                        <div class="plan-stage"><i class="fa fa-refresh"></i> Hoạt động định kỳ</div>
+                        <h3 class="plan-title">Các kỳ thi thường niên</h3>
+                        <p class="plan-purpose">Duy trì việc luyện tập và theo dõi quá trình tiến bộ</p>
+                    </div>
+                </div>
+                <p class="plan-description">
+                    Bên cạnh các đợt training tập trung, Tiểu ban duy trì các kỳ thi định kỳ để thành viên có cơ hội
+                    kiểm tra năng lực thường xuyên. Kết quả từng kỳ thi được sử dụng để theo dõi quá trình luyện tập
+                    và duy trì phong độ thi đấu.
+                </p>
+                <div class="plan-block">
+                    <div class="plan-block-title"><i class="fa fa-calendar"></i> Tổ chức</div>
+                    <ul class="plan-list">
+                        <li>Tổ chức định kỳ 01 lần mỗi tháng.</li>
+                        <li>Nội dung theo format Olympic Tin học cấp trường.</li>
+                        <li>Thành viên tham gia trên hệ thống thi hoặc theo hình thức được Tiểu ban thống nhất.</li>
+                    </ul>
+                </div>
+                <div class="plan-block">
+                    <div class="plan-block-title"><i class="fa fa-line-chart"></i> Theo dõi kết quả</div>
+                    <ul class="plan-list">
+                        <li>Ghi nhận kết quả qua từng kỳ thi.</li>
+                        <li>Xếp hạng và theo dõi Rating.</li>
+                        <li>Đánh giá sự tiến bộ của thành viên theo thời gian.</li>
+                    </ul>
+                </div>
+                <div class="plan-meta">
+                    <div class="plan-meta-item"><i class="fa fa-repeat"></i>
+                        <div><strong>Tần suất</strong>01 kỳ thi / tháng</div>
+                    </div>
+                    <div class="plan-meta-item"><i class="fa fa-star"></i>
+                        <div><strong>Đánh giá</strong>Xếp hạng và Rating</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="plan-item">
+            <div class="plan-marker" style="--plan-color:#0891b2;">06</div>
+            <div class="plan-card" style="--plan-color:#0891b2; --plan-bg:rgba(8,145,178,0.10);">
+                <div class="plan-header">
+                    <div class="plan-heading">
+                        <div class="plan-stage"><i class="fa fa-comments"></i> Sinh hoạt chuyên môn</div>
+                        <h3 class="plan-title">Sinh hoạt chuyên đề trong Tiểu ban</h3>
+                        <p class="plan-purpose">Khuyến khích tự học, chia sẻ kiến thức và nghiên cứu</p>
+                    </div>
+                </div>
+                <p class="plan-description">
+                    Thành viên chủ động lập nhóm nghiên cứu và lựa chọn chuyên đề để trình bày trước Tiểu ban.
+                    Hoạt động không chỉ tập trung vào việc trình bày kiến thức mà còn tạo điều kiện để các thành viên
+                    trao đổi, đặt câu hỏi, thảo luận và trực tiếp thực hành.
+                </p>
+                <div class="plan-block">
+                    <div class="plan-block-title"><i class="fa fa-book"></i> Nội dung chuyên đề</div>
+                    <ul class="plan-list">
+                        <li>Trình bày các thuật toán và kỹ thuật lập trình.</li>
+                        <li>Phân tích bài tập minh họa.</li>
+                        <li>Trao đổi về các ứng dụng thực tế.</li>
+                        <li>Thảo luận, đặt câu hỏi và phản biện nội dung.</li>
+                        <li>Thực hành cài đặt và triển khai thuật toán.</li>
+                    </ul>
+                </div>
+                <div class="plan-block">
+                    <div class="plan-block-title"><i class="fa fa-file-text-o"></i> Sản phẩm</div>
+                    <ul class="plan-list">
+                        <li>Tài liệu trình bày của từng chuyên đề.</li>
+                        <li>File kỷ yếu chuyên đề được tổng hợp trong quá trình hoạt động.</li>
+                        <li>Mã nguồn và bài tập thực hành đi kèm.</li>
+                    </ul>
+                </div>
+                <div class="plan-meta">
+                    <div class="plan-meta-item"><i class="fa fa-clock-o"></i>
+                        <div><strong>Thời lượng</strong>3–4 giờ / buổi</div>
+                    </div>
+                    <div class="plan-meta-item"><i class="fa fa-repeat"></i>
+                        <div><strong>Tần suất</strong>02 tuần / 01 buổi</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="plan-end">
+        <i class="fa fa-check-circle"></i>
+        Các hoạt động được triển khai xuyên suốt năm học theo kế hoạch của Tiểu ban
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: FORM ĐĂNG KÝ THÀNH VIÊN -->
+    <!-- ========================================== -->
+    <div id="dang-ky" class="icpc-card" style="border: 2px solid var(--icpc-blue-light); scroll-margin-top: 30px;">
+        <div class="section-title-wrapper" style="margin-bottom: 24px;">
+            <i class="fa fa-paper-plane" style="color: var(--icpc-blue-light); font-size: 1.6rem;"></i>
+            <div>
+                <h2 class="section-title" style="margin: 0;">III. Form Đăng ký thành viên Tiểu ban ICPC</h2>
+                <p style="margin: 4px 0 0 0; color: var(--icpc-text-muted); font-size: 0.92rem;">
+                    Hệ thống tiếp nhận đơn đăng ký trực tuyến chính thức của CLB Nghiệp vụ sư phạm - Khoa CNTT
+                </p>
+            </div>
+        </div>
+
+        {% if not request.user.is_authenticated %}
+        <!-- THÔNG BÁO YÊU CẦU ĐĂNG NHẬP KHI CHƯA ĐĂNG NHẬP -->
+        <div
+            style="background: linear-gradient(135deg, rgba(30, 58, 138, 0.05) 0%, rgba(37, 99, 235, 0.10) 100%); border: 2px dashed var(--icpc-blue-light); padding: 36px 28px; border-radius: 16px; text-align: center; margin-bottom: 20px;">
+            <div
+                style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 16px auto; box-shadow: 0 8px 20px rgba(30, 58, 138, 0.25);">
+                <i class="fa fa-lock"></i>
+            </div>
+            <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--icpc-text-main); margin: 0 0 10px 0;">
+                YÊU CẦU ĐĂNG NHẬP TÀI KHOẢN ĐỂ GỬI ĐƠN ĐĂNG KÝ
+            </h3>
+            <p
+                style="color: var(--icpc-text-muted); font-size: 0.95rem; max-width: 620px; margin: 0 auto 24px auto; line-height: 1.6;">
+                Bạn cần <b>đăng nhập tài khoản hệ thống HNUEOJ</b> trước khi thực hiện đăng ký tham gia <b>Tiểu ban
+                    ICPC</b>. Đơn đăng ký sẽ được lưu trữ và liên kết an toàn trực tiếp với tài khoản cá nhân của bạn.
+            </p>
+            <a href="{{ url('auth_login') }}?next={{ request.path }}#dang-ky" class="btn-icpc-primary"
+                style="font-size: 1.05rem; padding: 14px 38px; border-radius: 12px; text-decoration: none !important; display: inline-flex; align-items: center; gap: 10px;">
+                <i class="fa fa-sign-in"></i> ĐĂNG NHẬP TÀI KHOẢN NGAY
+            </a>
+        </div>
+        {% elif user_existing_reg %}
+        <!-- PASSPORT PROFILE CARD CHO SINH VIÊN ĐÃ NỘP ĐƠN -->
+        <div
+            style="background: rgba(16, 185, 129, 0.06); border: 2px solid #10b981; padding: 28px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.12);">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px dashed rgba(16, 185, 129, 0.3);">
+                <div>
+                    <h3
+                        style="font-size: 1.25rem; font-weight: 800; color: #059669; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa fa-check-circle" style="font-size: 1.4rem;"></i> ĐƠN ĐĂNG KÝ CỦA BẠN ĐÃ ĐƯỢC GHI
+                        NHẬN!
+                    </h3>
+                    <span style="font-size: 0.92rem; color: var(--icpc-text-muted);">
+                        <i class="fa fa-clock-o"></i> Thời gian gửi đơn: <strong>{{
+                            user_existing_reg.created_at.strftime('%d/%m/%Y %H:%M') }}</strong>
+                    </span>
+                </div>
+                <div>
+                    {% if user_existing_reg.status == 'approved' %}
+                    <span class="icpc-status-badge icpc-status-approved">
+                        <i class="fa fa-star"></i> TRẠNG THÁI: ĐÃ DUYỆT (CHÍNH THỨC)
+                    </span>
+                    {% elif user_existing_reg.status == 'rejected' %}
+                    <span class="icpc-status-badge icpc-status-rejected">
+                        <i class="fa fa-times-circle"></i> Trạng thái: Từ chối
+                    </span>
+                    {% else %}
+                    <span class="icpc-status-badge icpc-status-pending">
+                        <i class="fa fa-hourglass-half"></i> Trạng thái: Chờ duyệt
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- PASSPORT INFO GRID -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 20px; font-size: 0.94rem;">
+                <div
+                    style="background: var(--icpc-card-bg); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--icpc-border);">
+                    <i class="fa fa-user" style="color: var(--icpc-blue); margin-right: 6px;"></i> <strong>Họ và
+                        tên:</strong> {{ user_existing_reg.full_name }}
+                </div>
+                <div
+                    style="background: var(--icpc-card-bg); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--icpc-border);">
+                    <i class="fa fa-vcard-o" style="color: var(--icpc-blue); margin-right: 6px;"></i> <strong>Mã sinh
+                        viên:</strong> {{ user_existing_reg.student_id }}
+                </div>
+                <div
+                    style="background: var(--icpc-card-bg); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--icpc-border);">
+                    <i class="fa fa-graduation-cap" style="color: var(--icpc-blue); margin-right: 6px;"></i> <strong>Lớp
+                        / Ngành:</strong> {{ user_existing_reg.academic_class }}
+                </div>
+                <div
+                    style="background: var(--icpc-card-bg); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--icpc-border);">
+                    <i class="fa fa-users" style="color: var(--icpc-blue); margin-right: 6px;"></i>
+                    <strong>Khóa:</strong> {{ user_existing_reg.cohort }}
+                </div>
+                <div
+                    style="background: var(--icpc-card-bg); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--icpc-border);">
+                    <i class="fa fa-envelope" style="color: var(--icpc-blue); margin-right: 6px;"></i>
+                    <strong>Email:</strong> {{ user_existing_reg.email }}
+                </div>
+                <div
+                    style="background: var(--icpc-card-bg); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--icpc-border);">
+                    <i class="fa fa-phone" style="color: #059669; margin-right: 6px;"></i> <strong>SĐT Zalo:</strong> {{
+                    user_existing_reg.phone }}
+                </div>
+                <div
+                    style="background: var(--icpc-card-bg); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--icpc-border);">
+                    <i class="fa fa-code" style="color: var(--icpc-blue); margin-right: 6px;"></i> <strong>Trình
+                        độ:</strong> {{ user_existing_reg.get_programming_experience_display() }}
+                </div>
+                {% if user_existing_reg.facebook_url %}
+                <div
+                    style="background: var(--icpc-card-bg); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--icpc-border);">
+                    <i class="fa fa-facebook-official" style="color: #2563eb; margin-right: 6px;"></i>
+                    <strong>Facebook:</strong> <a href="{{ user_existing_reg.facebook_url }}" target="_blank"
+                        style="color: #2563eb; font-weight: 600;">Xem Trang cá nhân</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="margin-bottom: 16px; font-size: 0.94rem;">
+                <strong><i class="fa fa-bullseye" style="color: var(--icpc-blue); margin-right: 6px;"></i> Lý do & Mục
+                    tiêu tham gia:</strong>
+                <p
+                    style="background: var(--icpc-card-bg); padding: 14px 18px; border-radius: 10px; border: 1px solid var(--icpc-border); margin-top: 8px; font-style: italic; line-height: 1.6; color: var(--icpc-text-main);">
+                    "{{ user_existing_reg.reason }}"
+                </p>
+            </div>
+
+            {% if user_existing_reg.admin_note %}
+            <div
+                style="background: rgba(245, 158, 11, 0.14); border-left: 4px solid #d97706; padding: 14px 18px; border-radius: 8px; font-size: 0.92rem; color: #b45309; margin-bottom: 16px;">
+                <i class="fa fa-info-circle" style="font-size: 1.1rem; margin-right: 6px;"></i> <strong>Ghi chú từ Ban
+                    Quản lý:</strong> {{ user_existing_reg.admin_note }}
+            </div>
+            {% endif %}
+
+            <div
+                style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(16, 185, 129, 0.2); font-size: 0.88rem; color: var(--icpc-text-muted); text-align: center;">
+                <i class="fa fa-lock"></i> <em>Mỗi sinh viên chỉ được nộp 1 đơn đăng ký. Để hỗ trợ cập nhật thông tin,
+                    vui lòng liên hệ Ban Quản lý Tiểu ban ICPC.</em>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- STEP INDICATOR BAR -->
+        <div class="form-steps-bar">
+            <div class="form-step-pill">
+                <div class="form-step-num">01</div>
+                <div class="form-step-info">
+                    <span class="form-step-lbl">Bước 1</span>
+                    <span class="form-step-title">Cá nhân & Học tập</span>
+                </div>
+            </div>
+            <div class="form-step-pill">
+                <div class="form-step-num">02</div>
+                <div class="form-step-info">
+                    <span class="form-step-lbl">Bước 2</span>
+                    <span class="form-step-title">Liên lạc & Zalo</span>
+                </div>
+            </div>
+            <div class="form-step-pill">
+                <div class="form-step-num">03</div>
+                <div class="form-step-info">
+                    <span class="form-step-lbl">Bước 3</span>
+                    <span class="form-step-title">Trình độ & Mục tiêu</span>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" action="#dang-ky">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+            <!-- BƯỚC 1: THÔNG TIN CÁ NHÂN & HỌC TẬP -->
+            <div class="form-group-section">
+                <div class="form-section-head">
+                    <span class="form-section-badge"><i class="fa fa-user"></i></span>
+                    <span>1. Thông tin Cá nhân & Học tập</span>
+                </div>
+
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 18px;">
+                    <div class="input-field-group">
+                        <label class="form-label" for="{{ form.full_name.id_for_label }}">
+                            Họ và tên sinh viên <span class="req-star">*</span>
+                        </label>
+                        <div class="input-with-icon">
+                            {{ form.full_name }}
+                            <i class="fa fa-user field-icon"></i>
+                        </div>
+                        {% if form.full_name.errors %}
+                        <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{
+                            form.full_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="input-field-group">
+                        <label class="form-label" for="{{ form.student_id.id_for_label }}">
+                            Mã sinh viên <span class="req-star">*</span>
+                        </label>
+                        <div class="input-with-icon">
+                            {{ form.student_id }}
+                            <i class="fa fa-graduation-cap field-icon"></i>
+                        </div>
+                        {% if form.student_id.errors %}
+                        <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{
+                            form.student_id.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div class="input-field-group">
+                        <label class="form-label" for="{{ form.academic_class.id_for_label }}">
+                            Lớp sinh hoạt / Chuyên ngành <span class="req-star">*</span>
+                        </label>
+                        <div class="input-with-icon">
+                            {{ form.academic_class }}
+                            <i class="fa fa-university field-icon"></i>
+                        </div>
+                        {% if form.academic_class.errors %}
+                        <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{
+                            form.academic_class.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="input-field-group">
+                        <label class="form-label" for="{{ form.cohort.id_for_label }}">
+                            Khóa sinh viên <span class="req-star">*</span>
+                        </label>
+                        <div class="input-with-icon">
+                            {{ form.cohort }}
+                            <i class="fa fa-users field-icon"></i>
+                        </div>
+                        {% if form.cohort.errors %}
+                        <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{
+                            form.cohort.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- BƯỚC 2: THÔNG TIN LIÊN LẠC & MẠNG XÃ HỘI -->
+            <div class="form-group-section">
+                <div class="form-section-head">
+                    <span class="form-section-badge"><i class="fa fa-comments"></i></span>
+                    <span>2. Thông tin Liên lạc & Mạng xã hội</span>
+                </div>
+
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 18px;">
+                    <div class="input-field-group">
+                        <label class="form-label" for="{{ form.email.id_for_label }}">
+                            Địa chỉ Email sinh viên <span class="req-star">*</span>
+                        </label>
+                        <div class="input-with-icon">
+                            {{ form.email }}
+                            <i class="fa fa-envelope field-icon"></i>
+                        </div>
+                        {% if form.email.errors %}
+                        <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{
+                            form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="input-field-group">
+                        <label class="form-label" for="{{ form.phone.id_for_label }}">
+                            Số điện thoại Zalo <span class="req-star">*</span>
+                        </label>
+                        <div class="input-with-icon">
+                            {{ form.phone }}
+                            <i class="fa fa-phone-square field-icon"></i>
+                        </div>
+                        {% if form.phone.errors %}
+                        <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{
+                            form.phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="input-field-group">
+                    <label class="form-label" for="{{ form.facebook_url.id_for_label }}">
+                        Link Facebook cá nhân (nếu có)
+                    </label>
+                    <div class="input-with-icon">
+                        {{ form.facebook_url }}
+                        <i class="fa fa-facebook-official field-icon"></i>
+                    </div>
+                    {% if form.facebook_url.errors %}
+                    <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{
+                        form.facebook_url.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- BƯỚC 3: TRÌNH ĐỘ, KINH NGHIỆM & MỤC TIÊU -->
+            <div class="form-group-section">
+                <div class="form-section-head">
+                    <span class="form-section-badge"><i class="fa fa-code"></i></span>
+                    <span>3. Trình độ, Kinh nghiệm & Mục tiêu Tham gia</span>
+                </div>
+
+                <div class="input-field-group" style="margin-bottom: 18px;">
+                    <label class="form-label" for="{{ form.programming_experience.id_for_label }}">
+                        Trình độ lập trình hiện tại <span class="req-star">*</span>
+                    </label>
+                    <div class="input-with-icon">
+                        {{ form.programming_experience }}
+                        <i class="fa fa-code field-icon"></i>
+                    </div>
+                    {% if form.programming_experience.errors %}
+                    <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{
+                        form.programming_experience.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="input-field-group" style="margin-bottom: 18px;">
+                    <label class="form-label" for="{{ form.achievements.id_for_label }}">
+                        Thành tích / Giải thưởng / Kinh nghiệm đã đạt được (nếu có)
+                    </label>
+                    <div class="input-with-icon">
+                        {{ form.achievements }}
+                        <i class="fa fa-trophy field-icon" style="top: 18px;"></i>
+                    </div>
+                    {% if form.achievements.errors %}
+                    <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{
+                        form.achievements.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="input-field-group">
+                    <label class="form-label" for="{{ form.reason.id_for_label }}">
+                        Lý do & Mục tiêu khi tham gia Tiểu ban ICPC <span class="req-star">*</span>
+                    </label>
+                    <div class="input-with-icon">
+                        {{ form.reason }}
+                        <i class="fa fa-bullseye field-icon" style="top: 18px;"></i>
+                    </div>
+                    {% if form.reason.errors %}
+                    <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{ form.reason.errors.0
+                        }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ACTION SUBMIT BUTTON -->
+            <div style="text-align: center; margin-top: 20px;">
+                <button type="submit" class="btn-icpc-primary"
+                    style="font-size: 1.12rem; padding: 16px 52px; border-radius: 12px;">
+                    <i class="fa fa-paper-plane"></i> XÁC NHẬN NỘP ĐƠN ĐĂNG KÝ
+                </button>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+    {% endblock %}

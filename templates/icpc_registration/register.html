@@ -1,0 +1,183 @@
+{% extends "icpc_registration/base_club.html" %}
+
+{% block icpc_content %}
+<div class="row" style="display: flex; gap: 24px; flex-wrap: wrap;">
+    <!-- LEFT: Registration Form -->
+    <div style="flex: 2; min-width: 320px;">
+        <div class="icpc-card">
+            <div class="icpc-card-header">
+                <i class="fa fa-pencil-square-o"></i>
+                <h2 class="icpc-card-title">Đơn đăng ký tham gia Tiểu ban ICPC</h2>
+            </div>
+
+            {% if user_existing_reg %}
+            <div style="background: rgba(59, 130, 246, 0.08); border-left: 4px solid var(--icpc-blue); padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong style="font-size: 1rem; color: var(--icpc-text-main);">
+                        <i class="fa fa-info-circle"></i> Trạng thái đơn của bạn:
+                    </strong>
+                    <span class="badge 
+                        {% if user_existing_reg.status == 'approved' %}bg-success
+                        {% elif user_existing_reg.status == 'rejected' %}bg-danger
+                        {% else %}bg-warning text-dark{% endif %}" 
+                        style="padding: 6px 12px; font-size: 0.88rem; border-radius: 20px;">
+                        {{ user_existing_reg.get_status_display() }}
+                    </span>
+                </div>
+                <p style="font-size: 0.9rem; color: var(--icpc-text-muted); margin: 0;">
+                    Bạn đã nộp đơn vào ngày <strong>{{ user_existing_reg.created_at.strftime('%d/%m/%Y %H:%M') }}</strong> với mã sinh viên <strong>{{ user_existing_reg.student_id }}</strong>.
+                    {% if user_existing_reg.admin_note %}
+                    <br><strong>Ghi chú từ BQL:</strong> {{ user_existing_reg.admin_note }}
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+
+            <form method="post" action="">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                    <div>
+                        <label class="form-label" for="{{ form.full_name.id_for_label }}">
+                            Họ và tên <span style="color: red;">*</span>
+                        </label>
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}
+                        <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{ form.full_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="form-label" for="{{ form.student_id.id_for_label }}">
+                            Mã sinh viên <span style="color: red;">*</span>
+                        </label>
+                        {{ form.student_id }}
+                        {% if form.student_id.errors %}
+                        <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{ form.student_id.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                    <div>
+                        <label class="form-label" for="{{ form.academic_class.id_for_label }}">
+                            Lớp học phần / Chuyên ngành <span style="color: red;">*</span>
+                        </label>
+                        {{ form.academic_class }}
+                        {% if form.academic_class.errors %}
+                        <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{ form.academic_class.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="form-label" for="{{ form.cohort.id_for_label }}">
+                            Khóa sinh viên <span style="color: red;">*</span>
+                        </label>
+                        {{ form.cohort }}
+                        {% if form.cohort.errors %}
+                        <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{ form.cohort.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                    <div>
+                        <label class="form-label" for="{{ form.email.id_for_label }}">
+                            Địa chỉ Email <span style="color: red;">*</span>
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="form-label" for="{{ form.phone.id_for_label }}">
+                            Số điện thoại (Ưu tiên dùng Zalo) <span style="color: red;">*</span>
+                        </label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{ form.phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label class="form-label" for="{{ form.facebook_url.id_for_label }}">
+                        Link trang cá nhân Facebook
+                    </label>
+                    {{ form.facebook_url }}
+                    {% if form.facebook_url.errors %}
+                    <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{ form.facebook_url.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label class="form-label" for="{{ form.programming_experience.id_for_label }}">
+                        Trình độ lập trình hiện tại của bạn <span style="color: red;">*</span>
+                    </label>
+                    {{ form.programming_experience }}
+                    {% if form.programming_experience.errors %}
+                    <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{ form.programming_experience.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label class="form-label" for="{{ form.achievements.id_for_label }}">
+                        Thành tích / Kinh nghiệm / Giải thưởng đã đạt được (nếu có)
+                    </label>
+                    {{ form.achievements }}
+                    {% if form.achievements.errors %}
+                    <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{ form.achievements.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label class="form-label" for="{{ form.reason.id_for_label }}">
+                        Lý do & Mục tiêu khi tham gia Tiểu ban ICPC <span style="color: red;">*</span>
+                    </label>
+                    {{ form.reason }}
+                    {% if form.reason.errors %}
+                    <div style="color: var(--icpc-rose); font-size: 0.85rem; margin-top: 4px;">{{ form.reason.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div style="text-align: right;">
+                    <button type="submit" class="btn-icpc-primary">
+                        <i class="fa fa-paper-plane"></i> XÁC NHẬN NỘP ĐƠN ĐĂNG KÝ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- RIGHT: Info Sidebar -->
+    <div style="flex: 1; min-width: 280px;">
+        <div class="icpc-card" style="position: sticky; top: 80px;">
+            <div class="icpc-card-header">
+                <i class="fa fa-heartbeat"></i>
+                <h3 class="icpc-card-title">Quyền lợi thành viên</h3>
+            </div>
+
+            <ul style="padding-left: 20px; color: var(--icpc-text-main); font-size: 0.93rem; line-height: 1.7;">
+                <li style="margin-bottom: 10px;">
+                    <strong>Training chuyên sâu:</strong> Được đào tạo miễn phí từ các bài tập cơ bản đến nâng cao.
+                </li>
+                <li style="margin-bottom: 10px;">
+                    <strong>Thi đấu cọ xát:</strong> Tham gia các kỳ thi thử Olympic & ICPC tổ chức offline chuẩn hóa.
+                </li>
+                <li style="margin-bottom: 10px;">
+                    <strong>Môi trường học thuật:</strong> Sinh hoạt chuyên đề hàng tuần, làm việc nhóm và xây dựng kỷ yếu thuật toán.
+                </li>
+                <li style="margin-bottom: 10px;">
+                    <strong>Cơ hội Đội tuyển:</strong> Ưu tiên xét chọn vào đội tuyển Olympic Tin học & ICPC đại diện ĐHSP Hà Nội.
+                </li>
+            </ul>
+
+            <div style="margin-top: 20px; padding: 14px; background: rgba(241, 245, 249, 0.6); border-radius: 10px; font-size: 0.85rem; color: var(--icpc-text-muted);">
+                <i class="fa fa-shield"></i> Cam kết bảo mật thông tin cá nhân chỉ sử dụng cho mục đích vận hành Tiểu ban ICPC.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

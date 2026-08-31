@@ -3281,3 +3281,313 @@ INFO 2026-08-28 15:24:09,913 judge_handler Judge authenticated: ('127.0.0.1', 40
 INFO 2026-08-28 15:24:09,913 judge_list Minimum tier changed from None to 1
 INFO 2026-08-28 15:24:09,922 judge_handler Judge authenticated: ('127.0.0.1', 40196) (Judge-01)
 INFO 2026-08-28 15:25:59,800 daemon Exiting due to SIGINT
+INFO 2026-08-28 15:27:10,599 judge_handler Judge connected from: ('127.0.0.1', 40206)
+INFO 2026-08-28 15:27:10,600 judge_handler Judge connected from: ('127.0.0.1', 40208)
+INFO 2026-08-28 15:27:10,601 judge_handler Judge connected from: ('127.0.0.1', 40210)
+INFO 2026-08-28 15:27:10,612 judge_handler Judge authenticated: ('127.0.0.1', 40206) (Judge-02)
+INFO 2026-08-28 15:27:10,612 judge_handler Judge authenticated: ('127.0.0.1', 40208) (Judge-03)
+INFO 2026-08-28 15:27:10,613 judge_list Minimum tier changed from None to 1
+INFO 2026-08-28 15:27:10,614 judge_handler Judge authenticated: ('127.0.0.1', 40210) (Judge-01)
+INFO 2026-08-28 16:03:09,116 daemon Exiting due to SIGINT
+INFO 2026-08-28 16:04:20,118 judge_handler Judge connected from: ('127.0.0.1', 40212)
+INFO 2026-08-28 16:04:20,119 judge_handler Judge connected from: ('127.0.0.1', 40214)
+INFO 2026-08-28 16:04:20,120 judge_handler Judge connected from: ('127.0.0.1', 40216)
+INFO 2026-08-28 16:04:20,137 judge_handler Judge authenticated: ('127.0.0.1', 40214) (Judge-01)
+INFO 2026-08-28 16:04:20,139 judge_handler Judge authenticated: ('127.0.0.1', 40216) (Judge-03)
+INFO 2026-08-28 16:04:20,139 judge_list Minimum tier changed from None to 1
+INFO 2026-08-28 16:04:20,139 judge_handler Judge authenticated: ('127.0.0.1', 40212) (Judge-02)
+INFO 2026-08-28 16:12:15,828 daemon Exiting due to SIGINT
+INFO 2026-08-28 16:13:26,695 judge_handler Judge connected from: ('127.0.0.1', 40218)
+INFO 2026-08-28 16:13:26,698 judge_handler Judge connected from: ('127.0.0.1', 40220)
+INFO 2026-08-28 16:13:26,700 judge_handler Judge connected from: ('127.0.0.1', 40222)
+INFO 2026-08-28 16:13:26,712 judge_handler Judge authenticated: ('127.0.0.1', 40218) (Judge-03)
+INFO 2026-08-28 16:13:26,713 judge_list Minimum tier changed from None to 1
+INFO 2026-08-28 16:13:26,716 judge_handler Judge authenticated: ('127.0.0.1', 40220) (Judge-02)
+INFO 2026-08-28 16:13:26,726 judge_handler Judge authenticated: ('127.0.0.1', 40222) (Judge-01)
+INFO 2026-08-28 16:25:46,854 daemon Exiting due to SIGINT
+INFO 2026-08-28 16:26:57,803 judge_handler Judge connected from: ('127.0.0.1', 40224)
+INFO 2026-08-28 16:26:57,804 judge_handler Judge connected from: ('127.0.0.1', 40226)
+INFO 2026-08-28 16:26:57,805 judge_handler Judge connected from: ('127.0.0.1', 40228)
+INFO 2026-08-28 16:26:57,815 judge_handler Judge authenticated: ('127.0.0.1', 40224) (Judge-01)
+INFO 2026-08-28 16:26:57,816 judge_handler Judge authenticated: ('127.0.0.1', 40226) (Judge-02)
+INFO 2026-08-28 16:26:57,817 judge_list Minimum tier changed from None to 1
+INFO 2026-08-28 16:26:57,818 judge_handler Judge authenticated: ('127.0.0.1', 40228) (Judge-03)
+INFO 2026-08-29 06:04:15,411 daemon Exiting due to SIGINT
+INFO 2026-08-29 06:05:25,552 judge_handler Judge connected from: ('127.0.0.1', 40232)
+INFO 2026-08-29 06:05:25,553 judge_handler Judge connected from: ('127.0.0.1', 40230)
+INFO 2026-08-29 06:05:25,554 judge_handler Judge connected from: ('127.0.0.1', 40234)
+INFO 2026-08-29 06:05:25,571 judge_handler Judge authenticated: ('127.0.0.1', 40234) (Judge-01)
+INFO 2026-08-29 06:05:25,571 judge_handler Judge authenticated: ('127.0.0.1', 40232) (Judge-03)
+INFO 2026-08-29 06:05:25,572 judge_handler Judge authenticated: ('127.0.0.1', 40230) (Judge-02)
+INFO 2026-08-29 06:05:25,572 judge_list Minimum tier changed from None to 1
+INFO 2026-08-29 06:06:26,503 daemon Exiting due to SIGINT
+INFO 2026-08-29 06:07:37,430 judge_handler Judge connected from: ('127.0.0.1', 40242)
+INFO 2026-08-29 06:07:37,433 judge_handler Judge connected from: ('127.0.0.1', 40244)
+INFO 2026-08-29 06:07:37,435 judge_handler Judge connected from: ('127.0.0.1', 40246)
+INFO 2026-08-29 06:07:37,444 judge_handler Judge authenticated: ('127.0.0.1', 40242) (Judge-02)
+INFO 2026-08-29 06:07:37,444 judge_list Minimum tier changed from None to 1
+INFO 2026-08-29 06:07:37,446 judge_handler Judge authenticated: ('127.0.0.1', 40244) (Judge-01)
+INFO 2026-08-29 06:07:37,450 judge_handler Judge authenticated: ('127.0.0.1', 40246) (Judge-03)
+INFO 2026-08-29 06:20:14,315 daemon Exiting due to SIGINT
+INFO 2026-08-29 06:21:24,429 judge_handler Judge connected from: ('127.0.0.1', 40248)
+INFO 2026-08-29 06:21:24,430 judge_handler Judge connected from: ('127.0.0.1', 40250)
+INFO 2026-08-29 06:21:24,431 judge_handler Judge connected from: ('127.0.0.1', 40254)
+INFO 2026-08-29 06:21:24,442 judge_handler Judge authenticated: ('127.0.0.1', 40254) (Judge-02)
+INFO 2026-08-29 06:21:24,442 judge_handler Judge authenticated: ('127.0.0.1', 40250) (Judge-01)
+INFO 2026-08-29 06:21:24,443 judge_list Minimum tier changed from None to 1
+INFO 2026-08-29 06:21:24,443 judge_handler Judge authenticated: ('127.0.0.1', 40248) (Judge-03)
+INFO 2026-08-29 06:22:44,597 daemon Exiting due to SIGINT
+INFO 2026-08-29 06:23:28,622 daemon Exiting due to SIGINT
+INFO 2026-08-29 06:23:55,328 judge_handler Judge connected from: ('127.0.0.1', 40258)
+INFO 2026-08-29 06:23:55,328 judge_handler Judge connected from: ('127.0.0.1', 40256)
+INFO 2026-08-29 06:23:55,333 judge_handler Judge connected from: ('127.0.0.1', 40262)
+INFO 2026-08-29 06:23:55,344 judge_handler Judge authenticated: ('127.0.0.1', 40256) (Judge-03)
+INFO 2026-08-29 06:23:55,345 judge_handler Judge authenticated: ('127.0.0.1', 40258) (Judge-02)
+INFO 2026-08-29 06:23:55,346 judge_list Minimum tier changed from None to 1
+INFO 2026-08-29 06:23:55,356 judge_handler Judge authenticated: ('127.0.0.1', 40262) (Judge-01)
+INFO 2026-08-29 06:25:32,873 daemon Exiting due to SIGINT
+INFO 2026-08-29 06:26:43,591 judge_handler Judge connected from: ('127.0.0.1', 40264)
+INFO 2026-08-29 06:26:43,592 judge_handler Judge connected from: ('127.0.0.1', 40266)
+INFO 2026-08-29 06:26:43,594 judge_handler Judge connected from: ('127.0.0.1', 40270)
+INFO 2026-08-29 06:26:43,606 judge_handler Judge authenticated: ('127.0.0.1', 40266) (Judge-03)
+INFO 2026-08-29 06:26:43,608 judge_list Minimum tier changed from None to 1
+INFO 2026-08-29 06:26:43,608 judge_handler Judge authenticated: ('127.0.0.1', 40270) (Judge-02)
+INFO 2026-08-29 06:26:43,611 judge_handler Judge authenticated: ('127.0.0.1', 40264) (Judge-01)
+INFO 2026-08-29 15:48:33,820 judge_list Free judges: 3
+INFO 2026-08-29 15:48:33,820 judge_list Dispatched submission 124 to: Judge-02
+INFO 2026-08-29 15:48:33,834 judge_handler Submission acknowledged: 124
+INFO 2026-08-29 15:48:36,222 judge_handler Judge-02: Submission generated compiler messages: 124
+INFO 2026-08-29 15:48:36,225 judge_handler Judge-02: Grading has begun on: 124
+INFO 2026-08-29 15:48:36,355 judge_handler Judge-02: 3 test case(s) completed on: 124
+INFO 2026-08-29 15:48:36,606 judge_handler Judge-02: 8 test case(s) completed on: 124
+INFO 2026-08-29 15:48:36,857 judge_handler Judge-02: 7 test case(s) completed on: 124
+INFO 2026-08-29 15:48:36,891 judge_handler Judge-02: 2 test case(s) completed on: 124
+INFO 2026-08-29 15:48:36,902 judge_handler Judge-02: Grading has ended on: 124
+INFO 2026-08-29 15:48:36,903 judge_list Judge available after grading 124: Judge-02
+INFO 2026-08-30 03:31:39,846 judge_list Free judges: 3
+INFO 2026-08-30 03:31:39,847 judge_list Dispatched submission 125 to: Judge-02
+INFO 2026-08-30 03:31:39,857 judge_handler Submission acknowledged: 125
+INFO 2026-08-30 03:31:41,140 judge_handler Judge-02: Submission generated compiler messages: 125
+INFO 2026-08-30 03:31:41,145 judge_handler Judge-02: Grading has begun on: 125
+INFO 2026-08-30 03:31:41,310 judge_handler Judge-02: 6 test case(s) completed on: 125
+INFO 2026-08-30 03:31:41,560 judge_handler Judge-02: 2 test case(s) completed on: 125
+INFO 2026-08-30 03:31:41,811 judge_handler Judge-02: 1 test case(s) completed on: 125
+INFO 2026-08-30 03:31:41,844 judge_handler Judge-02: 1 test case(s) completed on: 125
+INFO 2026-08-30 03:31:41,852 judge_handler Judge-02: Grading has ended on: 125
+INFO 2026-08-30 03:31:41,852 judge_list Judge available after grading 125: Judge-02
+INFO 2026-08-30 04:15:36,843 judge_list Free judges: 3
+INFO 2026-08-30 04:15:36,844 judge_list Dispatched submission 126 to: Judge-02
+INFO 2026-08-30 04:15:36,855 judge_handler Submission acknowledged: 126
+INFO 2026-08-30 04:15:38,320 judge_handler Judge-02: Submission generated compiler messages: 126
+INFO 2026-08-30 04:15:38,322 judge_handler Judge-02: Grading has begun on: 126
+INFO 2026-08-30 04:15:38,429 judge_handler Judge-02: 4 test case(s) completed on: 126
+INFO 2026-08-30 04:15:38,679 judge_handler Judge-02: 3 test case(s) completed on: 126
+INFO 2026-08-30 04:15:38,930 judge_handler Judge-02: 1 test case(s) completed on: 126
+INFO 2026-08-30 04:15:40,430 judge_handler Judge-02: 1 test case(s) completed on: 126
+INFO 2026-08-30 04:15:41,793 judge_handler Judge-02: 1 test case(s) completed on: 126
+INFO 2026-08-30 04:15:41,803 judge_handler Judge-02: Grading has ended on: 126
+INFO 2026-08-30 04:15:41,804 judge_list Judge available after grading 126: Judge-02
+INFO 2026-08-31 12:50:05,416 judge_list Free judges: 3
+INFO 2026-08-31 12:50:05,417 judge_list Dispatched submission 125 to: Judge-01
+INFO 2026-08-31 12:50:05,429 judge_handler Submission acknowledged: 125
+INFO 2026-08-31 12:50:06,800 judge_handler Judge-01: Submission generated compiler messages: 125
+INFO 2026-08-31 12:50:06,804 judge_handler Judge-01: Grading has begun on: 125
+INFO 2026-08-31 12:50:06,962 judge_handler Judge-01: 5 test case(s) completed on: 125
+INFO 2026-08-31 12:50:07,213 judge_handler Judge-01: 3 test case(s) completed on: 125
+INFO 2026-08-31 12:50:07,463 judge_handler Judge-01: 1 test case(s) completed on: 125
+INFO 2026-08-31 12:50:07,600 judge_handler Judge-01: 1 test case(s) completed on: 125
+INFO 2026-08-31 12:50:07,611 judge_handler Judge-01: Grading has ended on: 125
+INFO 2026-08-31 12:50:07,612 judge_list Judge available after grading 125: Judge-01
+INFO 2026-08-31 12:50:08,099 judge_list Free judges: 3
+INFO 2026-08-31 12:50:08,099 judge_list Dispatched submission 126 to: Judge-02
+INFO 2026-08-31 12:50:08,115 judge_handler Submission acknowledged: 126
+INFO 2026-08-31 12:50:09,879 judge_handler Judge-02: Submission generated compiler messages: 126
+INFO 2026-08-31 12:50:09,885 judge_handler Judge-02: Grading has begun on: 126
+INFO 2026-08-31 12:50:09,940 judge_handler Judge-02: 1 test case(s) completed on: 126
+INFO 2026-08-31 12:50:10,193 judge_handler Judge-02: 5 test case(s) completed on: 126
+INFO 2026-08-31 12:50:10,445 judge_handler Judge-02: 1 test case(s) completed on: 126
+INFO 2026-08-31 12:50:10,698 judge_handler Judge-02: 1 test case(s) completed on: 126
+INFO 2026-08-31 12:50:12,451 judge_handler Judge-02: 1 test case(s) completed on: 126
+INFO 2026-08-31 12:50:13,758 judge_handler Judge-02: 1 test case(s) completed on: 126
+INFO 2026-08-31 12:50:13,768 judge_handler Judge-02: Grading has ended on: 126
+INFO 2026-08-31 12:50:13,768 judge_list Judge available after grading 126: Judge-02
+INFO 2026-08-31 13:05:12,625 daemon Exiting due to SIGINT
+INFO 2026-08-31 13:05:27,184 judge_handler Judge connected from: ('127.0.0.1', 40272)
+INFO 2026-08-31 13:05:27,186 judge_handler Judge connected from: ('127.0.0.1', 40276)
+INFO 2026-08-31 13:05:27,193 judge_handler Judge authenticated: ('127.0.0.1', 40272) (Judge-01)
+INFO 2026-08-31 13:05:27,193 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 13:05:27,201 judge_handler Judge authenticated: ('127.0.0.1', 40276) (Judge-02)
+INFO 2026-08-31 13:06:23,185 judge_handler Judge connected from: ('127.0.0.1', 40280)
+INFO 2026-08-31 13:06:23,192 judge_handler Judge authenticated: ('127.0.0.1', 40280) (Judge-03)
+INFO 2026-08-31 13:15:15,276 daemon Exiting due to SIGINT
+INFO 2026-08-31 13:15:32,124 judge_handler Judge connected from: ('127.0.0.1', 40282)
+INFO 2026-08-31 13:15:32,125 judge_handler Judge connected from: ('127.0.0.1', 40284)
+INFO 2026-08-31 13:15:32,133 judge_handler Judge authenticated: ('127.0.0.1', 40282) (Judge-02)
+INFO 2026-08-31 13:15:32,133 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 13:15:32,140 judge_handler Judge authenticated: ('127.0.0.1', 40284) (Judge-01)
+INFO 2026-08-31 13:16:26,122 judge_handler Judge connected from: ('127.0.0.1', 40286)
+INFO 2026-08-31 13:16:26,126 judge_handler Judge authenticated: ('127.0.0.1', 40286) (Judge-03)
+INFO 2026-08-31 13:17:27,295 daemon Exiting due to SIGINT
+INFO 2026-08-31 13:17:46,451 judge_handler Judge connected from: ('127.0.0.1', 40288)
+INFO 2026-08-31 13:17:46,452 judge_handler Judge connected from: ('127.0.0.1', 40290)
+INFO 2026-08-31 13:17:46,460 judge_handler Judge authenticated: ('127.0.0.1', 40290) (Judge-02)
+INFO 2026-08-31 13:17:46,460 judge_handler Judge authenticated: ('127.0.0.1', 40288) (Judge-01)
+INFO 2026-08-31 13:17:46,460 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 13:18:37,451 judge_handler Judge connected from: ('127.0.0.1', 40292)
+INFO 2026-08-31 13:18:37,457 judge_handler Judge authenticated: ('127.0.0.1', 40292) (Judge-03)
+INFO 2026-08-31 13:26:51,838 daemon Exiting due to SIGINT
+INFO 2026-08-31 13:27:15,509 judge_handler Judge connected from: ('127.0.0.1', 40294)
+INFO 2026-08-31 13:27:15,514 judge_handler Judge connected from: ('127.0.0.1', 40296)
+INFO 2026-08-31 13:27:15,520 judge_handler Judge authenticated: ('127.0.0.1', 40294) (Judge-02)
+INFO 2026-08-31 13:27:15,521 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 13:27:15,524 judge_handler Judge authenticated: ('127.0.0.1', 40296) (Judge-01)
+INFO 2026-08-31 13:28:02,008 judge_handler Judge connected from: ('127.0.0.1', 40298)
+INFO 2026-08-31 13:28:02,021 judge_handler Judge authenticated: ('127.0.0.1', 40298) (Judge-03)
+INFO 2026-08-31 13:33:42,911 daemon Exiting due to SIGINT
+INFO 2026-08-31 13:34:13,762 judge_handler Judge connected from: ('127.0.0.1', 40300)
+INFO 2026-08-31 13:34:13,762 judge_handler Judge connected from: ('127.0.0.1', 40302)
+INFO 2026-08-31 13:34:13,769 judge_handler Judge authenticated: ('127.0.0.1', 40300) (Judge-01)
+INFO 2026-08-31 13:34:13,770 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 13:34:13,771 judge_handler Judge authenticated: ('127.0.0.1', 40302) (Judge-02)
+INFO 2026-08-31 13:34:53,511 judge_handler Judge connected from: ('127.0.0.1', 40304)
+INFO 2026-08-31 13:34:53,517 judge_handler Judge authenticated: ('127.0.0.1', 40304) (Judge-03)
+INFO 2026-08-31 13:36:25,154 daemon Exiting due to SIGINT
+INFO 2026-08-31 13:37:06,164 judge_handler Judge connected from: ('127.0.0.1', 40306)
+INFO 2026-08-31 13:37:06,165 judge_handler Judge connected from: ('127.0.0.1', 40308)
+INFO 2026-08-31 13:37:06,173 judge_handler Judge authenticated: ('127.0.0.1', 40308) (Judge-02)
+INFO 2026-08-31 13:37:06,173 judge_handler Judge authenticated: ('127.0.0.1', 40306) (Judge-01)
+INFO 2026-08-31 13:37:06,173 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 13:37:13,090 daemon Exiting due to SIGINT
+INFO 2026-08-31 13:37:35,789 judge_handler Judge connected from: ('127.0.0.1', 40310)
+INFO 2026-08-31 13:37:35,795 judge_handler Judge authenticated: ('127.0.0.1', 40310) (Judge-03)
+INFO 2026-08-31 13:37:35,796 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 13:38:09,339 judge_handler Judge connected from: ('127.0.0.1', 40312)
+INFO 2026-08-31 13:38:09,341 judge_handler Judge connected from: ('127.0.0.1', 40314)
+INFO 2026-08-31 13:38:09,349 judge_handler Judge authenticated: ('127.0.0.1', 40314) (Judge-01)
+INFO 2026-08-31 13:38:09,352 judge_handler Judge authenticated: ('127.0.0.1', 40312) (Judge-02)
+INFO 2026-08-31 13:45:02,228 daemon Exiting due to SIGINT
+INFO 2026-08-31 13:46:13,185 judge_handler Judge connected from: ('127.0.0.1', 40320)
+INFO 2026-08-31 13:46:13,187 judge_handler Judge connected from: ('127.0.0.1', 40316)
+INFO 2026-08-31 13:46:13,192 judge_handler Judge connected from: ('127.0.0.1', 40318)
+INFO 2026-08-31 13:46:13,201 judge_handler Judge authenticated: ('127.0.0.1', 40316) (Judge-01)
+INFO 2026-08-31 13:46:13,201 judge_handler Judge authenticated: ('127.0.0.1', 40320) (Judge-03)
+INFO 2026-08-31 13:46:13,202 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 13:46:13,207 judge_handler Judge authenticated: ('127.0.0.1', 40318) (Judge-02)
+INFO 2026-08-31 13:51:11,403 daemon Exiting due to SIGINT
+INFO 2026-08-31 13:52:22,074 judge_handler Judge connected from: ('127.0.0.1', 40330)
+INFO 2026-08-31 13:52:22,075 judge_handler Judge connected from: ('127.0.0.1', 40332)
+INFO 2026-08-31 13:52:22,075 judge_handler Judge connected from: ('127.0.0.1', 40334)
+INFO 2026-08-31 13:52:22,086 judge_handler Judge authenticated: ('127.0.0.1', 40332) (Judge-02)
+INFO 2026-08-31 13:52:22,088 judge_handler Judge authenticated: ('127.0.0.1', 40334) (Judge-03)
+INFO 2026-08-31 13:52:22,088 judge_handler Judge authenticated: ('127.0.0.1', 40330) (Judge-01)
+INFO 2026-08-31 13:52:22,089 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 13:52:41,833 daemon Exiting due to SIGINT
+INFO 2026-08-31 13:53:52,764 judge_handler Judge connected from: ('127.0.0.1', 40336)
+INFO 2026-08-31 13:53:52,771 judge_handler Judge connected from: ('127.0.0.1', 40338)
+INFO 2026-08-31 13:53:52,773 judge_handler Judge connected from: ('127.0.0.1', 40340)
+INFO 2026-08-31 13:53:52,789 judge_handler Judge authenticated: ('127.0.0.1', 40338) (Judge-01)
+INFO 2026-08-31 13:53:52,789 judge_handler Judge authenticated: ('127.0.0.1', 40336) (Judge-03)
+INFO 2026-08-31 13:53:52,790 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 13:53:52,791 judge_handler Judge authenticated: ('127.0.0.1', 40340) (Judge-02)
+INFO 2026-08-31 13:56:37,024 daemon Exiting due to SIGINT
+INFO 2026-08-31 13:57:47,985 judge_handler Judge connected from: ('127.0.0.1', 40344)
+INFO 2026-08-31 13:57:47,991 judge_handler Judge connected from: ('127.0.0.1', 40346)
+INFO 2026-08-31 13:57:47,992 judge_handler Judge connected from: ('127.0.0.1', 40348)
+INFO 2026-08-31 13:57:48,003 judge_handler Judge authenticated: ('127.0.0.1', 40346) (Judge-02)
+INFO 2026-08-31 13:57:48,005 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 13:57:48,009 judge_handler Judge authenticated: ('127.0.0.1', 40344) (Judge-01)
+INFO 2026-08-31 13:57:48,016 judge_handler Judge authenticated: ('127.0.0.1', 40348) (Judge-03)
+INFO 2026-08-31 14:01:57,780 daemon Exiting due to SIGINT
+INFO 2026-08-31 14:03:08,320 judge_handler Judge connected from: ('127.0.0.1', 40358)
+INFO 2026-08-31 14:03:08,323 judge_handler Judge connected from: ('127.0.0.1', 40360)
+INFO 2026-08-31 14:03:08,324 judge_handler Judge connected from: ('127.0.0.1', 40362)
+INFO 2026-08-31 14:03:08,334 judge_handler Judge authenticated: ('127.0.0.1', 40360) (Judge-02)
+INFO 2026-08-31 14:03:08,334 judge_handler Judge authenticated: ('127.0.0.1', 40358) (Judge-03)
+INFO 2026-08-31 14:03:08,335 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 14:03:08,337 judge_handler Judge authenticated: ('127.0.0.1', 40362) (Judge-01)
+INFO 2026-08-31 14:24:32,364 daemon Exiting due to SIGINT
+INFO 2026-08-31 14:25:43,261 judge_handler Judge connected from: ('127.0.0.1', 40364)
+INFO 2026-08-31 14:25:43,262 judge_handler Judge connected from: ('127.0.0.1', 40366)
+INFO 2026-08-31 14:25:43,263 judge_handler Judge connected from: ('127.0.0.1', 40368)
+INFO 2026-08-31 14:25:43,273 judge_handler Judge authenticated: ('127.0.0.1', 40364) (Judge-01)
+INFO 2026-08-31 14:25:43,274 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 14:25:43,287 judge_handler Judge authenticated: ('127.0.0.1', 40368) (Judge-03)
+INFO 2026-08-31 14:25:43,291 judge_handler Judge authenticated: ('127.0.0.1', 40366) (Judge-02)
+INFO 2026-08-31 14:32:11,186 judge_list Free judges: 3
+INFO 2026-08-31 14:32:11,186 judge_list Dispatched submission 127 to: Judge-01
+INFO 2026-08-31 14:32:11,199 judge_handler Submission acknowledged: 127
+INFO 2026-08-31 14:32:13,306 judge_handler Judge-01: Submission generated compiler messages: 127
+INFO 2026-08-31 14:32:13,310 judge_handler Judge-01: Grading has begun on: 127
+INFO 2026-08-31 14:32:13,423 judge_handler Judge-01: 1 test case(s) completed on: 127
+INFO 2026-08-31 14:32:14,424 judge_handler Judge-01: 4 test case(s) completed on: 127
+INFO 2026-08-31 14:32:14,675 judge_handler Judge-01: 2 test case(s) completed on: 127
+INFO 2026-08-31 14:32:14,925 judge_handler Judge-01: 1 test case(s) completed on: 127
+INFO 2026-08-31 14:32:15,177 judge_handler Judge-01: 1 test case(s) completed on: 127
+INFO 2026-08-31 14:32:15,679 judge_handler Judge-01: 1 test case(s) completed on: 127
+INFO 2026-08-31 14:32:16,144 judge_handler Judge-01: 1 test case(s) completed on: 127
+INFO 2026-08-31 14:32:16,153 judge_handler Judge-01: Grading has ended on: 127
+INFO 2026-08-31 14:32:16,153 judge_list Judge available after grading 127: Judge-01
+INFO 2026-08-31 14:32:30,605 judge_list Free judges: 3
+INFO 2026-08-31 14:32:30,606 judge_list Dispatched submission 128 to: Judge-01
+INFO 2026-08-31 14:32:30,615 judge_handler Submission acknowledged: 128
+INFO 2026-08-31 14:32:30,739 judge_handler Judge-01: Submission failed to compile: 128
+INFO 2026-08-31 14:32:30,740 judge_list Judge available after grading 128: Judge-01
+INFO 2026-08-31 14:33:20,971 judge_list Free judges: 3
+INFO 2026-08-31 14:33:20,972 judge_list Dispatched submission 129 to: Judge-03
+INFO 2026-08-31 14:33:20,984 judge_handler Submission acknowledged: 129
+INFO 2026-08-31 14:33:21,096 judge_handler Judge-03: Submission failed to compile: 129
+INFO 2026-08-31 14:33:21,097 judge_list Judge available after grading 129: Judge-03
+INFO 2026-08-31 14:33:54,077 judge_list Free judges: 3
+INFO 2026-08-31 14:33:54,078 judge_list Dispatched submission 130 to: Judge-03
+INFO 2026-08-31 14:33:54,090 judge_handler Submission acknowledged: 130
+INFO 2026-08-31 14:33:54,125 judge_list Free judges: 2
+INFO 2026-08-31 14:33:54,125 judge_list Dispatched submission 131 to: Judge-01
+INFO 2026-08-31 14:33:54,136 judge_handler Submission acknowledged: 131
+INFO 2026-08-31 14:33:54,189 judge_handler Judge-03: Submission failed to compile: 130
+INFO 2026-08-31 14:33:54,190 judge_list Judge available after grading 130: Judge-03
+INFO 2026-08-31 14:33:54,256 judge_handler Judge-01: Submission failed to compile: 131
+INFO 2026-08-31 14:33:54,257 judge_list Judge available after grading 131: Judge-01
+INFO 2026-08-31 14:34:18,586 judge_list Free judges: 3
+INFO 2026-08-31 14:34:18,587 judge_list Dispatched submission 132 to: Judge-03
+INFO 2026-08-31 14:34:18,597 judge_handler Submission acknowledged: 132
+INFO 2026-08-31 14:34:18,637 judge_list Free judges: 2
+INFO 2026-08-31 14:34:18,637 judge_list Dispatched submission 133 to: Judge-01
+INFO 2026-08-31 14:34:18,648 judge_handler Submission acknowledged: 133
+INFO 2026-08-31 14:34:18,717 judge_handler Judge-03: Submission failed to compile: 132
+INFO 2026-08-31 14:34:18,717 judge_list Judge available after grading 132: Judge-03
+INFO 2026-08-31 14:34:18,827 judge_handler Judge-01: Submission failed to compile: 133
+INFO 2026-08-31 14:34:18,828 judge_list Judge available after grading 133: Judge-01
+INFO 2026-08-31 14:48:25,173 daemon Exiting due to SIGINT
+INFO 2026-08-31 14:48:40,106 judge_handler Judge connected from: ('127.0.0.1', 40370)
+INFO 2026-08-31 14:48:40,114 judge_handler Judge authenticated: ('127.0.0.1', 40370) (Judge-03)
+INFO 2026-08-31 14:48:40,115 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 14:48:40,121 judge_handler Judge connected from: ('127.0.0.1', 40372)
+INFO 2026-08-31 14:48:40,137 judge_handler Judge authenticated: ('127.0.0.1', 40372) (Judge-01)
+INFO 2026-08-31 14:49:36,106 judge_handler Judge connected from: ('127.0.0.1', 40374)
+INFO 2026-08-31 14:49:36,113 judge_handler Judge authenticated: ('127.0.0.1', 40374) (Judge-02)
+INFO 2026-08-31 14:53:37,419 daemon Exiting due to SIGINT
+INFO 2026-08-31 14:53:54,367 judge_handler Judge connected from: ('127.0.0.1', 40376)
+INFO 2026-08-31 14:53:54,371 judge_handler Judge connected from: ('127.0.0.1', 40378)
+INFO 2026-08-31 14:53:54,377 judge_handler Judge authenticated: ('127.0.0.1', 40376) (Judge-03)
+INFO 2026-08-31 14:53:54,378 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 14:53:54,380 judge_handler Judge authenticated: ('127.0.0.1', 40378) (Judge-01)
+INFO 2026-08-31 14:54:48,366 judge_handler Judge connected from: ('127.0.0.1', 40382)
+INFO 2026-08-31 14:54:48,371 judge_handler Judge authenticated: ('127.0.0.1', 40382) (Judge-02)
+INFO 2026-08-31 14:59:09,378 daemon Exiting due to SIGINT
+INFO 2026-08-31 21:59:28,646 judge_handler Judge connected from: ('127.0.0.1', 40386)
+INFO 2026-08-31 21:59:28,647 judge_handler Judge connected from: ('127.0.0.1', 40388)
+INFO 2026-08-31 21:59:28,655 judge_handler Judge authenticated: ('127.0.0.1', 40386) (Judge-01)
+INFO 2026-08-31 21:59:28,656 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 21:59:28,662 judge_handler Judge authenticated: ('127.0.0.1', 40388) (Judge-03)
+INFO 2026-08-31 22:00:19,643 judge_handler Judge connected from: ('127.0.0.1', 40390)
+INFO 2026-08-31 22:00:19,649 judge_handler Judge authenticated: ('127.0.0.1', 40390) (Judge-02)
+INFO 2026-08-31 22:09:23,405 daemon Exiting due to SIGINT
+INFO 2026-08-31 22:09:47,183 judge_handler Judge connected from: ('127.0.0.1', 40394)
+INFO 2026-08-31 22:09:47,188 judge_handler Judge connected from: ('127.0.0.1', 40392)
+INFO 2026-08-31 22:09:47,194 judge_handler Judge authenticated: ('127.0.0.1', 40394) (Judge-01)
+INFO 2026-08-31 22:09:47,196 judge_list Minimum tier changed from None to 1
+INFO 2026-08-31 22:09:47,197 judge_handler Judge authenticated: ('127.0.0.1', 40392) (Judge-03)
+INFO 2026-08-31 22:10:13,683 daemon Exiting due to SIGINT
+INFO 2026-08-31 22:10:33,688 judge_handler Judge connected from: ('127.0.0.1', 40398)
+INFO 2026-08-31 22:10:33,695 judge_handler Judge authenticated: ('127.0.0.1', 40398) (Judge-02)
+INFO 2026-08-31 22:10:33,697 judge_list Minimum tier changed from None to 1

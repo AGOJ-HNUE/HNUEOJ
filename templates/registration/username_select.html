@@ -131,6 +131,9 @@
 
         <div class="block-header">{{ form.username.label }}</div>
         <span class="fullwidth{% if form.username.errors %}-error{% endif %}">{{ form.username }}</span>
+        {% if form.username.help_text %}
+            <div style="font-size: 0.8125rem; color: #666; margin-top: 4px;">{{ form.username.help_text }}</div>
+        {% endif %}
         {% if form.username.errors %}
             <div class="form-field-error">{{ form.username.errors }}</div>
         {% endif %}
@@ -153,7 +156,7 @@
         {% endif %}
 
         <hr>
-        <button style="float:right;" type="submit">Register!</button>
+        <button style="float:right;" type="submit">Hoàn tất đăng ký</button>
     </form>
 </div>
 {% endblock %}

@@ -1,0 +1,616 @@
+{% extends "icpc_registration/base_club.html" %}
+
+{% block icpc_content %}
+<style>
+    .admin-hero-card {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+        color: #ffffff;
+        border-radius: var(--icpc-radius);
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        box-shadow: var(--icpc-shadow);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .admin-hero-title {
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin: 0 0 6px 0;
+        color: #ffffff !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .admin-hero-subtitle {
+        font-size: 0.92rem;
+        color: #94a3b8;
+        margin: 0;
+    }
+
+    /* KPI Cards Grid */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+        margin-bottom: 24px;
+    }
+
+    .kpi-card {
+        background: var(--icpc-card-bg);
+        border: 1px solid var(--icpc-border);
+        border-radius: var(--icpc-radius);
+        padding: 20px;
+        box-shadow: var(--icpc-shadow);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .kpi-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .kpi-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+
+    .kpi-val {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--icpc-text-main);
+        line-height: 1;
+    }
+
+    .kpi-lbl {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--icpc-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .kpi-progress {
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(226, 232, 240, 0.6);
+        margin-top: 12px;
+        overflow: hidden;
+    }
+
+    .kpi-bar {
+        height: 100%;
+        border-radius: 3px;
+    }
+
+    /* Breakdown Grid */
+    .breakdown-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .breakdown-card {
+        background: var(--icpc-card-bg);
+        border: 1px solid var(--icpc-border);
+        border-radius: var(--icpc-radius);
+        padding: 20px 24px;
+        box-shadow: var(--icpc-shadow);
+    }
+
+    .breakdown-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--icpc-border);
+        font-size: 0.9rem;
+    }
+
+    .breakdown-item:last-child {
+        border-bottom: none;
+    }
+
+    /* SCIENTIFIC TABLE STYLING */
+    .table-container {
+        background: var(--icpc-card-bg);
+        border: 1px solid var(--icpc-border);
+        border-radius: var(--icpc-radius);
+        box-shadow: var(--icpc-shadow);
+        overflow: hidden;
+    }
+
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        font-size: 0.88rem;
+    }
+
+    .admin-table th {
+        background: rgba(30, 58, 138, 0.08);
+        color: var(--icpc-text-main);
+        font-weight: 700;
+        padding: 14px 12px;
+        text-align: left;
+        border-bottom: 2px solid var(--icpc-border);
+    }
+
+    .admin-table td {
+        padding: 12px;
+        border-bottom: 1px solid var(--icpc-border);
+        vertical-align: middle;
+        color: var(--icpc-text-main);
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .admin-table tr:hover {
+        background: rgba(59, 130, 246, 0.04);
+    }
+
+    .text-truncate-multi {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Modal Styling */
+    .admin-modal-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(4px);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .admin-modal-content {
+        background: var(--icpc-card-bg);
+        border: 1px solid var(--icpc-border);
+        border-radius: 16px;
+        max-width: 650px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        padding: 28px;
+        position: relative;
+    }
+</style>
+
+<!-- ADMIN HERO CARD -->
+<div class="admin-hero-card">
+    <div>
+        <h2 class="admin-hero-title">
+            <i class="fa fa-user-shield" style="color: #10b981;"></i> TRANG QUẢN TRỊ VIÊN - TIỂU BAN ICPC
+        </h2>
+        <p class="admin-hero-subtitle">
+            Hệ thống quản lý, phân loại danh sách sinh viên đăng ký & xuất báo cáo thống kê Excel.
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{{ url('icpc_registration:export_excel') }}?q={{ search_query }}&status={{ status_filter }}&cohort={{ cohort_filter }}&experience={{ experience_filter }}"
+            class="btn btn-success"
+            style="background: #10b981; border: none; font-weight: 700; padding: 10px 20px; border-radius: 10px; color: #fff !important; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fa fa-file-excel-o"></i> XUẤT FILE EXCEL (.XLSX)
+        </a>
+    </div>
+</div>
+
+<!-- KPI STATS CARDS -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span class="kpi-lbl">Tổng đơn đăng ký</span>
+            <div class="kpi-icon" style="background: rgba(59, 130, 246, 0.12); color: #2563eb;">
+                <i class="fa fa-users"></i>
+            </div>
+        </div>
+        <div class="kpi-val">{{ total_count }}</div>
+        <div style="font-size: 0.8rem; color: var(--icpc-text-muted); margin-top: 4px;">Sinh viên đã đăng ký</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span class="kpi-lbl">Đơn Chờ duyệt</span>
+            <div class="kpi-icon" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
+                <i class="fa fa-clock-o"></i>
+            </div>
+        </div>
+        <div class="kpi-val" style="color: #d97706;">{{ pending_count }}</div>
+        <div class="kpi-progress">
+            <div class="kpi-bar" style="width: {{ pending_percent }}%; background: #d97706;"></div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span class="kpi-lbl">Đơn Đã duyệt</span>
+            <div class="kpi-icon" style="background: rgba(16, 185, 129, 0.12); color: #059669;">
+                <i class="fa fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="kpi-val" style="color: #059669;">{{ approved_count }}</div>
+        <div class="kpi-progress">
+            <div class="kpi-bar" style="width: {{ approved_percent }}%; background: #059669;"></div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span class="kpi-lbl">Đơn Từ chối</span>
+            <div class="kpi-icon" style="background: rgba(239, 68, 68, 0.12); color: #dc2626;">
+                <i class="fa fa-times-circle"></i>
+            </div>
+        </div>
+        <div class="kpi-val" style="color: #dc2626;">{{ rejected_count }}</div>
+        <div class="kpi-progress">
+            <div class="kpi-bar" style="width: {{ rejected_percent }}%; background: #dc2626;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- DEMOGRAPHICS BREAKDOWN -->
+<div class="breakdown-grid">
+    <!-- Cohort Breakdown -->
+    <div class="breakdown-card">
+        <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 14px 0; color: var(--icpc-text-main);">
+            <i class="fa fa-graduation-cap" style="color: var(--icpc-blue);"></i> Thống kê theo Khóa Sinh viên
+        </h4>
+        {% for st in cohort_stats %}
+        <div class="breakdown-item">
+            <span style="font-weight: 600;">Khóa {{ st.cohort }}</span>
+            <span class="badge bg-primary" style="border-radius: 12px;">{{ st.count }} đơn</span>
+        </div>
+        {% else %}
+        <div style="font-size: 0.88rem; color: var(--icpc-text-muted);">Chưa có dữ liệu khóa.</div>
+        {% endfor %}
+    </div>
+
+    <!-- Experience Breakdown -->
+    <div class="breakdown-card">
+        <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 14px 0; color: var(--icpc-text-main);">
+            <i class="fa fa-code" style="color: var(--icpc-indigo);"></i> Thống kê theo Trình độ Lập trình
+        </h4>
+        {% for st in experience_stats %}
+        <div class="breakdown-item">
+            <span>
+                {% if st.programming_experience == 'beginner' %}Mới bắt đầu
+                {% elif st.programming_experience == 'basic' %}Đã nắm cơ bản C++/Python
+                {% elif st.programming_experience == 'intermediate' %}Cấu trúc dữ liệu & Thuật toán
+                {% else %}Đội tuyển / HSG / Olympic{% endif %}
+            </span>
+            <span class="badge bg-info text-dark" style="border-radius: 12px;">{{ st.count }} đơn</span>
+        </div>
+        {% else %}
+        <div style="font-size: 0.88rem; color: var(--icpc-text-muted);">Chưa có dữ liệu trình độ.</div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- FILTER & SEARCH PANEL -->
+<div class="icpc-card" style="padding: 20px; margin-bottom: 20px;">
+    <form method="get" action="" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+        <div style="flex: 2 1 220px; min-width: 0;">
+            <input type="text" name="q" value="{{ search_query }}" class="form-control"
+                placeholder="Tìm theo Tên, MSSV, Lớp, Email, SĐT...">
+        </div>
+
+        <div style="flex: 1 1 140px; min-width: 0;">
+            <select name="status" class="form-select">
+                <option value="">-- Trạng thái --</option>
+                {% for st_val, st_lbl in status_choices %}
+                <option value="{{ st_val }}" {% if status_filter==st_val %}selected{% endif %}>{{ st_lbl }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="flex: 1 1 110px; min-width: 0;">
+            <select name="cohort" class="form-select">
+                <option value="">-- Khóa --</option>
+                {% for ch in available_cohorts %}
+                <option value="{{ ch }}" {% if cohort_filter==ch %}selected{% endif %}>{{ ch }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="flex: 1 1 180px; min-width: 0; max-width: 220px;">
+            <select name="experience" class="form-select"
+                style="max-width: 100%; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
+                title="Lọc theo Trình độ">
+                <option value="">-- Trình độ --</option>
+                {% for exp_val, exp_lbl in experience_choices %}
+                <option value="{{ exp_val }}" {% if experience_filter==exp_val %}selected{% endif %}>{{ exp_lbl }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+            <button type="submit" class="btn-icpc-primary" style="padding: 10px 20px;">
+                <i class="fa fa-search"></i> Lọc
+            </button>
+            {% if search_query or status_filter or cohort_filter or experience_filter %}
+            <a href="{{ url('icpc_registration:stats') }}" class="btn btn-secondary"
+                style="padding: 10px 16px; border-radius: 8px;">
+                <i class="fa fa-undo"></i> Bỏ lọc
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- SCIENTIFIC DATA TABLE (5 COLUMNS) -->
+<div class="table-container">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th style="width: 50px; text-align: center;">STT</th>
+                <th style="width: 220px;">Họ tên & Tài khoản</th>
+                <th style="width: 170px;">MSSV / Lớp</th>
+                <th style="width: 240px;">Liên hệ (SĐT/Email/FB)</th>
+                <th style="text-align: center;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reg in registrations %}
+            <tr id="reg-row-{{ reg.pk }}">
+                <td style="text-align: center; font-weight: 700;">{{ loop.index }}</td>
+                <td>
+                    <div style="font-weight: 700; color: var(--icpc-text-main); font-size: 0.95rem;">{{ reg.full_name }}
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--icpc-text-muted);">
+                        <i class="fa fa-user"></i> {{ reg.user.username if reg.user else 'Khách' }}
+                    </div>
+                </td>
+                <td>
+                    <div style="font-weight: 700; color: var(--icpc-blue); font-size: 0.92rem;">{{ reg.student_id }}
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--icpc-text-muted);">{{ reg.academic_class }} ({{
+                        reg.cohort }})</div>
+                </td>
+                <td>
+                    <div><a href="https://zalo.me/{{ reg.phone }}" target="_blank"
+                            style="color: #10b981; font-weight: 600; font-size: 0.88rem;"><i class="fa fa-phone"></i> {{
+                            reg.phone }} (Zalo)</a></div>
+                    <div
+                        style="font-size: 0.82rem; color: var(--icpc-text-muted); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                        <i class="fa fa-envelope"></i> {{ reg.email }}</div>
+                    {% if reg.facebook_url %}
+                    <div style="font-size: 0.82rem; margin-top: 2px;">
+                        <a href="{{ reg.facebook_url }}" target="_blank" style="color: #2563eb; font-weight: 600;"><i
+                                class="fa fa-facebook-square"></i> Trang cá nhân FB</a>
+                    </div>
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">
+                    <div
+                        style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                        <span id="status-badge-{{ reg.pk }}" class="icpc-status-badge 
+                            {% if reg.status == 'approved' %}icpc-status-approved
+                            {% elif reg.status == 'rejected' %}icpc-status-rejected
+                            {% else %}icpc-status-pending{% endif %}">
+                            {% if reg.status == 'approved' %}<i class="fa fa-check"></i> Đã duyệt
+                            {% elif reg.status == 'rejected' %}<i class="fa fa-times"></i> Từ chối
+                            {% else %}<i class="fa fa-clock-o"></i> Chờ duyệt{% endif %}
+                        </span>
+
+                        <button class="open-detail-btn btn btn-sm btn-primary" data-id="{{ reg.pk }}"
+                            data-fullname="{{ reg.full_name|escape }}" data-studentid="{{ reg.student_id|escape }}"
+                            data-class="{{ reg.academic_class|escape }}" data-cohort="{{ reg.cohort|escape }}"
+                            data-phone="{{ reg.phone|escape }}" data-email="{{ reg.email|escape }}"
+                            data-facebook="{{ reg.facebook_url|default('', true)|escape }}"
+                            data-experience="{{ reg.get_programming_experience_display()|escape }}"
+                            data-achievements="{{ reg.achievements|escape }}" data-reason="{{ reg.reason|escape }}"
+                            data-status="{{ reg.status|escape }}" data-note="{{ reg.admin_note|escape }}"
+                            style="font-weight: 700; padding: 6px 14px; border-radius: 8px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.25);">
+                            <i class="fa fa-eye"></i> Xem chi tiết & Duyệt đơn
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 40px; color: var(--icpc-text-muted);">
+                    <i class="fa fa-inbox" style="font-size: 2.2rem; margin-bottom: 10px;"></i>
+                    <div>Không tìm thấy đơn đăng ký nào phù hợp với bộ lọc hiện tại.</div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- DETAILS MODAL FOR FULL VIEW & APPROVAL POPDOWN -->
+<div id="detailModal" class="admin-modal-backdrop">
+    <div class="admin-modal-content" style="max-width: 680px;">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 14px; border-bottom: 2px solid var(--icpc-border); margin-bottom: 20px;">
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 800; margin: 0; color: var(--icpc-text-main);">
+                    <i class="fa fa-graduation-cap" style="color: var(--icpc-blue);"></i> Chi tiết Đơn Đăng Ký - <span
+                        id="m_title_name" style="color: var(--icpc-blue);"></span>
+                </h3>
+                <div style="font-size: 0.85rem; color: var(--icpc-text-muted); margin-top: 4px;">
+                    Xem toàn bộ thông tin ứng viên và thực hiện phê duyệt đơn
+                </div>
+            </div>
+            <button onclick="closeDetailModal()" class="btn btn-sm btn-close"
+                style="font-size: 1.3rem; cursor: pointer; border: none; background: transparent; color: var(--icpc-text-muted);">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+
+        <div style="font-size: 0.93rem; line-height: 1.7; color: var(--icpc-text-main);">
+            <div
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; background: rgba(30, 58, 138, 0.04); padding: 16px; border-radius: 12px; border: 1px solid var(--icpc-border);">
+                <div><strong><i class="fa fa-user" style="color: var(--icpc-blue);"></i> Họ và tên:</strong> <span
+                        id="m_fullname"></span></div>
+                <div><strong><i class="fa fa-graduation-cap" style="color: var(--icpc-blue);"></i> Mã sinh
+                        viên:</strong> <span id="m_studentid"></span></div>
+                <div><strong><i class="fa fa-graduation-cap" style="color: var(--icpc-blue);"></i> Lớp:</strong> <span
+                        id="m_class"></span></div>
+                <div><strong><i class="fa fa-users" style="color: var(--icpc-blue);"></i> Khóa:</strong> <span
+                        id="m_cohort"></span></div>
+                <div><strong><i class="fa fa-phone" style="color: #10b981;"></i> Số điện thoại Zalo:</strong> <span
+                        id="m_phone"></span></div>
+                <div><strong><i class="fa fa-envelope" style="color: var(--icpc-blue);"></i> Email:</strong> <span
+                        id="m_email"></span></div>
+                <div id="m_facebook_wrapper" style="grid-column: span 2;">
+                    <strong><i class="fa fa-facebook-official" style="color: #2563eb;"></i> Link Facebook:</strong> <a
+                        id="m_facebook_link" href="#" target="_blank" style="color: #2563eb; font-weight: 600;">Trang cá
+                        nhân FB</a>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <strong><i class="fa fa-code" style="color: var(--icpc-blue);"></i> Trình độ lập trình hiện
+                    tại:</strong>
+                <div id="m_experience"
+                    style="font-weight: 700; color: var(--icpc-blue); margin-top: 4px; font-size: 0.95rem;"></div>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <strong><i class="fa fa-trophy" style="color: #d97706;"></i> Thành tích / Giải thưởng / Kinh
+                    nghiệm:</strong>
+                <div id="m_achievements"
+                    style="background: var(--icpc-card-bg); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--icpc-border); margin-top: 4px; font-size: 0.9rem;">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 18px;">
+                <strong><i class="fa fa-bullseye" style="color: #e11d48;"></i> Lý do & Mục tiêu tham gia:</strong>
+                <div id="m_reason"
+                    style="background: var(--icpc-card-bg); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--icpc-border); margin-top: 4px; font-size: 0.9rem; white-space: pre-wrap; font-style: italic;">
+                </div>
+            </div>
+
+            <div style="border-top: 1px dashed var(--icpc-border); padding-top: 16px;">
+                <label class="form-label" for="m_admin_note" style="font-weight: 700;"><i
+                        class="fa fa-pencil-square-o"></i> Ghi chú của Ban Quản lý (Lưu thông báo cho ứng viên):</label>
+                <textarea id="m_admin_note" class="form-control" rows="2"
+                    placeholder="Nhập ghi chú hoặc hướng dẫn dành cho sinh viên..."></textarea>
+            </div>
+        </div>
+
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--icpc-border);">
+            <div style="display: flex; gap: 8px;">
+                <button onclick="saveModalStatus('approved')" class="btn btn-success"
+                    style="font-weight: 700; padding: 9px 20px; border-radius: 8px;">
+                    <i class="fa fa-check"></i> Duyệt Đơn
+                </button>
+                <button onclick="saveModalStatus('rejected')" class="btn btn-danger"
+                    style="font-weight: 700; padding: 9px 20px; border-radius: 8px;">
+                    <i class="fa fa-times"></i> Từ Chối
+                </button>
+                <button onclick="saveModalStatus('pending')" class="btn btn-warning text-dark"
+                    style="font-weight: 700; padding: 9px 18px; border-radius: 8px;">
+                    <i class="fa fa-undo"></i> Đặt lại Chờ duyệt
+                </button>
+            </div>
+            <button onclick="closeDetailModal()" class="btn btn-secondary"
+                style="padding: 9px 20px; border-radius: 8px;">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    var currentModalRegId = null;
+
+    $(function () {
+        $('.open-detail-btn').on('click', function () {
+            const btn = $(this);
+            currentModalRegId = btn.data('id');
+            const fullname = btn.data('fullname');
+            $('#m_title_name').text(fullname);
+            $('#m_fullname').text(fullname);
+            $('#m_studentid').text(btn.data('studentid'));
+            $('#m_class').text(btn.data('class'));
+            $('#m_cohort').text(btn.data('cohort'));
+            $('#m_phone').text(btn.data('phone'));
+            $('#m_email').text(btn.data('email'));
+
+            const fbUrl = btn.data('facebook');
+            if (fbUrl) {
+                $('#m_facebook_link').attr('href', fbUrl);
+                $('#m_facebook_wrapper').show();
+            } else {
+                $('#m_facebook_wrapper').hide();
+            }
+
+            $('#m_experience').text(btn.data('experience'));
+            $('#m_achievements').text(btn.data('achievements') || 'Chưa cập nhật');
+            $('#m_reason').text(btn.data('reason'));
+            $('#m_admin_note').val(btn.data('note') || '');
+            $('#detailModal').css('display', 'flex');
+        });
+    });
+
+    function closeDetailModal() {
+        $('#detailModal').css('display', 'none');
+        currentModalRegId = null;
+    }
+
+    function saveModalStatus(status) {
+        if (!currentModalRegId) return;
+        const note = $('#m_admin_note').val();
+        updateStatus(currentModalRegId, status, note, function () {
+            closeDetailModal();
+        });
+    }
+
+    function updateStatus(id, newStatus, note, callback) {
+        const csrfToken = '{{ csrf_token }}';
+        $.ajax({
+            url: '/clb-nvsp/icpc/update-status/' + id + '/',
+            type: 'POST',
+            data: {
+                'status': newStatus,
+                'admin_note': note || '',
+                'csrfmiddlewaretoken': csrfToken
+            },
+            success: function (response) {
+                if (response.success) {
+                    const badge = $('#status-badge-' + id);
+                    badge.removeClass('icpc-status-approved icpc-status-rejected icpc-status-pending bg-success bg-danger bg-warning text-dark');
+                    if (newStatus === 'approved') {
+                        badge.addClass('icpc-status-approved').html('<i class="fa fa-check"></i> Đã duyệt');
+                    } else if (newStatus === 'rejected') {
+                        badge.addClass('icpc-status-rejected').html('<i class="fa fa-times"></i> Từ chối');
+                    } else {
+                        badge.addClass('icpc-status-pending').html('<i class="fa fa-clock-o"></i> Chờ duyệt');
+                    }
+                    if (callback) callback();
+                }
+            },
+            error: function (err) {
+                alert('Lỗi khi cập nhật trạng thái đơn!');
+            }
+        });
+    }
+</script>
+{% endblock %}

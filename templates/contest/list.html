@@ -178,12 +178,12 @@
     <td>
         {% if request.profile not in contest.authors.all() and request.profile not in contest.curators.all() and request.profile not in contest.testers.all() %}
             {% if request.profile and contest.id in request.profile.registered_contest_ids %}
-                <span style="color: #87ab69"><b>Already registered</b></span>
+                <span style="color: #87ab69"><b>Đã đăng ký</b></span>
             {% elif not contest.can_register %}
                 {% if contest.time_before_register %}
                     <span class="time">{{ _('Registration opens in %(countdown)s', countdown=as_countdown(contest.time_before_register)) }}</span>
                 {% else %}
-                    <span>Registration closed</span>
+                    <span>Đã đóng đăng ký</span>
                 {% endif %}
             {% else %}
                 <form action="{{ url('contest_register', contest.key) }}" method="post">
@@ -195,7 +195,7 @@
         {% endif %}
         {% if not contest.time_before_register %}
             <div style="padding-top: 0.5em">
-                <span style="opacity: 50%">Registered users: </span>
+                <span style="opacity: 50%">Thí sinh đã đăng ký: </span>
                 <span>{{ contest.user_count }}</span>
             </div>
         {% endif %}

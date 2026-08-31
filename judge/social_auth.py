@@ -48,9 +48,23 @@ def slugify_username(username, renotword=re.compile(r'[^\w]')):
     return renotword.sub('', username.replace('-', '_'))
 
 
+class InvalidHNUEEmail(SocialAuthBaseException):
+    def __init__(self, backend, email=None):
+        self.email = email
+        super().__init__(backend)
+
+    def __str__(self):
+        return 'Chỉ chấp nhận đăng nhập bằng Email sinh viên HNUE có định dạng stu<mã sinh viên 9 chữ số>@hnue.edu.vn (Ví dụ: stu725105088@hnue.edu.vn).'
+
+
 def verify_email(backend, details, *args, **kwargs):
-    if not details['email']:
+    email = (details.get('email') or '').strip().lower()
+    if not email:
         raise InvalidEmail(backend)
+
+    # Ràng buộc chỉ chấp nhận Email sinh viên HNUE (dạng stu<9 chữ số>@hnue.edu.vn hoặc domain @hnue.edu.vn)
+    if not re.match(r'^stu\d{9}@hnue\.edu\.vn$', email, re.IGNORECASE) and not email.endswith('@hnue.edu.vn'):
+        raise InvalidHNUEEmail(backend, email)
 
 
 class SocialPostAuthForm(forms.Form):
@@ -61,10 +75,20 @@ class SocialPostAuthForm(forms.Form):
                                validators=[password_validation.validate_password])
     password_confirm = forms.CharField(label='Retype password', widget=forms.PasswordInput(), strip=False)
 
+    def __init__(self, *args, lock_username=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        if lock_username:
+            self.fields['username'].widget.attrs.update({
+                'readonly': 'readonly',
+                'style': 'background-color: #f3f4f6; cursor: not-allowed; font-weight: 600;',
+            })
+            self.fields['username'].help_text = 'Username mặc định được khởi tạo từ Email và không thể thay đổi.'
+
     def clean_username(self):
-        if User.objects.filter(username=self.cleaned_data['username']).exists():
-            raise forms.ValidationError('Sorry, the username is taken.')
-        return self.cleaned_data['username']
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError('Tên đăng nhập này đã được sử dụng.')
+        return username
 
     def clean(self):
         cleaned_data = super().clean()
@@ -75,19 +99,42 @@ class SocialPostAuthForm(forms.Form):
 
 
 @partial
-def get_username_password(backend, user, username=None, *args, **kwargs):
+def get_username_password(backend, user, details=None, username=None, *args, **kwargs):
     if not user:
         request = backend.strategy.request
+
+        # Xử lý tự động lấy username mặc định từ email nếu chưa truyền
+        if not username and details and details.get('email'):
+            email_prefix = details['email'].split('@')[0]
+            username = slugify_username(email_prefix)
+
+        # Đảm bảo username mặc định là duy nhất
+        if username:
+            base_username = username
+            count = 1
+            while User.objects.filter(username=username).exists():
+                username = f'{base_username}_{count}'
+                count += 1
+
         if request.POST:
-            form = SocialPostAuthForm(request.POST)
+            post_data = request.POST.copy()
+            # Bắt buộc khóa username mặc định, không cho phép thay đổi từ phía client
+            if username:
+                post_data['username'] = username
+
+            form = SocialPostAuthForm(post_data, lock_username=True)
             if form.is_valid():
                 return {'username': form.cleaned_data['username'],
                         'password': form.cleaned_data['password']}
         else:
-            form = SocialPostAuthForm(initial={'username': username})
+            form = SocialPostAuthForm(initial={'username': username}, lock_username=True)
+
         return render(request, 'registration/username_select.html', {
-            'title': 'Set up your account', 'form': form,
+            'title': 'Hoàn tất thiết lập tài khoản',
+            'form': form,
+            'default_username': username,
         })
+
 
 
 def add_password(user, password=None, *args, **kwargs):

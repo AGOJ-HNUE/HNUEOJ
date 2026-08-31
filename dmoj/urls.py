@@ -291,9 +291,14 @@ urlpatterns = [
         path('/contest/<int:cc_id>/', course.CourseContestDetailView.as_view(), name='course_contest_detail'),
         path('/manage/', course.CourseManageView.as_view(), name='course_manage'),
         path('/monitor/', course.CourseMonitorView.as_view(), name='course_monitor'),
+        path('/exam/<int:exam_id>/', course.ExamDetailView.as_view(), name='course_exam'),
+        path('/exam/<int:exam_id>/submit/', course.ExamSubmitView.as_view(), name='course_exam_submit'),
+        path('/exam/<int:exam_id>/ranking/', course.CourseExamRankingView.as_view(), name='course_exam_ranking'),
+        path('/exam/<int:exam_id>/ranking-data/', course.CourseExamRankingDataAjax.as_view(), name='course_exam_ranking_data'),
         path('/api/lesson/<int:lesson_id>/toggle/', course.ToggleLessonProgressAjax.as_view(), name='course_lesson_toggle'),
         path('/api/lesson/<int:lesson_id>/submit/', course.LessonSubmitAjax.as_view(), name='course_lesson_submit'),
         path('/api/lesson/<int:lesson_id>/problems/batch-save/', course.BatchSaveLessonProblemsAjax.as_view(), name='course_lesson_problems_batch_save'),
+        path('/api/exam/<int:exam_id>/problems/batch-save/', course.BatchSaveExamProblemsAjax.as_view(), name='course_exam_problems_batch_save'),
         path('/api/problem-search/', course.CourseProblemSearchAjax.as_view(), name='course_problem_search'),
         path('/api/contest-search/', course.CourseContestSearchAjax.as_view(), name='course_contest_search'),
         path('/api/course-contest/search/', course.CourseContestSearchAjax.as_view(), name='course_contest_search_alias'),
@@ -302,6 +307,8 @@ urlpatterns = [
         path('/api/chapter/save/', course.SaveChapterAjax.as_view(), name='course_chapter_save'),
         path('/api/lesson/save/', course.SaveLessonAjax.as_view(), name='course_lesson_save'),
         path('/api/lesson-problem/save/', course.SaveLessonProblemAjax.as_view(), name='course_lesson_problem_save'),
+        path('/api/exam/save/', course.SaveExamAjax.as_view(), name='course_exam_save'),
+        path('/api/exam-problem/save/', course.SaveExamProblemAjax.as_view(), name='course_exam_problem_save'),
         path('/api/course-contest/save/', course.SaveCourseContestAjax.as_view(), name='course_contest_save'),
         path('/api/course-contest/create/', course.CreateCourseContestAjax.as_view(), name='course_contest_create'),
         path('/api/item/delete/', course.DeleteCourseItemAjax.as_view(), name='course_item_delete'),
@@ -507,6 +514,8 @@ if 'impersonate' in settings.INSTALLED_APPS:
     urlpatterns.append(path('impersonate/', include('impersonate.urls')))
 if 'student_profile' in settings.INSTALLED_APPS:
     urlpatterns.append(path('student-profile/', include('student_profile.urls', namespace='student_profile')))
+if 'icpc_registration' in settings.INSTALLED_APPS:
+    urlpatterns.append(path('clb-nvsp/icpc/', include('icpc_registration.urls', namespace='icpc_registration')))
 
 if settings.VNOJ_ENABLE_SYNC_API:
     urlpatterns.append(
