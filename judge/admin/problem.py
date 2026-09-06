@@ -117,7 +117,7 @@ class ProblemTranslationInline(admin.StackedInline):
     has_add_permission = has_change_permission = has_delete_permission = has_permission_full_markup
 
 
-class ProblemAdmin(AdminFastPaginationMixin, NoBatchDeleteMixin, VersionAdmin):
+class ProblemAdmin(AdminFastPaginationMixin, VersionAdmin):
     fieldsets = (
         (None, {
             'fields': (
@@ -148,11 +148,21 @@ class ProblemAdmin(AdminFastPaginationMixin, NoBatchDeleteMixin, VersionAdmin):
     def get_actions(self, request):
         actions = super(ProblemAdmin, self).get_actions(request)
 
-        if request.user.has_perm('judge.change_public_visibility'):
+        if request.user.is_superuser or request.user.has_perm('judge.change_public_visibility'):
             func, name, desc = self.get_action('make_public_and_update_publish_date')
-            actions[name] = (func, name, desc)
+            if func:
+                actions[name] = (func, name, desc)
 
             func, name, desc = self.get_action('make_private')
+            if func:
+                actions[name] = (func, name, desc)
+
+        func, name, desc = self.get_action('assign_hnueolp')
+        if func:
+            actions[name] = (func, name, desc)
+
+        func, name, desc = self.get_action('assign_dtqg')
+        if func:
             actions[name] = (func, name, desc)
 
         return actions
@@ -181,24 +191,38 @@ class ProblemAdmin(AdminFastPaginationMixin, NoBatchDeleteMixin, VersionAdmin):
         from judge.tasks import rescore_problem
         transaction.on_commit(rescore_problem.s(problem_id).delay)
 
-    @admin.display(description=_('Mark problems as public and set publish date to now'))
+    @admin.display(description=_('Công khai các bài đã chọn (cập nhật ngày đăng)'))
     def make_public_and_update_publish_date(self, request, queryset):
         count = queryset.update(is_public=True, date=timezone.now())
         for problem_id in queryset.values_list('id', flat=True):
             self._rescore(request, problem_id)
 
-        self.message_user(request, ngettext('%d problem successfully marked as public.',
-                                            '%d problems successfully marked as public.',
+        self.message_user(request, ngettext('%d bài tập đã được chuyển sang công khai.',
+                                            '%d bài tập đã được chuyển sang công khai.',
                                             count) % count)
 
-    @admin.display(description=_('Mark problems as private'))
+    @admin.display(description=_('Ẩn / Chuyển các bài đã chọn thành riêng tư'))
     def make_private(self, request, queryset):
         count = queryset.update(is_public=False)
         for problem_id in queryset.values_list('id', flat=True):
             self._rescore(request, problem_id)
-        self.message_user(request, ngettext('%d problem successfully marked as private.',
-                                            '%d problems successfully marked as private.',
+        self.message_user(request, ngettext('%d bài tập đã chuyển sang riêng tư.',
+                                            '%d bài tập đã chuyển sang riêng tư.',
                                             count) % count)
+
+    @admin.display(description=_('Gán các bài đã chọn vào nhóm "Olympic Tin học HNUE"'))
+    def assign_hnueolp(self, request, queryset):
+        from judge.models import ProblemGroup
+        group, _ = ProblemGroup.objects.get_or_create(name='hnueolp', defaults={'full_name': 'Olympic Tin học HNUE'})
+        count = queryset.update(group=group)
+        self.message_user(request, f'Đã gán {count} bài tập vào nhóm "Olympic Tin học HNUE".')
+
+    @admin.display(description=_('Gán các bài đã chọn vào nhóm "Đội tuyển HSG Quốc Gia"'))
+    def assign_dtqg(self, request, queryset):
+        from judge.models import ProblemGroup
+        group, _ = ProblemGroup.objects.get_or_create(name='dtqg', defaults={'full_name': 'Đội tuyển HSG Quốc Gia'})
+        count = queryset.update(group=group)
+        self.message_user(request, f'Đã gán {count} bài tập vào nhóm "Đội tuyển HSG Quốc Gia".')
 
     def get_queryset(self, request):
         editable_ids = Problem.get_editable_problems(request.user).values('id')

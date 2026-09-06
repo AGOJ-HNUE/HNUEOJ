@@ -117,16 +117,28 @@
     <div class="course-grid">
         {% for course in courses %}
         {% set enrollment = user_enrollments.get(course.id) %}
+        {% set cert = user_certificates.get(course.id) if user_certificates else None %}
         <div class="course-card">
             <div>
                 <!-- Header Badges -->
-                <div class="course-card__header">
+                <div class="course-card__header" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <span class="course-badge {{ course.reg_status_badge_class }}">
                         <i class="fa fa-circle"></i> {{ course.reg_status_display }}
                     </span>
+                    {% if course.target_audience %}
                     <span class="course-badge badge-audience">
-                        <i class="fa fa-user"></i> {{ course.target_audience or 'Mọi đối tượng' }}
+                        <i class="fa fa-user"></i> {{ course.target_audience }}
                     </span>
+                    {% endif %}
+                    {% if cert %}
+                    <span class="course-badge" style="background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700;">
+                        <i class="fa fa-trophy"></i> {{ _('Đã cấp Chứng chỉ') }}
+                    </span>
+                    {% elif enrollment %}
+                    <span class="course-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); font-weight: 700;">
+                        <i class="fa fa-check-circle"></i> {{ _('Đã ghi danh') }}
+                    </span>
+                    {% endif %}
                 </div>
 
                 <!-- Card Body -->
@@ -142,27 +154,38 @@
                         <span>{{ course.instructor_name }}</span>
                     </div>
 
+                    {% if course.description %}
                     <div class="course-card__desc lms-markdown-body">
-                        {{ (course.description or _('Chương trình bồi dưỡng chuyên sâu trang bị đầy đủ kiến thức thuật toán và kỹ năng lập trình thi đấu.'))|markdown('default', MATH_ENGINE)|reference|str|safe }}
+                        {{ course.description|markdown('default', MATH_ENGINE)|reference|str|safe }}
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
             <div>
-                <!-- Meta Chips -->
+                <!-- Meta Chips (Conditioned on field presence) -->
                 <div class="course-card__meta-chips">
+                    {% if course.format_type %}
                     <span class="meta-chip">
-                        <i class="fa fa-video-camera"></i> {{ course.format_type or 'Online qua Zoom' }}
+                        <i class="fa fa-video-camera"></i> {{ course.format_type }}
                     </span>
+                    {% endif %}
+                    {% if course.duration_info %}
                     <span class="meta-chip">
-                        <i class="fa fa-clock-o"></i> {{ course.duration_info or '12 tuần' }}
+                        <i class="fa fa-clock-o"></i> {{ course.duration_info }}
                     </span>
+                    {% endif %}
+                    {% if course.schedule_info %}
                     <span class="meta-chip">
-                        <i class="fa fa-calendar"></i> {{ course.schedule_info or 'Tối T3, T5' }}
+                        <i class="fa fa-calendar"></i> {{ course.schedule_info }}
                     </span>
+                    {% endif %}
+                    {% if course.start_date_info %}
                     <span class="meta-chip">
-                        <i class="fa fa-flag"></i> {{ _('Khai giảng:') }} {{ course.start_date_info or '15/09/2026' }}
+                        <i class="fa fa-flag"></i> {{ _('Khai giảng:') }} {{ course.start_date_info }}
                     </span>
+                    {% endif %}
+
                     {% if course.price == 0 %}
                     <span class="meta-chip fee-free">
                         <i class="fa fa-tag"></i> {{ _('Miễn phí') }}
@@ -176,7 +199,15 @@
 
                 <!-- Card Actions / Buttons -->
                 <div class="course-card__actions">
-                    {% if course.is_paid %}
+                    {% if cert %}
+                    <a href="{{ cert.get_absolute_url() }}" target="_blank" class="btn-course-cta" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
+                        <i class="fa fa-trophy"></i> {{ _('Xem Chứng nhận') }}
+                    </a>
+                    {% elif enrollment %}
+                    <a href="{{ course.get_absolute_url() }}" class="btn-course-cta" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                        <i class="fa fa-play-circle"></i> {{ _('Vào học ngay') }}
+                    </a>
+                    {% elif course.is_paid %}
                     <a href="{{ course.effective_contact_url }}" target="_blank" rel="noopener"
                         class="btn-course-cta btn-contact-fb">
                         <i class="fa fa-facebook-square"></i> {{ _('Liên hệ đăng ký') }}
@@ -189,7 +220,7 @@
 
                     <a href="{{ course.get_absolute_url() }}" class="btn-course-outline"
                         title="{{ _('Xem chi tiết khóa học') }}">
-                        <i class="fa fa-arrow-right"></i> {{ _('Xem thêm') }}
+                        <i class="fa fa-arrow-right"></i> {{ _('Chi tiết') }}
                     </a>
                 </div>
             </div>

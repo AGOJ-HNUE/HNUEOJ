@@ -24,12 +24,6 @@ def icpc_index(request):
     """
     initial_data = {}
     if request.user.is_authenticated:
-        full_name = f"{request.user.first_name} {request.user.last_name}".strip()
-        if full_name:
-            initial_data['full_name'] = full_name
-        else:
-            initial_data['full_name'] = request.user.username
-        
         if request.user.email:
             initial_data['email'] = request.user.email
 

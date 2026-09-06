@@ -1,7 +1,10 @@
+import csv
 import datetime
+import io
 import itertools
 import json
 import os
+import secrets
 from operator import attrgetter, itemgetter
 
 import pytz
@@ -32,9 +35,9 @@ from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, FormView, ListView, TemplateView, View
 from reversion import revisions
 
-from judge.forms import CustomAuthenticationForm, ProfileForm, UserBanForm, UserDownloadDataForm, UserForm, \
-    newsletter_id
-from judge.models import BlogPost, Organization, Profile, Submission
+from judge.forms import BulkUserAddForm, CustomAuthenticationForm, ProfileForm, SingleUserAddForm, UserBanForm, \
+    UserDownloadDataForm, UserForm, newsletter_id
+from judge.models import BlogPost, Language, Organization, Profile, Submission
 from judge.models import Comment
 from judge.performance_points import get_pp_breakdown
 from judge.ratings import rating_class, rating_progress
@@ -52,7 +55,8 @@ from judge.views.blog import PostListBase
 from .contests import ContestRanking
 
 __all__ = ['UserPage', 'UserAboutPage', 'UserProblemsPage', 'UserCommentPage', 'UserDownloadData', 'UserPrepareData',
-           'users', 'edit_profile']
+           'users', 'edit_profile', 'add_user', 'download_sample_csv']
+
 
 
 def remap_keys(iterable, mapping):
@@ -719,3 +723,223 @@ class CustomPasswordResetView(PasswordResetView):
         }
 
         return super().post(request, *args, **kwargs)
+
+
+def create_single_user(username, password, email='', fullname='', organization_slug=''):
+    username = (username or '').strip()
+    if not username:
+        return None, _('Tên đăng nhập không được để trống.')
+    if User.objects.filter(username=username).exists():
+        return None, _('Tên đăng nhập "%s" đã tồn tại.') % username
+
+    if not password:
+        password = secrets.token_urlsafe(8)
+
+    user = User(username=username, email=(email or '').strip(), first_name=(fullname or '').strip(), is_active=True)
+    user.set_password(password)
+    user.save()
+
+    lang = Language.objects.filter(key=settings.DEFAULT_USER_LANGUAGE).first()
+    profile = Profile(user=user)
+    if lang:
+        profile.language = lang
+    profile.save()
+
+    org_obj = None
+    if organization_slug and str(organization_slug).strip():
+        slug = str(organization_slug).strip()
+        org_obj = Organization.objects.filter(slug=slug).first()
+        if not org_obj:
+            org_obj = Organization.objects.filter(name__iexact=slug).first()
+        if org_obj:
+            profile.organizations.add(org_obj)
+            org_obj.on_user_changes()
+
+    return user, {
+        'username': username,
+        'password': password,
+        'email': email or '',
+        'fullname': fullname or '',
+        'organization': org_obj.name if org_obj else (organization_slug if organization_slug else ''),
+        'org_found': bool(org_obj) if organization_slug else True,
+    }
+
+
+def parse_bulk_user_file(file_obj):
+    filename = file_obj.name.lower()
+    rows = []
+
+    if filename.endswith('.csv'):
+        content = file_obj.read()
+        try:
+            text = content.decode('utf-8-sig')
+        except UnicodeDecodeError:
+            text = content.decode('latin-1')
+
+        reader = csv.reader(io.StringIO(text))
+        header = None
+        for r in reader:
+            if not r or not any(cell.strip() for cell in r):
+                continue
+            if header is None:
+                header = [c.strip() for c in r]
+                continue
+            row_dict = {}
+            for idx, col_name in enumerate(header):
+                if idx < len(r):
+                    row_dict[col_name] = r[idx].strip()
+            rows.append(row_dict)
+
+    elif filename.endswith(('.xlsx', '.xls')):
+        import openpyxl
+        wb = openpyxl.load_workbook(file_obj, data_only=True)
+        sheet = wb.active
+        header = None
+        for row in sheet.iter_rows(values_only=True):
+            if not row or not any(cell is not None and str(cell).strip() for cell in row):
+                continue
+            str_row = [str(cell).strip() if cell is not None else '' for cell in row]
+            if header is None:
+                header = str_row
+                continue
+            row_dict = {}
+            for idx, col_name in enumerate(header):
+                if idx < len(str_row):
+                    row_dict[col_name] = str_row[idx]
+            rows.append(row_dict)
+
+    return rows
+
+
+def extract_row_fields(row_dict):
+    username = ''
+    password = ''
+    email = ''
+    fullname = ''
+    organization = ''
+
+    for k, v in row_dict.items():
+        k_norm = k.strip().lower()
+        if 'username' in k_norm or 'tên đăng nhập' in k_norm or 'tài khoản' in k_norm or 'taikhoan' in k_norm:
+            username = v
+        elif 'password' in k_norm or 'mật khẩu' in k_norm or 'matkhau' in k_norm or 'pass' in k_norm:
+            password = v
+        elif 'email' in k_norm:
+            email = v
+        elif 'họ' in k_norm or 'fullname' in k_norm or 'full_name' in k_norm or 'name' in k_norm or 'tên' in k_norm:
+            fullname = v
+        elif 'tổ chức' in k_norm or 'to chuc' in k_norm or 'organization' in k_norm or 'org' in k_norm or 'slug' in k_norm:
+            organization = v
+
+    return username, password, email, fullname, organization
+
+
+@login_required
+def add_user(request):
+    if not (request.user.is_staff or request.user.is_superuser or request.user.has_perm('auth.add_user')):
+        raise PermissionDenied
+
+    active_tab = 'single'
+    single_form = SingleUserAddForm()
+    bulk_form = BulkUserAddForm()
+    bulk_results = None
+    success_message = None
+
+    if request.method == 'POST':
+        action = request.POST.get('action', 'single')
+        if action == 'single':
+            active_tab = 'single'
+            single_form = SingleUserAddForm(request.POST)
+            if single_form.is_valid():
+                username = single_form.cleaned_data['username']
+                password = single_form.cleaned_data['password']
+                email = single_form.cleaned_data['email']
+                fullname = single_form.cleaned_data['fullname']
+                organization_slug = single_form.cleaned_data['organization_slug']
+
+                user, data = create_single_user(username, password, email, fullname, organization_slug)
+                if user:
+                    success_message = _('Đã tạo thành công tài khoản "%s".') % username
+                    single_form = SingleUserAddForm()
+        elif action == 'bulk':
+            active_tab = 'bulk'
+            bulk_form = BulkUserAddForm(request.POST, request.FILES)
+            if bulk_form.is_valid():
+                file_obj = request.FILES['file']
+                rows = parse_bulk_user_file(file_obj)
+
+                results = []
+                success_count = 0
+                error_count = 0
+
+                for idx, row in enumerate(rows, start=1):
+                    username, password, email, fullname, org_slug = extract_row_fields(row)
+                    if not username:
+                        results.append({
+                            'row': idx, 'username': '', 'fullname': fullname, 'email': email, 'password': '', 'organization': org_slug,
+                            'status': 'error', 'message': _('Thiếu tên đăng nhập')
+                        })
+                        error_count += 1
+                        continue
+
+                    user, res = create_single_user(username, password, email, fullname, org_slug)
+                    if user:
+                        msg = _('Tạo thành công')
+                        if org_slug and not res['org_found']:
+                            msg += _(' (Không tìm thấy tổ chức "%s")') % org_slug
+                        results.append({
+                            'row': idx,
+                            'username': res['username'],
+                            'password': res['password'],
+                            'email': res['email'],
+                            'fullname': res['fullname'],
+                            'organization': res['organization'],
+                            'status': 'success',
+                            'message': msg
+                        })
+                        success_count += 1
+                    else:
+                        results.append({
+                            'row': idx,
+                            'username': username,
+                            'fullname': fullname,
+                            'email': email,
+                            'password': password,
+                            'organization': org_slug,
+                            'status': 'error',
+                            'message': str(res)
+                        })
+                        error_count += 1
+
+                bulk_results = {
+                    'rows': results,
+                    'total': len(rows),
+                    'success_count': success_count,
+                    'error_count': error_count,
+                }
+
+    return render(request, 'user/add_user.html', {
+        'title': _('Thêm tài khoản'),
+        'active_tab': active_tab,
+        'single_form': single_form,
+        'bulk_form': bulk_form,
+        'success_message': success_message,
+        'bulk_results': bulk_results,
+    })
+
+
+@login_required
+def download_sample_csv(request):
+    if not (request.user.is_staff or request.user.is_superuser or request.user.has_perm('auth.add_user')):
+        raise PermissionDenied
+
+    content = "\uFEFFusername,password,email,Họ và tên,Tổ chức\n" \
+              "nguyenvana,matkhau123,nguyenvana@gmail.com,Nguyễn Văn A,clb-lap-trinh\n" \
+              "tranvanb,,tranvanb@gmail.com,Trần Văn B,clb-lap-trinh\n"
+
+    response = HttpResponse(content, content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="mau_them_tai_khoan.csv"'
+    return response
+
+
+

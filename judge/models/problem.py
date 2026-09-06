@@ -179,17 +179,20 @@ class Problem(models.Model):
     group = models.ForeignKey(ProblemGroup, verbose_name=_('problem group'), on_delete=CASCADE,
                               help_text=_('The group of problem, shown under Category in the problem list.'))
     time_limit = models.FloatField(verbose_name=_('time limit'),
+                                   default=1.0,
                                    help_text=_('The time limit for this problem, in seconds. '
                                                'Fractional seconds (e.g. 1.5) are supported.'),
                                    validators=[MinValueValidator(settings.DMOJ_PROBLEM_MIN_TIME_LIMIT),
                                                MaxValueValidator(settings.DMOJ_PROBLEM_MAX_TIME_LIMIT)])
     memory_limit = models.PositiveIntegerField(verbose_name=_('memory limit'),
+                                               default=1048576,
                                                help_text=_('The memory limit for this problem, in kilobytes '
                                                            '(e.g. 64mb = 65536 kilobytes).'),
                                                validators=[MinValueValidator(settings.DMOJ_PROBLEM_MIN_MEMORY_LIMIT),
                                                            MaxValueValidator(settings.DMOJ_PROBLEM_MAX_MEMORY_LIMIT)])
     short_circuit = models.BooleanField(default=False)
     points = models.FloatField(verbose_name=_('points'),
+                               default=1.0,
                                help_text=_('Points awarded for problem completion. '
                                            "Points are displayed with a 'p' suffix if partial."),
                                validators=[MinValueValidator(settings.DMOJ_PROBLEM_MIN_PROBLEM_POINTS)])
@@ -297,6 +300,7 @@ class Problem(models.Model):
             from judge.models.course import ExamProblem, LessonProblem
             exam_qs = ExamProblem.objects.filter(problem_id=self.id)
             if exam_qs.filter(
+                models.Q(exam__course__instructors=user.profile) |
                 models.Q(exam__course__instructor_id=user.profile.id) |
                 models.Q(
                     exam__is_published=True,
@@ -308,6 +312,7 @@ class Problem(models.Model):
 
             lesson_qs = LessonProblem.objects.filter(problem_id=self.id)
             if lesson_qs.filter(
+                models.Q(lesson__chapter__course__instructors=user.profile) |
                 models.Q(lesson__chapter__course__instructor_id=user.profile.id) |
                 models.Q(
                     lesson__is_published=True,

@@ -31,7 +31,25 @@ class Migration(migrations.Migration):
                     field=models.CharField(blank=True, default='15/09/2026', max_length=128, verbose_name='Ngày khai giảng'),
                 ),
             ],
-            database_operations=[],
+            database_operations=[
+                migrations.RemoveField(
+                    model_name='contest',
+                    name='is_province_contest',
+                ),
+                migrations.RemoveField(
+                    model_name='contest',
+                    name='province',
+                ),
+                migrations.RemoveField(
+                    model_name='contest',
+                    name='province_category',
+                ),
+                migrations.AddField(
+                    model_name='course',
+                    name='start_date_info',
+                    field=models.CharField(blank=True, default='15/09/2026', max_length=128, verbose_name='Ngày khai giảng'),
+                ),
+            ],
         ),
         migrations.CreateModel(
             name='ProvinceExam',

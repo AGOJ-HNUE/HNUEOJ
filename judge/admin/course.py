@@ -31,12 +31,17 @@ class ExamProblemInline(admin.TabularInline):
 
 
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ('title', 'key', 'instructor', 'status', 'is_public', 'order_index', 'created_at')
+    list_display = ('title', 'key', 'display_instructors', 'status', 'is_public', 'order_index', 'created_at')
     list_filter = ('status', 'is_public', 'created_at')
-    search_fields = ('title', 'key', 'description', 'instructor__user__username')
+    search_fields = ('title', 'key', 'description', 'instructor__user__username', 'instructors__user__username')
     prepopulated_fields = {'key': ('title',)}
     raw_id_fields = ('instructor',)
+    filter_horizontal = ('instructors',)
     inlines = [ChapterInline]
+
+    @admin.display(description=_('Giảng viên'))
+    def display_instructors(self, obj):
+        return obj.instructor_name
 
 
 class ChapterAdmin(admin.ModelAdmin):

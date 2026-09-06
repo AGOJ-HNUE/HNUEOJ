@@ -240,7 +240,8 @@
             visibility: visible !important;
             z-index: 999999 !important;
         }
-        .settings-menu-item:hover > .settings-popup {
+
+        .settings-menu-item:hover>.settings-popup {
             display: block;
         }
     </style>
@@ -310,20 +311,24 @@
             <span id="user-links">
                 <ul>
                     <li class="settings-menu-item" style="position: relative;">
-                        <a href="javascript:void(0)" id="settings-toggle-btn" style="margin-right: 5px;" title="{{ _('Settings') }}">
+                        <a href="javascript:void(0)" id="settings-toggle-btn" style="margin-right: 5px;"
+                            title="{{ _('Settings') }}">
                             <span>
                                 <i class="fa fa-gear" style="color: rgb(200,200,200); font-size: 1.15em"></i>
                             </span>
                         </a>
-                        <ul class="settings-popup" id="settings-dropdown-menu" style="min-width: 210px; right: 0; left: auto; position: absolute; top: 100%;">
+                        <ul class="settings-popup" id="settings-dropdown-menu"
+                            style="min-width: 210px; right: 0; left: auto; position: absolute; top: 100%;">
                             <li>
                                 <div class="nav-settings-row">
                                     <span class="nav-settings-lbl">{{ _('Theme') }}</span>
                                     <span class="nav-seg">
-                                        <span onclick="set_theme('light')" class="nav-seg-btn{% if SITE_THEME_NAME != 'dark' %} active{% endif %}">
+                                        <span onclick="set_theme('light')"
+                                            class="nav-seg-btn{% if SITE_THEME_NAME != 'dark' %} active{% endif %}">
                                             <i class="fa fa-sun-o"></i>
                                         </span>
-                                        <span onclick="set_theme('dark')" class="nav-seg-btn{% if SITE_THEME_NAME == 'dark' %} active{% endif %}">
+                                        <span onclick="set_theme('dark')"
+                                            class="nav-seg-btn{% if SITE_THEME_NAME == 'dark' %} active{% endif %}">
                                             <i class="fa fa-moon-o"></i>
                                         </span>
                                     </span>
@@ -338,8 +343,10 @@
                                 </div>
                             </li>
                             {% if request.user.is_superuser %}
-                            <li style="border-top: 1px solid var(--border-color, rgba(0,0,0,0.1)); margin-top: 4px; padding-top: 4px;">
-                                <a href="{{ url('misc_config') }}" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: var(--text-main, #333); font-size: 13px; font-weight: 600; text-decoration: none;">
+                            <li
+                                style="border-top: 1px solid var(--border-color, rgba(0,0,0,0.1)); margin-top: 4px; padding-top: 4px;">
+                                <a href="{{ url('misc_config') }}"
+                                    style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: var(--text-main, #333); font-size: 13px; font-weight: 600; text-decoration: none;">
                                     <i class="fa fa-cogs"></i> {{ _('Trang quản trị Admin') }}
                                 </a>
                             </li>
@@ -391,6 +398,9 @@
                         <ul style="width: 150px; right: 0; left: auto;">
                             {% if request.user.is_staff or request.user.is_superuser %}
                             <li><a href="{{ url('admin:index') }}">{{ _('Admin') }}</a></li>
+                            {% endif %}
+                            {% if request.user.is_staff or request.user.is_superuser or request.user.has_perm('auth.add_user') %}
+                            <li><a href="{{ url('add_user') }}">{{ _('Add user') }}</a></li>
                             {% endif %}
                             <li><a href="{{ url('user_edit_profile') }}">{{ _('Edit profile') }}</a></li>
                             <li><a href="/student-profile/">{{ _('Student profile') }}</a></li>
@@ -473,16 +483,16 @@
 
         {% block bodyend %}{% endblock %}
 
-    <form id="set_language" action="{{ url('set_language') }}" method="post" style="display: none">
-        {% csrf_token %}
-        <input name="next" type="hidden" value="{{ request.get_full_path() }}">
-        <input name="language" type="hidden" value="{{ LANGUAGE_CODE }}">
-    </form>
-    <form id="set_theme" action="{{ url('set_theme') }}" method="post" style="display: none">
-        {% csrf_token %}
-        <input name="next" type="hidden" value="{{ request.get_full_path() }}">
-        <input name="theme" type="hidden" value="{{ SITE_THEME_NAME }}">
-    </form>
+        <form id="set_language" action="{{ url('set_language') }}" method="post" style="display: none">
+            {% csrf_token %}
+            <input name="next" type="hidden" value="{{ request.get_full_path() }}">
+            <input name="language" type="hidden" value="{{ LANGUAGE_CODE }}">
+        </form>
+        <form id="set_theme" action="{{ url('set_theme') }}" method="post" style="display: none">
+            {% csrf_token %}
+            <input name="next" type="hidden" value="{{ request.get_full_path() }}">
+            <input name="theme" type="hidden" value="{{ SITE_THEME_NAME }}">
+        </form>
     </div>
 </body>
 

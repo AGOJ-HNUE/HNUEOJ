@@ -53,9 +53,17 @@ class Course(models.Model):
     )
     instructor = models.ForeignKey(
         Profile,
+        verbose_name=_('Giảng viên tạo'),
+        related_name='created_courses',
+        on_delete=CASCADE,
+        null=True,
+        blank=True,
+    )
+    instructors = models.ManyToManyField(
+        Profile,
         verbose_name=_('Giảng viên'),
         related_name='instructed_courses',
-        on_delete=CASCADE,
+        blank=True,
     )
     is_public = models.BooleanField(
         default=True,
@@ -102,31 +110,31 @@ class Course(models.Model):
     )
     target_audience = models.CharField(
         max_length=128,
-        default='Khối THPT',
+        default='',
         blank=True,
         verbose_name=_('Đối tượng / Khối lớp'),
     )
     schedule_info = models.CharField(
         max_length=255,
-        default='Tối T3, T5 (19h30 - 21h30)',
+        default='',
         blank=True,
         verbose_name=_('Lịch học'),
     )
     format_type = models.CharField(
         max_length=64,
-        default='Online qua Zoom',
+        default='',
         blank=True,
         verbose_name=_('Hình thức học'),
     )
     duration_info = models.CharField(
         max_length=128,
-        default='12 tuần (24 buổi)',
+        default='',
         blank=True,
         verbose_name=_('Thời lượng học'),
     )
     start_date_info = models.CharField(
         max_length=128,
-        default='15/09/2026',
+        default='',
         blank=True,
         verbose_name=_('Ngày khai giảng'),
     )
@@ -166,8 +174,9 @@ class Course(models.Model):
             return True
         profile = getattr(user, 'profile', None)
         profile_id = profile.id if profile else None
-        if profile_id and self.instructor_id == profile_id:
-            return True
+        if profile_id:
+            if self.instructor_id == profile_id or self.instructors.filter(id=profile_id).exists():
+                return True
         if self.status == self.STATUS_PUBLISHED:
             return True
         if profile_id:
@@ -180,7 +189,9 @@ class Course(models.Model):
         if user.is_superuser or user.is_staff or user.has_perm('judge.edit_all_course'):
             return True
         profile = getattr(user, 'profile', None)
-        return bool(profile and self.instructor_id == profile.id)
+        if not profile:
+            return False
+        return self.instructor_id == profile.id or self.instructors.filter(id=profile.id).exists()
 
     def is_enrolled(self, user):
         if not user.is_authenticated:
@@ -236,13 +247,34 @@ class Course(models.Model):
         return 'https://facebook.com'
 
     @property
+    def instructors_list(self):
+        insts = list(self.instructors.all())
+        if insts:
+            return insts
+        if self.instructor:
+            return [self.instructor]
+        return []
+
+    @property
     def instructor_name(self):
-        if self.instructor_id and self.instructor and getattr(self.instructor, 'user', None):
-            return getattr(self.instructor, 'display_name', '') or self.instructor.user.get_full_name() or self.instructor.user.username
+        insts = self.instructors_list
+        if insts:
+            names = [
+                getattr(inst, 'display_name', '') or (inst.user.get_full_name() if getattr(inst, 'user', None) else '') or (inst.user.username if getattr(inst, 'user', None) else '')
+                for inst in insts
+            ]
+            valid_names = [n for n in names if n]
+            if valid_names:
+                return ', '.join(valid_names)
         return _('Ban Chuyên môn VNOJ')
 
     @property
     def instructor_initial(self):
+        insts = self.instructors_list
+        if insts:
+            first = insts[0]
+            name = getattr(first, 'display_name', '') or (first.user.get_full_name() if getattr(first, 'user', None) else '') or (first.user.username if getattr(first, 'user', None) else '')
+            return str(name).strip()[0].upper() if name else 'V'
         name = self.instructor_name
         return str(name).strip()[0].upper() if name else 'V'
 
@@ -321,7 +353,7 @@ class Lesson(models.Model):
         if user.is_superuser or user.has_perm('judge.edit_all_course'):
             return True
         profile = getattr(user, 'profile', None)
-        if profile and self.chapter.course.instructor_id == profile.id:
+        if self.chapter.course.is_editable_by(user):
             return True
         if self.is_locked or not self.is_published:
             return False
@@ -623,7 +655,7 @@ class Exam(models.Model):
         if user.is_superuser or user.has_perm('judge.edit_all_course'):
             return True
         profile = getattr(user, 'profile', None)
-        if profile and self.course.instructor_id == profile.id:
+        if self.course.is_editable_by(user):
             return True
         if self.is_locked or not self.is_published:
             return False
@@ -806,10 +838,32 @@ class Enrollment(models.Model):
         return f'{self.user.user.username} -> {self.course.title} ({self.progress_percentage:.1f}%)'
 
     def recalculate_progress(self):
-        """Tiến độ khóa học đã bỏ qua"""
-        self.progress_percentage = 0.0
-        self.save(update_fields=['progress_percentage'])
-        return 0.0
+        from judge.models import Submission
+        total_lessons = self.course.total_lessons_count
+        total_exams = self.course.total_exams_count
+        total_items = total_lessons + total_exams
+        if total_items == 0:
+            self.progress_percentage = 0.0
+        else:
+            completed_lessons = LessonProgress.objects.filter(
+                user=self.user,
+                lesson__chapter__course=self.course,
+                lesson__is_published=True,
+                is_completed=True,
+            ).count()
+            completed_exams = Submission.objects.filter(
+                user=self.user,
+                exam__course=self.course,
+                exam__is_published=True,
+            ).values('exam').distinct().count()
+            completed_items = completed_lessons + completed_exams
+            self.progress_percentage = round((completed_items / total_items) * 100.0, 1)
+
+        if self.progress_percentage >= 80.0 and self.status == self.STATUS_ACTIVE:
+            self.status = self.STATUS_READY_FOR_REVIEW
+
+        self.save(update_fields=['progress_percentage', 'status'])
+        return self.progress_percentage
 
 
 class Certificate(models.Model):

@@ -1,0 +1,641 @@
+{% extends "base.html" %}
+
+{% block media %}
+<style>
+    .add-user-page {
+        max-width: 900px;
+        margin: 25px auto 50px;
+        padding: 0 15px;
+    }
+
+    .add-user-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+    }
+
+    .dark-mode .add-user-card {
+        background: #1e2430;
+        border-color: #2d3748;
+        color: #e2e8f0;
+    }
+
+    .add-user-header {
+        padding: 24px 30px;
+        border-bottom: 1px solid #edf2f7;
+        background: #f8fafc;
+    }
+
+    .dark-mode .add-user-header {
+        background: #181d27;
+        border-bottom-color: #2d3748;
+    }
+
+    .add-user-title {
+        margin: 0 0 6px 0;
+        font-size: 22px;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .dark-mode .add-user-title {
+        color: #f1f5f9;
+    }
+
+    .add-user-subtitle {
+        margin: 0;
+        font-size: 14px;
+        color: #64748b;
+    }
+
+    .dark-mode .add-user-subtitle {
+        color: #94a3b8;
+    }
+
+    /* Tab Control Navigation - High specificity fixes hover bug */
+    .tab-bar-container {
+        display: flex;
+        background: #f1f5f9;
+        padding: 6px;
+        gap: 6px;
+        margin: 25px 30px 20px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .dark-mode .tab-bar-container {
+        background: #11151c;
+        border-color: #2d3748;
+    }
+
+    button.tab-nav-btn,
+    .tab-nav-btn {
+        flex: 1;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        padding: 10px 18px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 6px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease-in-out !important;
+        outline: none !important;
+        box-shadow: none !important;
+        text-decoration: none !important;
+        line-height: 1.4 !important;
+    }
+
+    .dark-mode button.tab-nav-btn,
+    .dark-mode .tab-nav-btn {
+        color: #94a3b8 !important;
+    }
+
+    button.tab-nav-btn:hover,
+    .tab-nav-btn:hover {
+        background: #e2e8f0 !important;
+        color: #1e293b !important;
+    }
+
+    .dark-mode button.tab-nav-btn:hover,
+    .dark-mode .tab-nav-btn:hover {
+        background: #1e293b !important;
+        color: #f1f5f9 !important;
+    }
+
+    button.tab-nav-btn.active,
+    .tab-nav-btn.active {
+        background: #ffffff !important;
+        color: #2563eb !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .dark-mode button.tab-nav-btn.active,
+    .dark-mode .tab-nav-btn.active {
+        background: #2563eb !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
+    }
+
+    .tab-pane {
+        display: none;
+        padding: 10px 30px 30px;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    .form-row {
+        margin-bottom: 20px;
+    }
+
+    .form-row label {
+        display: block;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 6px;
+        color: #334155;
+    }
+
+    .dark-mode .form-row label {
+        color: #cbd5e1;
+    }
+
+    .form-row input[type="text"],
+    .form-row input[type="password"],
+    .form-row input[type="email"],
+    .form-row input[type="file"] {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 14px;
+        background: #ffffff;
+        color: #0f172a;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .dark-mode .form-row input[type="text"],
+    .dark-mode .form-row input[type="password"],
+    .dark-mode .form-row input[type="email"],
+    .dark-mode .form-row input[type="file"] {
+        background: #0f172a;
+        border-color: #334155;
+        color: #f8fafc;
+    }
+
+    .form-row input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        outline: none;
+    }
+
+    .field-hint {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 5px;
+    }
+
+    .dark-mode .field-hint {
+        color: #94a3b8;
+    }
+
+    .field-error {
+        color: #ef4444;
+        font-size: 13px;
+        margin-top: 5px;
+        font-weight: 500;
+    }
+
+    button.btn-primary-action {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        padding: 11px 26px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        transition: background-color 0.2s, transform 0.1s !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
+    }
+
+    button.btn-primary-action:hover {
+        background-color: #1d4ed8 !important;
+    }
+
+    button.btn-primary-action:active {
+        transform: translateY(1px) !important;
+    }
+
+    .alert-banner {
+        padding: 14px 18px;
+        border-radius: 8px;
+        margin: 20px 30px 0;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .alert-success-banner {
+        background-color: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+    }
+
+    .dark-mode .alert-success-banner {
+        background-color: #064e3b;
+        border-color: #047857;
+        color: #a7f3d0;
+    }
+
+    .info-card {
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 18px 20px;
+        margin-bottom: 24px;
+        color: #1e40af;
+    }
+
+    .dark-mode .info-card {
+        background-color: #172554;
+        border-color: #1e40af;
+        color: #bfdbfe;
+    }
+
+    .info-card h4 {
+        margin: 0 0 10px 0;
+        font-size: 15px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-card ul {
+        margin: 8px 0 0 20px;
+        padding: 0;
+        line-height: 1.6;
+        font-size: 13.5px;
+    }
+
+    .summary-stats {
+        display: flex;
+        gap: 15px;
+        margin: 20px 0 15px;
+        flex-wrap: wrap;
+    }
+
+    .stat-pill {
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 13.5px;
+        font-weight: 600;
+        background: #f1f5f9;
+        color: #334155;
+    }
+
+    .dark-mode .stat-pill {
+        background: #0f172a;
+        color: #cbd5e1;
+    }
+
+    .stat-pill.success {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .dark-mode .stat-pill.success {
+        background: #064e3b;
+        color: #86efac;
+    }
+
+    .stat-pill.danger {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .dark-mode .stat-pill.danger {
+        background: #7f1d1d;
+        color: #fca5a5;
+    }
+
+    .results-table-container {
+        overflow-x: auto;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-top: 15px;
+    }
+
+    .dark-mode .results-table-container {
+        border-color: #334155;
+    }
+
+    table.data-results-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    table.data-results-table th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 700;
+        padding: 11px 14px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .dark-mode table.data-results-table th {
+        background: #0f172a;
+        color: #94a3b8;
+        border-bottom-color: #334155;
+    }
+
+    table.data-results-table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #1e293b;
+    }
+
+    .dark-mode table.data-results-table td {
+        border-bottom-color: #1e293b;
+        color: #e2e8f0;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11.5px;
+        font-weight: 700;
+    }
+
+    .status-badge.success {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .status-badge.error {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    button.btn-download-csv {
+        background-color: #16a34a !important;
+        color: #ffffff !important;
+        padding: 8px 16px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        transition: background-color 0.2s !important;
+    }
+
+    button.btn-download-csv:hover {
+        background-color: #15803d !important;
+    }
+
+    button.btn-download-sample,
+    a.btn-download-sample {
+        background-color: #0284c7 !important;
+        color: #ffffff !important;
+        padding: 8px 16px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        text-decoration: none !important;
+        transition: background-color 0.2s !important;
+        margin-top: 10px !important;
+    }
+
+    button.btn-download-sample:hover,
+    a.btn-download-sample:hover {
+        background-color: #0369a1 !important;
+        color: #ffffff !important;
+    }
+</style>
+{% endblock %}
+
+{% block js_media %}
+<script>
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-nav-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+        
+        document.getElementById('btn-tab-' + tabName).classList.add('active');
+        document.getElementById('pane-tab-' + tabName).classList.add('active');
+    }
+
+    function downloadResultsCSV() {
+        const table = document.getElementById('bulk-results-table');
+        if (!table) return;
+        
+        let csv = [];
+        const rows = table.querySelectorAll('tr');
+        for (let i = 0; i < rows.length; i++) {
+            const row = [], cols = rows[i].querySelectorAll('td, th');
+            for (let j = 0; j < cols.length; j++) {
+                let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/"/g, '""');
+                row.push('"' + data + '"');
+            }
+            csv.push(row.join(','));
+        }
+
+        const csvString = '\uFEFF' + csv.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', 'danh_sach_tai_khoan_da_tao.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+{% endblock %}
+
+{% block body %}
+<div class="add-user-page">
+    <div class="add-user-card">
+        <div class="add-user-header">
+            <h2 class="add-user-title">{{ _('Thêm tài khoản thành viên') }}</h2>
+            <p class="add-user-subtitle">{{ _('Quản lý tạo mới người dùng đơn lẻ hoặc tải lên danh sách từ tệp CSV / Excel.') }}</p>
+        </div>
+
+        {% if success_message %}
+        <div class="alert-banner alert-success-banner">
+            <i class="fa fa-check-circle" style="font-size: 18px;"></i>
+            <span>{{ success_message }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Tab Controls Navigation -->
+        <div class="tab-bar-container">
+            <button id="btn-tab-single" type="button" class="tab-nav-btn {% if active_tab == 'single' %}active{% endif %}" onclick="switchTab('single')">
+                <i class="fa fa-user-plus"></i> {{ _('Thêm 1 tài khoản') }}
+            </button>
+            <button id="btn-tab-bulk" type="button" class="tab-nav-btn {% if active_tab == 'bulk' %}active{% endif %}" onclick="switchTab('bulk')">
+                <i class="fa fa-file-excel-o"></i> {{ _('Thêm hàng loạt (CSV / Excel)') }}
+            </button>
+        </div>
+
+        <!-- Tab 1: Single User Addition -->
+        <div id="pane-tab-single" class="tab-pane {% if active_tab == 'single' %}active{% endif %}">
+            <form method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="single">
+
+                <div class="form-row">
+                    <label for="{{ single_form.username.id_for_label }}">
+                        {{ _('Tên đăng nhập (Username)') }} <span style="color: #ef4444;">*</span>
+                    </label>
+                    {{ single_form.username }}
+                    {% if single_form.username.errors %}
+                    <div class="field-error">{{ single_form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-row">
+                    <label for="{{ single_form.password.id_for_label }}">
+                        {{ _('Mật khẩu') }} <span style="color: #ef4444;">*</span>
+                    </label>
+                    {{ single_form.password }}
+                    {% if single_form.password.errors %}
+                    <div class="field-error">{{ single_form.password.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-row">
+                    <label for="{{ single_form.email.id_for_label }}">{{ _('Địa chỉ Email') }}</label>
+                    {{ single_form.email }}
+                    {% if single_form.email.errors %}
+                    <div class="field-error">{{ single_form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-row">
+                    <label for="{{ single_form.fullname.id_for_label }}">{{ _('Họ và tên thành viên') }}</label>
+                    {{ single_form.fullname }}
+                    {% if single_form.fullname.errors %}
+                    <div class="field-error">{{ single_form.fullname.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-row">
+                    <label for="{{ single_form.organization_slug.id_for_label }}">{{ _('Mã Slug Tổ chức') }}</label>
+                    {{ single_form.organization_slug }}
+                    <div class="field-hint">{{ _('Ví dụ: clb-lap-trinh. Điền mã slug của tổ chức để tự động gán tài khoản vào tổ chức ngay khi tạo.') }}</div>
+                    {% if single_form.organization_slug.errors %}
+                    <div class="field-error">{{ single_form.organization_slug.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-top: 25px;">
+                    <button type="submit" class="btn-primary-action">
+                        <i class="fa fa-plus-circle"></i> {{ _('Tạo tài khoản') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tab 2: Bulk CSV/Excel Upload -->
+        <div id="pane-tab-bulk" class="tab-pane {% if active_tab == 'bulk' %}active{% endif %}">
+            <div class="info-card">
+                <h4><i class="fa fa-info-circle"></i> {{ _('Hướng dẫn tệp dữ liệu tải lên:') }}</h4>
+                <p>{{ _('Hệ thống hỗ trợ các tệp dạng CSV (.csv) hoặc Excel (.xlsx, .xls). Tệp cần chứa tiêu đề ở dòng đầu tiên với các cột:') }}</p>
+                <ul>
+                    <li><b>username</b>: {{ _('Tên đăng nhập của tài khoản (Bắt buộc)') }}</li>
+                    <li><b>password</b>: {{ _('Mật khẩu (Nếu để trống hệ thống sẽ tự động tạo ngẫu nhiên)') }}</li>
+                    <li><b>email</b>: {{ _('Địa chỉ email thành viên') }}</li>
+                    <li><b>Họ và tên</b> (hoặc <b>fullname</b>): {{ _('Họ và tên đầy đủ') }}</li>
+                    <li><b>Tổ chức</b> (hoặc <b>organization</b>): {{ _('Mã slug hoặc tên tổ chức') }}</li>
+                </ul>
+                <div style="margin-top: 15px;">
+                    <a href="{{ url('add_user_sample_csv') }}" class="btn-download-sample">
+                        <i class="fa fa-download"></i> {{ _('Tải file CSV mẫu (.csv)') }}
+                    </a>
+                </div>
+            </div>
+
+
+            <form method="post" action="" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="bulk">
+
+                <div class="form-row">
+                    <label for="{{ bulk_form.file.id_for_label }}">
+                        {{ _('Chọn tệp CSV hoặc Excel từ máy tính:') }} <span style="color: #ef4444;">*</span>
+                    </label>
+                    {{ bulk_form.file }}
+                    {% if bulk_form.file.errors %}
+                    <div class="field-error">{{ bulk_form.file.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-top: 25px;">
+                    <button type="submit" class="btn-primary-action">
+                        <i class="fa fa-upload"></i> {{ _('Tải lên và Xử lý') }}
+                    </button>
+                </div>
+            </form>
+
+            {% if bulk_results %}
+            <div style="margin-top: 35px; border-top: 1px solid #e2e8f0; padding-top: 25px;">
+                <h3 style="margin: 0 0 10px 0; font-size: 18px; color: #1e293b;">{{ _('Kết quả xử lý danh sách tài khoản') }}</h3>
+
+                <div class="summary-stats">
+                    <div class="stat-pill">{{ _('Tổng số dòng:') }} {{ bulk_results.total }}</div>
+                    <div class="stat-pill success">{{ _('Thành công:') }} {{ bulk_results.success_count }}</div>
+                    <div class="stat-pill danger">{{ _('Thất bại / Lỗi:') }} {{ bulk_results.error_count }}</div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <button type="button" class="btn-download-csv" onclick="downloadResultsCSV()">
+                        <i class="fa fa-download"></i> {{ _('Tải về danh sách tài khoản đã tạo (CSV)') }}
+                    </button>
+                </div>
+
+                <div class="results-table-container">
+                    <table id="bulk-results-table" class="data-results-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>{{ _('Tên đăng nhập') }}</th>
+                                <th>{{ _('Mật khẩu') }}</th>
+                                <th>{{ _('Email') }}</th>
+                                <th>{{ _('Họ và tên') }}</th>
+                                <th>{{ _('Tổ chức') }}</th>
+                                <th>{{ _('Trạng thái') }}</th>
+                                <th>{{ _('Ghi chú') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in bulk_results.rows %}
+                            <tr>
+                                <td>{{ item.row }}</td>
+                                <td><b>{{ item.username }}</b></td>
+                                <td><code>{{ item.password }}</code></td>
+                                <td>{{ item.email }}</td>
+                                <td>{{ item.fullname }}</td>
+                                <td>{{ item.organization }}</td>
+                                <td>
+                                    {% if item.status == 'success' %}
+                                    <span class="status-badge success">{{ _('Thành công') }}</span>
+                                    {% else %}
+                                    <span class="status-badge error">{{ _('Thất bại') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.message }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

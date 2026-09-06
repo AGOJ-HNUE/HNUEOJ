@@ -199,7 +199,7 @@
     function issueCertificate(enrollmentId, username) {
         if (!confirm(`Bạn có chắc chắn muốn ký duyệt cấp chứng nhận hoàn thành khóa học cho học viên @${username}?`)) return;
 
-        fetch('{{ url("course_issue_certificate", course.key, 0) }}'.replace('0', enrollmentId), {
+        fetch('/course/{{ course.key }}/api/enrollment/' + enrollmentId + '/certify/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
             body: JSON.stringify({ grade: 'Xuất sắc' })

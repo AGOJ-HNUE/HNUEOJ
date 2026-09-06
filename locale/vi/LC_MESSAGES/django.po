@@ -8511,6 +8511,10 @@ msgstr "Tên bài"
 msgid "Assign new tag"
 msgstr "Thêm tag mới"
 
+msgid "Add user"
+msgstr "Thêm người dùng"
+
+
 #: templates/tag/problem.html:47
 msgid ""
 "The problem tag might not be correct. Please feel free to leave a comment or "

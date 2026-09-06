@@ -195,6 +195,8 @@ urlpatterns = [
 
     path('users/', include([
         path('', user.users, name='user_list'),
+        path('add', user.add_user, name='add_user'),
+        path('add/sample-csv', user.download_sample_csv, name='add_user_sample_csv'),
         path('<int:page>', lambda request, page:
              HttpResponsePermanentRedirect('%s?page=%s' % (reverse('user_list'), page))),
         path('find', user.user_ranking_redirect, name='user_ranking_redirect'),
@@ -282,6 +284,7 @@ urlpatterns = [
     ])),
 
     path('courses/', course.CourseListView.as_view(), name='course_list'),
+    path('course/save-info/', course.CreateCourseAjax.as_view(), name='course_create'),
     path('course/<slug:slug>', include([
         path('', course.CourseDetailView.as_view(), name='course_detail'),
         path('/enroll/', course.CourseEnrollView.as_view(), name='course_enroll'),
@@ -304,6 +307,7 @@ urlpatterns = [
         path('/api/course-contest/search/', course.CourseContestSearchAjax.as_view(), name='course_contest_search_alias'),
         path('/api/course/save/', course.SaveCourseInfoAjax.as_view(), name='course_info_save'),
         path('/api/item/toggle-lock/', course.ToggleCourseItemLockAjax.as_view(), name='course_item_toggle_lock'),
+        path('/api/curriculum/reorder/', course.ReorderCourseCurriculumAjax.as_view(), name='course_curriculum_reorder'),
         path('/api/chapter/save/', course.SaveChapterAjax.as_view(), name='course_chapter_save'),
         path('/api/lesson/save/', course.SaveLessonAjax.as_view(), name='course_lesson_save'),
         path('/api/lesson-problem/save/', course.SaveLessonProblemAjax.as_view(), name='course_lesson_problem_save'),

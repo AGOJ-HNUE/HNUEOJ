@@ -540,8 +540,15 @@ class Contest(models.Model):
 
     @classmethod
     def get_public_contests(cls):
-        return cls.objects.filter(is_visible=True, is_organization_private=False, is_course_private=False, is_course_only=False, is_private=False) \
-                          .defer('description').distinct()
+        return cls.objects.filter(
+            is_visible=True,
+            is_organization_private=False,
+            is_course_private=False,
+            is_course_only=False,
+            is_private=False,
+            course_id__isnull=True,
+            course_mappings__isnull=True,
+        ).defer('description').distinct()
 
     @classmethod
     def get_visible_contests(cls, user):
@@ -591,12 +598,20 @@ class Contest(models.Model):
                 has_tester=Exists(testers_exists),
             )
 
+            # Filter out course-linked contests unless user is enrolled in course or is instructor
+            enrolled_course_ids = set(user.profile.course_enrollments.values_list('course_id', flat=True)) | \
+                                  set(user.profile.instructed_courses.values_list('id', flat=True))
+
+            is_course_linked = Q(is_course_only=True) | Q(is_course_private=True) | Q(course_id__isnull=False) | Q(course_mappings__isnull=False)
+            course_access = Q(course_id__in=enrolled_course_ids) | Q(course_mappings__course_id__in=enrolled_course_ids)
+            course_q = ~is_course_linked | course_access
+
             queryset = queryset.filter(
-                q |
+                (q & course_q) |
                 Q(has_author=True) |
                 Q(has_curator=True) |
                 Q(has_tester=True),
-            )
+            ).distinct()
 
         return queryset
 

@@ -1,15 +1,62 @@
 {% extends "base.html" %}
 
 {% block media %}
-    <link rel="stylesheet" href="{{ static('course_lms.css') }}">
-    <style>
-        @media print {
-            body * { visibility: hidden; }
-            .lms-cert-frame, .lms-cert-frame * { visibility: visible; }
-            .lms-cert-frame { position: absolute; left: 0; top: 0; width: 100%; border-width: 6px; box-shadow: none; }
-            .lms-no-print { display: none !important; }
+<link rel="stylesheet" href="{{ static('course_lms.css') }}">
+<style>
+    .cert-canvas-container {
+        position: relative;
+        width: 100%;
+        max-width: 1000px;
+        margin: 20px auto;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
+        background: #ffffff;
+    }
+
+    .cert-canvas-el {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 16px;
+    }
+
+    .cert-verify-card {
+        background: var(--lms-card-bg, #ffffff);
+        border: 1px solid var(--lms-card-border, #e2e8f0);
+        border-radius: 12px;
+        padding: 24px;
+        margin: 24px auto;
+        max-width: 1000px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    @media print {
+        body * {
+            visibility: hidden;
         }
-    </style>
+
+        .cert-canvas-container,
+        .cert-canvas-container * {
+            visibility: visible;
+        }
+
+        .cert-canvas-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+        }
+
+        .lms-no-print {
+            display: none !important;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block body %}
@@ -22,82 +69,168 @@
             <i class="fa fa-angle-right"></i>
             <a href="{{ certificate.course.get_absolute_url() }}">{{ certificate.course.title }}</a>
             <i class="fa fa-angle-right"></i>
-            <span>{{ _('Chứng chỉ Xác thực Điện tử') }}</span>
+            <span>{{ _('Giấy chứng nhận Điện tử') }}</span>
         </div>
 
         <div class="lms-title-row">
             <div>
-                <h1 class="lms-page-title">{{ _('Chứng nhận Hoàn thành Học phần') }}</h1>
+                <h1 class="lms-page-title">{{ _('Giấy chứng nhận Hoàn thành Khoá học') }}</h1>
                 <p style="color: var(--lms-text-muted); font-size: 0.875rem; margin: 4px 0 0;">
-                    {{ _('Chứng chỉ số định danh chính quy được cấp bởi Hệ thống Đào tạo & Khảo thí Trực tuyến LMS HNUEOJ.') }}
+                    {{ _('Giấy chứng nhận điện tử chính thức được cấp bởi CLB Nghiệp vụ Sư phạm - Khoa Công nghệ Thông tin - Trường ĐH Sư phạm Hà Nội.') }}
                 </p>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button type="button" class="lms-btn lms-btn-primary" onclick="window.print()">
-                    <i class="fa fa-print"></i> {{ _('In / Tải PDF Chứng nhận') }}
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button type="button" class="lms-btn lms-btn-success" onclick="downloadCertPng()"
+                    style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-weight: 700;">
+                    <i class="fa fa-download"></i> {{ _('Tải về Ảnh Chứng nhận (PNG)') }}
+                </button>
+                <button type="button" class="lms-btn lms-btn-primary" onclick="window.print()"
+                    style="font-weight: 700;">
+                    <i class="fa fa-print"></i> {{ _('In / Tải PDF') }}
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Verifiable Certificate Frame -->
-    <div class="lms-cert-frame">
-        <div class="lms-cert-gold-seal">
-            <i class="fa fa-graduation-cap"></i>
-        </div>
+    <!-- Canvas Certificate Frame -->
+    <div class="cert-canvas-container">
+        <canvas id="certCanvas" width="1920" height="1080" class="cert-canvas-el"></canvas>
+    </div>
 
-        <div style="font-size: 0.8125rem; letter-spacing: 0.15em; font-weight: 800; color: #b45309; text-transform: uppercase; margin-bottom: 4px;">
-            TRƯỜNG ĐẠI HỌC SƯ PHẠM HÀ NỘI &bull; HANOI NATIONAL UNIVERSITY OF EDUCATION
-        </div>
-        <div style="font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 16px;">
-            HỆ THỐNG ĐÀO TẠO & KHẢO THÍ TRỰC TUYẾN &bull; LMS HNUE ONLINE JUDGE
-        </div>
-
-        <h1 class="lms-cert-heading">{{ _('GIẤY CHỨNG NHẬN HOÀN THÀNH') }}</h1>
-        <p style="font-style: italic; color: #64748b; font-size: 1.0625rem; margin: 0 0 16px;">
-            {{ _('Chứng nhận điện tử này trân trọng trao cho học viên') }}
-        </p>
-
-        <div class="lms-cert-recipient">
-            {{ certificate.user.display_name or certificate.user.user.get_full_name() or certificate.user.user.username }}
-        </div>
-
-        <p style="color: #475569; font-size: 1.0625rem; line-height: 1.6; max-width: 660px; margin: 16px auto;">
-            {{ _('Đã hoàn thành xuất sắc toàn bộ khối lượng kiến thức lý thuyết, đạt chuẩn bài tập thực hành và vượt qua các kỳ khảo thí đánh giá năng lực trong học phần:') }}
-        </p>
-
-        <div class="lms-cert-course">
-            {{ certificate.course.title }}
-        </div>
-
-        <div style="display: inline-block; padding: 6px 20px; background: #fef3c7; border-radius: var(--lms-radius-full); font-weight: 800; color: #92400e; font-size: 0.9375rem; margin-bottom: 24px; border: 1px solid #fde68a;">
-            {{ _('Kết quả Tốt nghiệp:') }} {{ certificate.grade }}
-        </div>
-
-        <!-- Signatures & Verification -->
-        <div class="lms-cert-signatures">
-            <div class="lms-signature-box">
-                <div style="font-weight: 800; color: #0f172a; font-size: 1.0625rem;">
-                    {{ (certificate.issued_by.display_name or certificate.issued_by.user.username) if certificate.issued_by else 'Giảng viên Phụ trách' }}
+    <!-- Verifiable Information Box -->
+    <div class="cert-verify-card lms-no-print">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--lms-card-border, #e2e8f0);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 42px; height: 42px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                    <i class="fa fa-check-circle"></i>
                 </div>
-                <div style="color: #64748b; font-size: 0.8125rem; font-weight: 600;">{{ _('Giảng viên Phụ trách Học phần') }}</div>
+                <div>
+                    <div style="font-weight: 800; font-size: 1rem; color: var(--lms-text-main);">
+                        {{ _('Giấy chứng nhận Số Hợp lệ') }}
+                    </div>
+                    <div style="font-size: 0.8125rem; color: var(--lms-text-muted);">
+                        {{ _('Thông tin học viên và kết quả đã được xác thực chính thức trên cơ sở dữ liệu LMS HNUEOJ') }}
+                    </div>
+                </div>
+            </div>
+            <span class="lms-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 14px; font-weight: 700; font-size: 0.875rem;">
+                <i class="fa fa-shield"></i> {{ _('Xác thực Hợp lệ') }}
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+            <div>
+                <div style="font-size: 0.75rem; color: var(--lms-text-light); font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">
+                    {{ _('Họ và tên Sinh viên') }}
+                </div>
+                <div style="font-size: 1rem; font-weight: 800; color: var(--lms-text-main);">
+                    {{ student_name }}
+                </div>
             </div>
 
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; font-weight: 600;">{{ _('Mã định danh xác thực điện tử') }}</div>
-                <div style="font-family: monospace; font-size: 0.9375rem; font-weight: 800; background: #f1f5f9; padding: 6px 14px; border-radius: 6px; border: 1px solid #e2e8f0; color: #0f172a;">
+            <div>
+                <div style="font-size: 0.75rem; color: var(--lms-text-light); font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">
+                    {{ _('Lớp Sinh viên') }}
+                </div>
+                <div style="font-size: 1rem; font-weight: 800; color: var(--lms-text-main);">
+                    {{ student_class or '—' }}
+                </div>
+            </div>
+
+            <div>
+                <div style="font-size: 0.75rem; color: var(--lms-text-light); font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">
+                    {{ _('Khóa học Đã Hoàn thành') }}
+                </div>
+                <div style="font-size: 0.9375rem; font-weight: 700; color: var(--lms-primary);">
+                    {{ certificate.course.title }}
+                </div>
+            </div>
+
+            <div>
+                <div style="font-size: 0.75rem; color: var(--lms-text-light); font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">
+                    {{ _('Mã Số Xác thực') }}
+                </div>
+                <div style="font-family: monospace; font-size: 0.875rem; font-weight: 800; color: var(--lms-text-main); background: var(--lms-bg-alt, #f8fafc); padding: 4px 10px; border-radius: 6px; display: inline-block; border: 1px solid var(--lms-card-border, #e2e8f0);">
                     {{ certificate.cert_code }}
                 </div>
-                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">
-                    {{ _('Ngày cấp quyết định:') }} {{ certificate.issued_date.strftime('%d/%m/%Y') }}
+            </div>
+
+            <div>
+                <div style="font-size: 0.75rem; color: var(--lms-text-light); font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">
+                    {{ _('Ngày cấp') }}
+                </div>
+                <div style="font-size: 0.9375rem; font-weight: 700; color: var(--lms-text-main);">
+                    {{ certificate.issued_date.strftime('%d/%m/%Y') }}
                 </div>
             </div>
 
-            <div class="lms-signature-box">
-                <div style="font-weight: 800; color: #0f172a; font-size: 1.0625rem;">LMS HNUEOJ Academic Board</div>
-                <div style="color: #64748b; font-size: 0.8125rem; font-weight: 600;">{{ _('Ban Đào tạo & Khảo thí LMS HNUEOJ') }}</div>
+            <div>
+                <div style="font-size: 0.75rem; color: var(--lms-text-light); font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">
+                    {{ _('Xếp loại Tốt nghiệp') }}
+                </div>
+                <div style="font-size: 0.9375rem; font-weight: 800; color: #b45309;">
+                    {{ certificate.grade }}
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    function renderCertificateCanvas() {
+        const canvas = document.getElementById('certCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = "{{ static('icpc_foundation_2026_bg.jpg') }}";
+
+        img.onload = function () {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, 1920, 1080);
+
+            const studentName = {{ student_name|tojson }};
+            const studentClass = {{ student_class|tojson }};
+            const courseTitle = {{ certificate.course.title|tojson }};
+
+            // Draw Student Name (first name of account) - Size 90, Position (652, 605)
+            ctx.font = 'bold 90px "Times New Roman", "DejaVu Serif", Georgia, serif';
+            ctx.fillStyle = '#1e293b';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillText(studentName, 652, 605);
+
+            // Draw Class (last name of account) - Size 70, Position (875, 710)
+            if (studentClass) {
+                ctx.font = 'bold 70px "Times New Roman", "DejaVu Serif", Georgia, serif';
+                ctx.fillStyle = '#1e293b';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+                ctx.fillText(studentClass, 875, 710);
+            }
+
+            // Draw Course Title dynamically under "Đã hoàn thành khoá học" in Red - Size 95, Position (960, 905)
+            if (courseTitle) {
+                ctx.font = 'bold 95px "Times New Roman", "DejaVu Serif", Georgia, serif';
+                ctx.fillStyle = '#e11d48';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'alphabetic';
+                ctx.fillText(courseTitle, 960, 905);
+            }
+        };
+    }
+
+    function downloadCertPng() {
+        const canvas = document.getElementById('certCanvas');
+        if (!canvas) return;
+        const link = document.createElement('a');
+        const safeName = ({{ student_name|tojson }} || 'Student').replace(/[^a-zA-Z0-9_-]/g, '_');
+        link.download = `Giay_Chung_Nhan_ICPC_Foundation_2026_${safeName}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+
+    window.addEventListener('load', renderCertificateCanvas);
+    document.addEventListener('DOMContentLoaded', renderCertificateCanvas);
+</script>
 {% endblock %}

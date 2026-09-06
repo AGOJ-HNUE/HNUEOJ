@@ -43,7 +43,7 @@ class CourseListView(TitleMixin, ListView):
             if tab == 'enrolled':
                 qs = Course.objects.filter(enrollments__user=user.profile)
             elif tab == 'teaching':
-                qs = Course.objects.filter(instructor=user.profile)
+                qs = Course.objects.filter(Q(instructors=user.profile) | Q(instructor=user.profile)).distinct()
             elif user.is_superuser or user.has_perm('judge.edit_all_course'):
                 if tab == 'all':
                     qs = Course.objects.all()
@@ -63,7 +63,7 @@ class CourseListView(TitleMixin, ListView):
         if query:
             qs = qs.filter(Q(title__icontains=query) | Q(description__icontains=query) | Q(target_audience__icontains=query))
 
-        return qs.select_related('instructor__user').prefetch_related('enrollments')
+        return qs.select_related('instructor__user').prefetch_related('enrollments', 'instructors__user')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -71,16 +71,19 @@ class CourseListView(TitleMixin, ListView):
         context['current_tab'] = self.request.GET.get('tab', 'all')
         context['search_query'] = self.request.GET.get('q', '')
 
-        if user.is_authenticated:
+        if user.is_authenticated and hasattr(user, 'profile'):
             context['enrolled_count'] = Enrollment.objects.filter(user=user.profile).count()
-            context['teaching_count'] = Course.objects.filter(instructor=user.profile).count()
-            # Map of course_id -> enrollment
+            context['teaching_count'] = Course.objects.filter(Q(instructors=user.profile) | Q(instructor=user.profile)).distinct().count()
+            # Map of course_id -> enrollment & certificate
             enrollments = Enrollment.objects.filter(user=user.profile)
             context['user_enrollments'] = {e.course_id: e for e in enrollments}
+            certs = Certificate.objects.filter(user=user.profile)
+            context['user_certificates'] = {c.course_id: c for c in certs}
         else:
             context['enrolled_count'] = 0
             context['teaching_count'] = 0
             context['user_enrollments'] = {}
+            context['user_certificates'] = {}
 
         return context
 
@@ -229,6 +232,7 @@ class LessonLearnView(LoginRequiredMixin, TitleMixin, TemplateView):
         context['current_lesson'] = self.lesson
         context['chapters'] = chapters
         context['enrollment'] = self.enrollment
+        context['certificate'] = Certificate.objects.filter(user=user.profile, course=course).first() if user.is_authenticated and hasattr(user, 'profile') else None
 
         # Progress of current lesson
         progress = LessonProgress.objects.filter(user=user.profile, lesson=self.lesson).first()
@@ -405,6 +409,7 @@ class CourseManageView(LoginRequiredMixin, TitleMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['course'] = self.course
+        context['instructors'] = self.course.instructors_list
         context['chapters'] = self.course.chapters.prefetch_related(
             'lessons__lesson_problems__problem',
             'chapter_contests__contest',
@@ -454,6 +459,13 @@ class SaveCourseInfoAjax(LoginRequiredMixin, View):
         start_date_info = data.get('start_date_info', course.start_date_info).strip()
         contact_url = data.get('contact_url', course.contact_url).strip()
 
+        instructor_usernames = data.get('instructor_usernames')
+        if instructor_usernames is not None:
+            if isinstance(instructor_usernames, str):
+                instructor_usernames = [u.strip() for u in instructor_usernames.split(',') if u.strip()]
+            profiles = [p for p in Profile.objects.filter(user__username__in=instructor_usernames).select_related('user') if p.user.username in instructor_usernames]
+            course.instructors.set(profiles)
+
         if not title:
             return JsonResponse({'error': _('Tên khóa học không được để trống.')}, status=400)
 
@@ -491,8 +503,81 @@ class SaveCourseInfoAjax(LoginRequiredMixin, View):
                 'allow_self_enrollment': course.allow_self_enrollment,
                 'validity_duration_days': course.validity_duration_days,
                 'thumbnail_url': course.thumbnail_url,
+                'instructor_name': course.instructor_name,
+                'instructors': [
+                    {
+                        'id': p.id,
+                        'username': p.user.username,
+                        'name': getattr(p, 'display_name', '') or p.user.get_full_name() or p.user.username,
+                    }
+                    for p in course.instructors_list
+                ],
             }
         })
+
+
+class CreateCourseAjax(LoginRequiredMixin, View):
+    def post(self, request):
+        user = request.user
+        profile = getattr(user, 'profile', None)
+        if not profile:
+            raise PermissionDenied()
+
+        teaching_count = Course.objects.filter(Q(instructors=profile) | Q(instructor=profile)).distinct().count()
+        if not (user.is_superuser or user.has_perm('judge.edit_all_course') or teaching_count > 0 or getattr(profile, 'is_teacher', False)):
+            raise PermissionDenied()
+
+        data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
+        title = data.get('title', '').strip()
+        key = data.get('key', '').strip()
+        description = data.get('description', '').strip()
+        price = data.get('price', 0)
+        try:
+            price = max(0, int(price))
+        except (ValueError, TypeError):
+            price = 0
+
+        reg_status = data.get('reg_status', Course.REG_STATUS_OPEN)
+        contact_url = data.get('contact_url', '').strip()
+        status = data.get('status', Course.STATUS_PUBLISHED)
+        is_public = bool(data.get('is_public', True))
+
+        if not title:
+            return JsonResponse({'error': _('Tên khóa học không được để trống.')}, status=400)
+
+        if not key:
+            from django.utils.text import slugify
+            key = slugify(title)
+
+        if not key or not re.match(r'^[a-z0-9-]+$', key):
+            return JsonResponse({'error': _('Slug / URL Key không hợp lệ. Chỉ chấp nhận chữ thường, số và dấu gạch ngang.')}, status=400)
+
+        if Course.objects.filter(key=key).exists():
+            return JsonResponse({'error': _('Mã khóa học (Slug/Key) này đã tồn tại. Vui lòng chọn key khác.')}, status=400)
+
+        course = Course.objects.create(
+            key=key,
+            title=title,
+            description=description,
+            price=price,
+            reg_status=reg_status if reg_status in dict(Course.REG_STATUS_CHOICES) else Course.REG_STATUS_OPEN,
+            contact_url=contact_url,
+            is_public=is_public,
+            status=status if status in dict(Course.STATUS_CHOICES) else Course.STATUS_PUBLISHED,
+            instructor=profile,
+        )
+        course.instructors.add(profile)
+
+        return JsonResponse({
+            'success': True,
+            'course': {
+                'id': course.id,
+                'key': course.key,
+                'title': course.title,
+            },
+            'url': reverse('course_manage', args=[course.key]),
+        })
+
 
 
 class ToggleCourseItemLockAjax(LoginRequiredMixin, View):
@@ -521,6 +606,75 @@ class ToggleCourseItemLockAjax(LoginRequiredMixin, View):
             return JsonResponse({'success': True, 'is_locked': exam.is_locked, 'item_type': 'exam', 'item_id': exam.id})
 
         return JsonResponse({'error': _('Loại đối tượng không hợp lệ.')}, status=400)
+
+
+class ReorderCourseCurriculumAjax(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        course = get_object_or_404(Course, key=slug)
+        if not course.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        try:
+            data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
+        except Exception:
+            return JsonResponse({'error': _('Dữ liệu không hợp lệ.')}, status=400)
+
+        action = data.get('action')
+
+        if action == 'reorder_chapters':
+            chapter_ids = data.get('chapter_ids', [])
+            if not isinstance(chapter_ids, list):
+                return JsonResponse({'error': _('Danh sách chương không hợp lệ.')}, status=400)
+
+            with transaction.atomic():
+                for idx, cid in enumerate(chapter_ids):
+                    try:
+                        cid_int = int(cid)
+                    except (ValueError, TypeError):
+                        continue
+                    Chapter.objects.filter(id=cid_int, course=course).update(order_index=idx)
+
+            return JsonResponse({'success': True, 'message': _('Đã lưu thứ tự các chương.')})
+
+        elif action == 'reorder_lessons':
+            lessons = data.get('lessons', [])
+            if not isinstance(lessons, list):
+                return JsonResponse({'error': _('Danh sách bài học không hợp lệ.')}, status=400)
+
+            target_chapter_id = data.get('chapter_id')
+
+            with transaction.atomic():
+                course_chapter_ids = set(course.chapters.values_list('id', flat=True))
+
+                for idx, item in enumerate(lessons):
+                    if isinstance(item, dict):
+                        lid = item.get('id')
+                        ch_id = item.get('chapter_id', target_chapter_id)
+                        order_idx = item.get('order_index', idx)
+                    else:
+                        lid = item
+                        ch_id = target_chapter_id
+                        order_idx = idx
+
+                    try:
+                        lid_int = int(lid)
+                    except (ValueError, TypeError):
+                        continue
+
+                    update_fields = {'order_index': order_idx}
+                    if ch_id is not None:
+                        try:
+                            ch_id_int = int(ch_id)
+                            if ch_id_int in course_chapter_ids:
+                                update_fields['chapter_id'] = ch_id_int
+                        except (ValueError, TypeError):
+                            pass
+
+                    Lesson.objects.filter(id=lid_int, chapter__course=course).update(**update_fields)
+
+            return JsonResponse({'success': True, 'message': _('Đã lưu thứ tự bài học.')})
+
+        return JsonResponse({'error': _('Hành động không hợp lệ.')}, status=400)
 
 
 class SaveChapterAjax(LoginRequiredMixin, View):
@@ -1138,6 +1292,9 @@ class IssueCertificateAjax(LoginRequiredMixin, View):
         data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
         grade = data.get('grade', 'Xuất sắc')
 
+        if enrollment.progress_percentage < 80.0 and enrollment.status not in (Enrollment.STATUS_READY_FOR_REVIEW, Enrollment.STATUS_COMPLETED):
+            return JsonResponse({'error': _('Học viên chưa hoàn thành từ 80% tiến độ khóa học trở lên.')}, status=400)
+
         with transaction.atomic():
             cert_code = Certificate.generate_cert_code(course.id, enrollment.user_id)
             cert, created = Certificate.objects.update_or_create(
@@ -1186,10 +1343,15 @@ class CertificateDetailView(TitleMixin, DetailView):
     context_object_name = 'certificate'
 
     def get_title(self):
-        return f'Chứng nhận Hoàn thành: {self.object.user.user.username} | {self.object.course.title} - LMS HNUEOJ'
+        user_obj = self.object.user.user
+        display_name = user_obj.first_name.strip() or self.object.user.display_name or user_obj.username
+        return f'Giấy chứng nhận: {display_name} | {self.object.course.title} - LMS HNUEOJ'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user_obj = self.object.user.user
+        context['student_name'] = user_obj.first_name.strip() or self.object.user.display_name or user_obj.username
+        context['student_class'] = user_obj.last_name.strip()
         context['verification_url'] = self.request.build_absolute_uri(self.object.get_absolute_url())
         return context
 

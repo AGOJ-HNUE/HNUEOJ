@@ -7,7 +7,9 @@ from django.utils import timezone
 from judge.models import (
     Certificate,
     Chapter,
+    Contest,
     Course,
+    CourseContest,
     Enrollment,
     Exam,
     ExamProblem,
@@ -83,6 +85,7 @@ class CourseLMSTestCase(TestCase):
             instructor=cls.instructor_profile,
             is_public=True,
         )
+        cls.course.instructors.add(cls.instructor_profile)
 
         # Chapters & Lessons
         cls.chapter1 = Chapter.objects.create(
@@ -212,14 +215,14 @@ class CourseLMSTestCase(TestCase):
         self.assertFalse(data2['is_completed'])
 
     def test_certificate_issuance(self):
-        """Kiểm tra quy trình cấp chứng chỉ khi tiến độ đạt 100%"""
+        """Kiểm tra quy trình cấp chứng chỉ khi tiến độ đạt từ 80% trở lên"""
         enrollment = Enrollment.objects.create(
             user=self.student_profile,
             course=self.course,
             status=Enrollment.STATUS_ACTIVE,
         )
 
-        # Try to issue certificate when < 100%: should fail
+        # Try to issue certificate when < 80%: should fail
         self.client.login(username='instructor1', password=self.password)
         cert_url = reverse('course_issue_certificate', args=[self.course.key, enrollment.id])
         resp = self.client.post(cert_url, data=json.dumps({'grade': 'Xuất sắc'}), content_type='application/json')
@@ -237,6 +240,7 @@ class CourseLMSTestCase(TestCase):
             result='AC',
             status='D',
         )
+        enrollment.recalculate_progress()
 
         # Issue certificate successfully
         resp2 = self.client.post(cert_url, data=json.dumps({'grade': 'Xuất sắc'}), content_type='application/json')
@@ -379,3 +383,128 @@ class CourseLMSTestCase(TestCase):
         # Đã ghi danh: có quyền truy cập
         Enrollment.objects.create(user=self.student_profile, course=self.course, status=Enrollment.STATUS_ACTIVE)
         self.assertTrue(self.private_problem.is_accessible_by(self.student_user))
+
+    def test_multiple_instructors_permissions_and_save(self):
+        """Kiểm tra tính năng nhiều giảng viên phụ trách khóa học"""
+        user_model = get_user_model()
+        co_instructor_user = user_model.objects.create_user(username='instructor2', password=self.password)
+        co_instructor_profile = Profile.objects.create(user=co_instructor_user)
+
+        # 1. Giảng viên 2 chưa được thêm vào course: không có quyền edit
+        self.assertFalse(self.course.is_editable_by(co_instructor_user))
+
+        # 2. Thêm giảng viên 2 vào instructors ManyToMany
+        self.course.instructors.add(self.instructor_profile, co_instructor_profile)
+
+        # Giảng viên 2 giờ đây có quyền edit và truy cập bài học locked
+        self.assertTrue(self.course.is_editable_by(co_instructor_user))
+        self.assertTrue(self.lesson1.is_accessible_by(co_instructor_user))
+        self.assertIn('instructor1', self.course.instructor_name)
+        self.assertIn('instructor2', self.course.instructor_name)
+
+        # 3. Cập nhật danh sách giảng viên qua AJAX SaveCourseInfoAjax
+        self.client.login(username='instructor1', password=self.password)
+        save_url = reverse('course_info_save', args=[self.course.key])
+        resp = self.client.post(
+            save_url,
+            data=json.dumps({
+                'title': self.course.title,
+                'instructor_usernames': 'instructor1, instructor2',
+                'price': 0,
+                'status': 'PUBLISHED',
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(len(data['course']['instructors']), 2)
+
+    def test_course_contest_displayed_without_chapters(self):
+        """Kiểm tra Contest khóa học vẫn hiển thị ở trang chủ khóa học dù chưa có chương nào"""
+        c_empty = Course.objects.create(
+            key='empty-course',
+            title='Khóa học Chưa có Chương',
+            author=self.instructor_profile,
+            is_public=True,
+        )
+        contest = Contest.objects.create(
+            key='empty_course_ct',
+            name='Contest Giữa kỳ Khóa Empty',
+            start_time=timezone.now(),
+            end_time=timezone.now() + timezone.timedelta(days=7),
+            is_visible=True,
+            course=c_empty,
+        )
+        CourseContest.objects.create(
+            course=c_empty,
+            contest=contest,
+            scope_type=CourseContest.SCOPE_COURSE,
+        )
+
+        resp = self.client.get(reverse('course_detail', args=[c_empty.key]))
+        self.assertEqual(resp.status_code, 200)
+        content = resp.content.decode('utf-8')
+        self.assertIn('Contest Giữa kỳ Khóa Empty', content)
+        self.assertIn('Contest Khóa học', content)
+
+    def test_reorder_curriculum_api(self):
+        """Kiểm tra API kéo thả sắp xếp thứ tự Chương & Bài học"""
+        reorder_url = reverse('course_curriculum_reorder', args=[self.course.key])
+
+        # 1. Chưa đăng nhập -> 302/403
+        resp = self.client.post(
+            reorder_url,
+            data=json.dumps({'action': 'reorder_chapters', 'chapter_ids': []}),
+            content_type='application/json',
+        )
+        self.assertIn(resp.status_code, (302, 403))
+
+        # 2. Đăng nhập là học viên (không có quyền edit) -> 403
+        self.client.login(username='student1', password=self.password)
+        resp = self.client.post(
+            reorder_url,
+            data=json.dumps({'action': 'reorder_chapters', 'chapter_ids': []}),
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # 3. Đăng nhập là Giảng viên
+        self.client.login(username='instructor1', password=self.password)
+
+        # Tạo thêm chương 2 và bài học 2
+        chapter2 = Chapter.objects.create(course=self.course, title='Chương 2', order_index=1)
+        lesson2 = Lesson.objects.create(chapter=self.chapter, title='Bài học 2', order_index=1)
+
+        # Sắp xếp lại chương: đưa chapter2 lên đầu (order 0), chapter 1 xuống sau (order 1)
+        resp = self.client.post(
+            reorder_url,
+            data=json.dumps({'action': 'reorder_chapters', 'chapter_ids': [chapter2.id, self.chapter.id]}),
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()['success'])
+        chapter2.refresh_from_db()
+        self.chapter.refresh_from_db()
+        self.assertEqual(chapter2.order_index, 0)
+        self.assertEqual(self.chapter.order_index, 1)
+
+        # Sắp xếp và di chuyển bài học: đưa lesson2 sang chapter2 với order 0
+        resp = self.client.post(
+            reorder_url,
+            data=json.dumps({
+                'action': 'reorder_lessons',
+                'lessons': [
+                    {'id': lesson2.id, 'chapter_id': chapter2.id, 'order_index': 0},
+                    {'id': self.lesson1.id, 'chapter_id': self.chapter.id, 'order_index': 0},
+                ],
+            }),
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()['success'])
+        lesson2.refresh_from_db()
+        self.lesson1.refresh_from_db()
+        self.assertEqual(lesson2.chapter_id, chapter2.id)
+        self.assertEqual(lesson2.order_index, 0)
+        self.assertEqual(self.lesson1.order_index, 0)

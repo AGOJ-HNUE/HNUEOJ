@@ -2,6 +2,98 @@
 
 {% block media %}
 <link rel="stylesheet" href="{{ static('course_lms.css') }}">
+<style>
+/* Drag and Drop Curriculum Styles */
+.chapter-drag-handle:hover, .lesson-drag-handle:hover {
+    color: var(--lms-primary) !important;
+    background: var(--lms-primary-light) !important;
+}
+.chapter-drag-handle:active, .lesson-drag-handle:active {
+    cursor: grabbing !important;
+}
+.chapter-card-item.dragging {
+    opacity: 0.45;
+    border: 2px dashed var(--lms-primary) !important;
+    box-shadow: var(--lms-shadow-lg) !important;
+}
+.chapter-card-item.drag-over-top {
+    border-top: 3px solid var(--lms-primary) !important;
+}
+.chapter-card-item.drag-over-bottom {
+    border-bottom: 3px solid var(--lms-primary) !important;
+}
+.lesson-card-item.dragging {
+    opacity: 0.45;
+    background: var(--lms-primary-light) !important;
+    border: 1px dashed var(--lms-primary) !important;
+}
+.lesson-card-item.drag-over-top {
+    border-top: 2px solid var(--lms-primary) !important;
+}
+.lesson-card-item.drag-over-bottom {
+    border-bottom: 2px solid var(--lms-primary) !important;
+}
+.chapter-lessons-list.drag-target-hover {
+    background: rgba(18, 97, 166, 0.05);
+    border: 1px dashed var(--lms-primary);
+    border-radius: var(--lms-radius-sm);
+}
+/* Toast notifications */
+.lms-toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.lms-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    background: var(--lms-card-bg);
+    color: var(--lms-text-main);
+    border: 1px solid var(--lms-card-border);
+    border-radius: var(--lms-radius-md);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    animation: lmsToastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lms-toast-success {
+    border-left: 4px solid var(--lms-success);
+}
+.lms-toast-success i {
+    color: var(--lms-success);
+    font-size: 1.125rem;
+}
+.lms-toast-error {
+    border-left: 4px solid var(--lms-danger);
+}
+.lms-toast-error i {
+    color: var(--lms-danger);
+    font-size: 1.125rem;
+}
+.lms-toast.fade-out {
+    opacity: 0;
+    transform: translateY(10px);
+}
+@keyframes lmsToastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
 {% endblock %}
 
 {% block body %}
@@ -109,7 +201,8 @@
         "is_public": {{ 'true' if course.is_public else 'false' }},
         "is_locked": {{ 'true' if course.is_locked else 'false' }},
         "allow_self_enrollment": {{ 'true' if course.allow_self_enrollment else 'false' }},
-        "validity_duration_days": {{ course.validity_duration_days or 'null' }}
+        "validity_duration_days": {{ course.validity_duration_days or 'null' }},
+        "instructor_usernames": {{ (course.instructors_list|map(attribute='user.username')|list)|tojson }}
     }
     </script>
 
@@ -176,22 +269,28 @@
     </div>
 
     <!-- Chapter & Content Structure -->
-    <div style="display: flex; flex-direction: column; gap: 20px;">
+    <div id="course-chapters-container" style="display: flex; flex-direction: column; gap: 20px;">
         {% for chapter in chapters %}
-        <div class="lms-card-bg"
-            style="border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-lg); overflow: hidden; background: var(--lms-card-bg); box-shadow: var(--lms-shadow-sm);">
+        <div class="lms-card-bg chapter-card-item" data-chapter-id="{{ chapter.id }}"
+            style="border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-lg); overflow: hidden; background: var(--lms-card-bg); box-shadow: var(--lms-shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease;">
             <div
                 style="padding: 16px 20px; background: var(--lms-bg); border-bottom: 1px solid var(--lms-card-border); display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <span
-                        style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--lms-primary);">
-                        {{ _('Chương') }} {{ loop.index }}
-                    </span>
-                    <h3 style="margin: 2px 0 0; font-size: 1.125rem; font-weight: 700;">{{ chapter.title }}</h3>
-                    {% if chapter.description %}
-                    <p style="margin: 2px 0 0; font-size: 0.8125rem; color: var(--lms-text-muted);">{{
-                        chapter.description }}</p>
-                    {% endif %}
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="chapter-drag-handle" title="{{ _('Kéo để đổi thứ tự chương') }}"
+                        style="cursor: grab; color: var(--lms-text-muted); padding: 6px 8px; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.04);">
+                        <i class="fa fa-bars" style="font-size: 1.125rem;"></i>
+                    </div>
+                    <div>
+                        <span class="chapter-order-label"
+                            style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--lms-primary);">
+                            {{ _('Chương') }} {{ loop.index }}
+                        </span>
+                        <h3 style="margin: 2px 0 0; font-size: 1.125rem; font-weight: 700;">{{ chapter.title }}</h3>
+                        {% if chapter.description %}
+                        <p style="margin: 2px 0 0; font-size: 0.8125rem; color: var(--lms-text-muted);">{{
+                            chapter.description }}</p>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <div style="display: flex; gap: 8px;">
@@ -216,7 +315,8 @@
             </div>
 
             <div style="padding: 12px 16px;">
-                <!-- Lessons -->
+                <!-- Lessons Container -->
+                <div class="chapter-lessons-list" data-chapter-id="{{ chapter.id }}" style="min-height: 12px; display: flex; flex-direction: column;">
                 {% for lesson in chapter.lessons.all() %}
                 <script type="application/json" id="lesson_data_{{ lesson.id }}">
                         {
@@ -245,10 +345,15 @@
                             {% endfor %}
                         ]
                         </script>
-                <div style="border-bottom: 1px solid var(--lms-card-border); padding: 10px 14px;">
+                <div class="lesson-card-item" data-lesson-id="{{ lesson.id }}" data-chapter-id="{{ chapter.id }}"
+                    style="border-bottom: 1px solid var(--lms-card-border); padding: 10px 14px; background: var(--lms-card-bg); transition: background 0.15s ease;">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <div class="lesson-drag-handle" title="{{ _('Kéo để đổi thứ tự bài học') }}"
+                                style="cursor: grab; color: var(--lms-text-muted); padding: 4px 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.03);">
+                                <i class="fa fa-bars" style="font-size: 0.9375rem;"></i>
+                            </div>
                             <i class="fa fa-file-text-o" style="color: var(--lms-primary);"></i>
                             <span style="font-weight: 600; font-size: 0.9375rem;">{{ lesson.title }}</span>
                             <span style="font-size: 0.75rem; color: var(--lms-text-muted);">
@@ -333,6 +438,7 @@
                     {% endif %}
                 </div>
                 {% endfor %}
+                </div>
 
                 <!-- Chapter Contests -->
                 {% for cc in chapter.chapter_contests.all() %}
@@ -411,6 +517,13 @@
                     phần / Khóa học') }} *</label>
                 <input type="text" id="ci_title" required placeholder="Ví dụ: Cấu trúc dữ liệu & Giải thuật nâng cao"
                     style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 6px;">{{ _('Danh sách Giảng viên (Username phân cách bằng dấu phẩy)') }}</label>
+                <input type="text" id="ci_instructors" placeholder="teacher1, teacher2"
+                    style="width: 100%; padding: 10px 12px; border: 1px solid var(--lms-card-border); border-radius: var(--lms-radius-md); background: var(--lms-bg); color: var(--lms-text-main); font-size: 0.875rem;">
+                <small style="color: var(--lms-text-muted); font-size: 0.75rem;">{{ _('Tất cả giảng viên được phân công đều có đầy đủ quyền quản lý học liệu và kỳ thi.') }}</small>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
@@ -810,12 +923,15 @@
         document.getElementById('ci_price').value = data.price;
         document.getElementById('ci_status').value = data.status;
         if (document.getElementById('ci_reg_status')) document.getElementById('ci_reg_status').value = data.reg_status || 'OPEN';
-        if (document.getElementById('ci_target_audience')) document.getElementById('ci_target_audience').value = data.target_audience || 'Khối THPT';
+        if (document.getElementById('ci_target_audience')) document.getElementById('ci_target_audience').value = data.target_audience || '';
         if (document.getElementById('ci_schedule_info')) document.getElementById('ci_schedule_info').value = data.schedule_info || '';
-        if (document.getElementById('ci_format_type')) document.getElementById('ci_format_type').value = data.format_type || 'Online qua Zoom';
+        if (document.getElementById('ci_format_type')) document.getElementById('ci_format_type').value = data.format_type || '';
         if (document.getElementById('ci_duration_info')) document.getElementById('ci_duration_info').value = data.duration_info || '';
         if (document.getElementById('ci_start_date_info')) document.getElementById('ci_start_date_info').value = data.start_date_info || '';
         if (document.getElementById('ci_contact_url')) document.getElementById('ci_contact_url').value = data.contact_url || '';
+        if (document.getElementById('ci_instructors')) {
+            document.getElementById('ci_instructors').value = (data.instructor_usernames || []).join(', ');
+        }
         document.getElementById('ci_thumbnail').value = data.thumbnail_url || '';
         document.getElementById('ci_is_public').checked = !!data.is_public;
         document.getElementById('ci_is_locked').checked = !!data.is_locked;
@@ -828,6 +944,7 @@
     function saveCourseInfo(e) {
         e.preventDefault();
         const title = document.getElementById('ci_title').value.trim();
+        const instructorsStr = document.getElementById('ci_instructors') ? document.getElementById('ci_instructors').value.trim() : '';
         const price = parseInt(document.getElementById('ci_price').value) || 0;
         const status = document.getElementById('ci_status').value;
         const reg_status = document.getElementById('ci_reg_status') ? document.getElementById('ci_reg_status').value : 'OPEN';
@@ -849,6 +966,7 @@
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
             body: JSON.stringify({
                 title: title,
+                instructor_usernames: instructorsStr,
                 price: price,
                 status: status,
                 reg_status: reg_status,
@@ -1476,6 +1594,337 @@
                 else alert(data.error || 'Có lỗi xảy ra.');
             });
     }
+
+    /* =========================================================
+       Curriculum Drag & Drop Reordering (Chapters & Lessons)
+    ========================================================= */
+    function showLmsToast(message, type = 'success') {
+        let container = document.getElementById('lms-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'lms-toast-container';
+            container.className = 'lms-toast-container';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = `lms-toast lms-toast-${type}`;
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        toast.innerHTML = `<i class="fa ${icon}"></i> <span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+
+    // CHAPTER DRAG & DROP
+    let draggedChapter = null;
+
+    function initChapterDragAndDrop() {
+        const container = document.getElementById('course-chapters-container');
+        if (!container) return;
+
+        const chapters = container.querySelectorAll('.chapter-card-item');
+        chapters.forEach(card => {
+            const handle = card.querySelector('.chapter-drag-handle');
+            if (!handle) return;
+
+            handle.addEventListener('mousedown', () => {
+                card.setAttribute('draggable', 'true');
+            });
+            handle.addEventListener('mouseup', () => {
+                card.setAttribute('draggable', 'false');
+            });
+
+            card.addEventListener('dragstart', function(e) {
+                if (card.getAttribute('draggable') !== 'true') {
+                    e.preventDefault();
+                    return;
+                }
+                draggedChapter = this;
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', this.getAttribute('data-chapter-id'));
+            });
+
+            card.addEventListener('dragend', function() {
+                this.setAttribute('draggable', 'false');
+                this.classList.remove('dragging');
+                container.querySelectorAll('.chapter-card-item').forEach(c => {
+                    c.classList.remove('drag-over-top', 'drag-over-bottom');
+                });
+                draggedChapter = null;
+            });
+
+            card.addEventListener('dragover', function(e) {
+                if (!draggedChapter || draggedChapter === this) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+
+                const rect = this.getBoundingClientRect();
+                const midY = rect.top + rect.height / 2;
+                if (e.clientY < midY) {
+                    this.classList.add('drag-over-top');
+                    this.classList.remove('drag-over-bottom');
+                } else {
+                    this.classList.add('drag-over-bottom');
+                    this.classList.remove('drag-over-top');
+                }
+            });
+
+            card.addEventListener('dragleave', function() {
+                this.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+
+            card.addEventListener('drop', function(e) {
+                if (!draggedChapter || draggedChapter === this) return;
+                e.preventDefault();
+                e.stopPropagation();
+
+                const isTop = this.classList.contains('drag-over-top');
+                this.classList.remove('drag-over-top', 'drag-over-bottom');
+
+                if (isTop) {
+                    this.before(draggedChapter);
+                } else {
+                    this.after(draggedChapter);
+                }
+
+                renumberChaptersAndSave();
+            });
+        });
+    }
+
+    function renumberChaptersAndSave() {
+        const container = document.getElementById('course-chapters-container');
+        if (!container) return;
+
+        const chapters = container.querySelectorAll('.chapter-card-item');
+        const chapterIds = [];
+
+        chapters.forEach((card, idx) => {
+            chapterIds.push(card.getAttribute('data-chapter-id'));
+            const orderLabel = card.querySelector('.chapter-order-label');
+            if (orderLabel) {
+                orderLabel.innerText = `{{ _("Chương") }} ${idx + 1}`;
+            }
+        });
+
+        fetch('{{ url("course_curriculum_reorder", course.key) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                action: 'reorder_chapters',
+                chapter_ids: chapterIds
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showLmsToast(data.message || '{{ _("Đã lưu thứ tự các chương!") }}', 'success');
+            } else {
+                showLmsToast(data.error || '{{ _("Có lỗi khi lưu thứ tự.") }}', 'error');
+            }
+        })
+        .catch(() => {
+            showLmsToast('{{ _("Lỗi kết nối mạng khi lưu thứ tự.") }}', 'error');
+        });
+    }
+
+    // LESSON DRAG & DROP
+    let draggedLesson = null;
+    let sourceChapterId = null;
+
+    function initLessonDragAndDrop() {
+        const lessons = document.querySelectorAll('.lesson-card-item');
+        lessons.forEach(lessonEl => {
+            const handle = lessonEl.querySelector('.lesson-drag-handle');
+            if (!handle) return;
+
+            handle.addEventListener('mousedown', () => {
+                lessonEl.setAttribute('draggable', 'true');
+            });
+            handle.addEventListener('mouseup', () => {
+                lessonEl.setAttribute('draggable', 'false');
+            });
+
+            lessonEl.addEventListener('dragstart', function(e) {
+                if (this.getAttribute('draggable') !== 'true') {
+                    e.preventDefault();
+                    return;
+                }
+                e.stopPropagation();
+                draggedLesson = this;
+                sourceChapterId = this.getAttribute('data-chapter-id');
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', this.getAttribute('data-lesson-id'));
+            });
+
+            lessonEl.addEventListener('dragend', function() {
+                this.setAttribute('draggable', 'false');
+                this.classList.remove('dragging');
+                document.querySelectorAll('.lesson-card-item').forEach(l => {
+                    l.classList.remove('drag-over-top', 'drag-over-bottom');
+                });
+                document.querySelectorAll('.chapter-lessons-list').forEach(list => {
+                    list.classList.remove('drag-target-hover');
+                });
+                draggedLesson = null;
+                sourceChapterId = null;
+            });
+
+            lessonEl.addEventListener('dragover', function(e) {
+                if (!draggedLesson || draggedLesson === this) return;
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = 'move';
+
+                const rect = this.getBoundingClientRect();
+                const midY = rect.top + rect.height / 2;
+                if (e.clientY < midY) {
+                    this.classList.add('drag-over-top');
+                    this.classList.remove('drag-over-bottom');
+                } else {
+                    this.classList.add('drag-over-bottom');
+                    this.classList.remove('drag-over-top');
+                }
+            });
+
+            lessonEl.addEventListener('dragleave', function(e) {
+                e.stopPropagation();
+                this.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+
+            lessonEl.addEventListener('drop', function(e) {
+                if (!draggedLesson || draggedLesson === this) return;
+                e.preventDefault();
+                e.stopPropagation();
+
+                const isTop = this.classList.contains('drag-over-top');
+                this.classList.remove('drag-over-top', 'drag-over-bottom');
+
+                const targetList = this.closest('.chapter-lessons-list');
+                const targetChapterId = targetList.getAttribute('data-chapter-id');
+
+                if (isTop) {
+                    this.before(draggedLesson);
+                } else {
+                    this.after(draggedLesson);
+                }
+
+                draggedLesson.setAttribute('data-chapter-id', targetChapterId);
+                const lessonId = draggedLesson.getAttribute('data-lesson-id');
+                const scriptEl = document.getElementById(`lesson_data_${lessonId}`);
+                if (scriptEl) {
+                    try {
+                        const parsed = JSON.parse(scriptEl.textContent);
+                        parsed.chapter_id = parseInt(targetChapterId, 10);
+                        scriptEl.textContent = JSON.stringify(parsed);
+                    } catch (_) {}
+                }
+
+                saveLessonsOrder(targetChapterId, sourceChapterId);
+            });
+        });
+
+        // Also allow dropping directly into chapter-lessons-list
+        const chapterLists = document.querySelectorAll('.chapter-lessons-list');
+        chapterLists.forEach(list => {
+            list.addEventListener('dragover', function(e) {
+                if (!draggedLesson) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                this.classList.add('drag-target-hover');
+            });
+
+            list.addEventListener('dragleave', function() {
+                this.classList.remove('drag-target-hover');
+            });
+
+            list.addEventListener('drop', function(e) {
+                if (!draggedLesson) return;
+                e.preventDefault();
+                this.classList.remove('drag-target-hover');
+
+                if (e.target.closest('.lesson-card-item')) return;
+
+                const targetChapterId = this.getAttribute('data-chapter-id');
+                this.appendChild(draggedLesson);
+                draggedLesson.setAttribute('data-chapter-id', targetChapterId);
+
+                const lessonId = draggedLesson.getAttribute('data-lesson-id');
+                const scriptEl = document.getElementById(`lesson_data_${lessonId}`);
+                if (scriptEl) {
+                    try {
+                        const parsed = JSON.parse(scriptEl.textContent);
+                        parsed.chapter_id = parseInt(targetChapterId, 10);
+                        scriptEl.textContent = JSON.stringify(parsed);
+                    } catch (_) {}
+                }
+
+                saveLessonsOrder(targetChapterId, sourceChapterId);
+            });
+        });
+    }
+
+    function saveLessonsOrder(targetChapterId, fromChapterId) {
+        const targetList = document.querySelector(`.chapter-lessons-list[data-chapter-id="${targetChapterId}"]`);
+        if (!targetList) return;
+
+        const updatedLessons = [];
+
+        targetList.querySelectorAll('.lesson-card-item').forEach((item, idx) => {
+            updatedLessons.push({
+                id: parseInt(item.getAttribute('data-lesson-id'), 10),
+                chapter_id: parseInt(targetChapterId, 10),
+                order_index: idx
+            });
+        });
+
+        if (fromChapterId && fromChapterId !== targetChapterId) {
+            const sourceList = document.querySelector(`.chapter-lessons-list[data-chapter-id="${fromChapterId}"]`);
+            if (sourceList) {
+                sourceList.querySelectorAll('.lesson-card-item').forEach((item, idx) => {
+                    updatedLessons.push({
+                        id: parseInt(item.getAttribute('data-lesson-id'), 10),
+                        chapter_id: parseInt(fromChapterId, 10),
+                        order_index: idx
+                    });
+                });
+            }
+        }
+
+        fetch('{{ url("course_curriculum_reorder", course.key) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                action: 'reorder_lessons',
+                lessons: updatedLessons
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showLmsToast(data.message || '{{ _("Đã lưu thứ tự bài học!") }}', 'success');
+            } else {
+                showLmsToast(data.error || '{{ _("Có lỗi khi lưu thứ tự bài học.") }}', 'error');
+            }
+        })
+        .catch(() => {
+            showLmsToast('{{ _("Lỗi kết nối mạng khi lưu bài học.") }}', 'error');
+        });
+    }
+
+    // Initialize drag & drop handlers
+    initChapterDragAndDrop();
+    initLessonDragAndDrop();
 </script>
 
 <!-- Add / Edit Course Contest Modal -->

@@ -908,3 +908,34 @@ class CompareSubmissionsForm(Form):
     user = forms.ChoiceField(
         widget=HeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
     )
+
+
+class SingleUserAddForm(Form):
+    username = CharField(label=_('Tên đăng nhập'), max_length=150, required=True)
+    password = CharField(label=_('Mật khẩu'), widget=forms.PasswordInput, required=True)
+    email = forms.EmailField(label=_('Email'), required=False)
+    fullname = CharField(label=_('Họ và tên'), max_length=150, required=False)
+    organization_slug = CharField(label=_('Slug tổ chức'), max_length=128, required=False,
+                                  help_text=_('Để trống nếu không gán, hoặc điền slug của tổ chức.'))
+
+    def clean_username(self):
+        username = self.cleaned_data['username'].strip()
+        if User.objects.filter(username=username).exists():
+            raise ValidationError(_('Tên đăng nhập này đã tồn tại trong hệ thống.'))
+        return username
+
+    def clean_organization_slug(self):
+        slug = self.cleaned_data['organization_slug'].strip()
+        if slug and not Organization.objects.filter(slug=slug).exists():
+            raise ValidationError(_('Tổ chức với slug "%s" không tồn tại.') % slug)
+        return slug
+
+
+class BulkUserAddForm(Form):
+    file = forms.FileField(
+        label=_('Tệp CSV hoặc Excel'),
+        validators=[FileExtensionValidator(allowed_extensions=['csv', 'xlsx', 'xls'])],
+        help_text=_('Hỗ trợ định dạng .csv, .xlsx, .xls với các cột: username, password, email, Họ và tên, Tổ chức'),
+    )
+
+
